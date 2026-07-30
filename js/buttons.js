@@ -128,15 +128,9 @@ function buildLeaderboard() {
   LEVELS.forEach(function (lv, i) {
     const rank = i + 1;
 
-    // Verifying only counts if there is a verification video.
+    // Verifying is tracked but gives no points.
     if (lv.verifier) {
-      const p = slot(lv.verifier);
-      if (lv.verification) {
-        p.verified++;
-        p.total += score(rank, 100, lv.percentToQualify);
-      } else {
-        p.pending++;
-      }
+      slot(lv.verifier).verified++;
     }
 
     lv.records.forEach(function (r) {
