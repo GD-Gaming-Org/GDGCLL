@@ -1,3 +1,5 @@
+const ADMIN_ROLES = ['owner', 'admin', 'developer'];
+
 let LEVELS = [];
 
 function $(id) {
@@ -41,6 +43,23 @@ function rankClass(i) {
   if (i === 1) return 'silver';
   if (i === 2) return 'bronze';
   return '';
+}
+
+function currentUser() {
+  return localStorage.getItem('gd_user') || '';
+}
+
+function staffEntry(name) {
+  if (!name) return null;
+  return STAFF.find(function (s) {
+    return s.name.toLowerCase() === name.toLowerCase();
+  }) || null;
+}
+
+function isAdmin() {
+  const s = staffEntry(currentUser());
+  if (!s) return false;
+  return ADMIN_ROLES.indexOf(s.role.toLowerCase()) !== -1;
 }
 
 function normalize(raw, path) {
@@ -128,7 +147,6 @@ function buildLeaderboard() {
   LEVELS.forEach(function (lv, i) {
     const rank = i + 1;
 
-    // Verifying is tracked but gives no points.
     if (lv.verifier) {
       slot(lv.verifier).verified++;
     }
@@ -136,7 +154,6 @@ function buildLeaderboard() {
     lv.records.forEach(function (r) {
       const p = slot(r.user);
 
-      // No proof video, no points.
       if (!r.proof) {
         p.pending++;
         return;
@@ -211,7 +228,7 @@ function showDetail(i) {
       ? '<a class="thumb" href="' + esc(lv.verification) + '" target="_blank" rel="noopener">' +
           '<img src="https://img.youtube.com/vi/' + vid + '/hqdefault.jpg" alt="Verification video">' +
         '</a>'
-      : '<div class="note-small">No verification video yet &mdash; this level gives no points.</div>') +
+      : '') +
     '<div class="facts">' +
       '<div class="fact"><b>Level ID</b>' + (lv.id || '-') + '</div>' +
       '<div class="fact"><b>Password</b>' + esc(lv.password) + '</div>' +
@@ -286,14 +303,181 @@ function renderStaff() {
   }).join('');
 }
 
+function renderAdmin() {
+  const el = $('admin');
+  if (!el) return;
+
+  const who = staffEntry(currentUser());
+
+  el.innerHTML = '' +
+    '<div class="admin-box">' +
+      '<h3 class="admin-title">Signed in as ' + esc(who.name) + ' &middot; ' + esc(who.role) + '</h3>' +
+      '<p class="admin-hint">Fill a form, press Generate, then paste the result into ' +
+        '<b>data/data.js</b> and commit it.</p>' +
+    '</div>' +
+
+    '<div class="admin-box">' +
+      '<h3 class="admin-title">Add a level</h3>' +
+
+      '<label class="field"><span>Key (no spaces, lowercase)</span>' +
+        '<input type="text" id="aKey" placeholder="ninecircles"></label>' +
+
+      '<label class="field"><span>Level name</span>' +
+        '<input type="text" id="aName" placeholder="Nine Circles"></label>' +
+
+      '<label class="field"><span>Level ID</span>' +
+        '<input type="text" id="aId" placeholder="4322194"></label>' +
+
+      '<label class="field"><span>Creators (comma separated)</span>' +
+        '<input type="text" id="aCreators" placeholder="Zobros"></label>' +
+
+      '<label class="field"><span>Verifier</span>' +
+        '<input type="text" id="aVerifier" placeholder="Zobros"></label>' +
+
+      '<label class="field"><span>Verification video</span>' +
+        '<input type="text" id="aVideo" placeholder="https://youtu.be/..."></label>' +
+
+      '<label class="field"><span>Percent to qualify</span>' +
+        '<input type="number" id="aPct" value="50"></label>' +
+
+      '<label class="field"><span>Password</span>' +
+        '<input type="text" id="aPass" value="Free To Copy"></label>' +
+
+      '<label class="field"><span>Place at rank</span>' +
+        '<input type="number" id="aRank" value="1" min="1"></label>' +
+
+      '<button class="login" id="genLevel">Generate level code</button>' +
+    '</div>' +
+
+    '<div class="admin-box">' +
+      '<h3 class="admin-title">Add a record</h3>' +
+
+      '<label class="field"><span>Level</span>' +
+        '<select id="rLevel">' +
+          LIST.map(function (k) {
+            const lv = LEVELS_DATA[k];
+            return '<option value="' + esc(k) + '">' + esc(lv ? lv.name : k) + '</option>';
+          }).join('') +
+        '</select></label>' +
+
+      '<label class="field"><span>Player name</span>' +
+        '<input type="text" id="rUser" placeholder="Pester44"></label>' +
+
+      '<label class="field"><span>Percent</span>' +
+        '<input type="number" id="rPct" value="100" min="1" max="100"></label>' +
+
+      '<label class="field"><span>Proof video (required)</span>' +
+        '<input type="text" id="rLink" placeholder="https://youtu.be/..."></label>' +
+
+      '<label class="field checkline">' +
+        '<input type="checkbox" id="rMobile"> <span>Mobile run</span></label>' +
+
+      '<button class="login" id="genRecord">Generate record code</button>' +
+    '</div>' +
+
+    '<div class="admin-box" id="outBox" hidden>' +
+      '<h3 class="admin-title">Copy this</h3>' +
+      '<pre class="admin-out" id="outCode"></pre>' +
+      '<button class="login" id="copyOut">Copy</button>' +
+      '<p class="admin-hint" id="outWhere"></p>' +
+    '</div>';
+
+  onClick('genLevel', genLevel);
+  onClick('genRecord', genRecord);
+  onClick('copyOut', function () {
+    navigator.clipboard.writeText($('outCode').textContent);
+    $('copyOut').textContent = 'Copied';
+    setTimeout(function () { $('copyOut').textContent = 'Copy'; }, 1200);
+  });
+}
+
+function showOutput(code, where) {
+  $('outCode').textContent = code;
+  $('outWhere').textContent = where;
+  $('outBox').hidden = false;
+  $('outBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function genLevel() {
+  const key = $('aKey').value.trim().toLowerCase().replace(/\s+/g, '');
+  const name = $('aName').value.trim();
+
+  if (!key || !name) {
+    alert('Key and level name are required.');
+    return;
+  }
+
+  const creators = $('aCreators').value
+    .split(',')
+    .map(function (s) { return s.trim(); })
+    .filter(Boolean);
+
+  const level = {
+    id: Number($('aId').value) || 0,
+    name: name,
+    author: creators[0] || '',
+    creators: creators,
+    verifier: $('aVerifier').value.trim(),
+    verification: $('aVideo').value.trim(),
+    percentToQualify: Number($('aPct').value) || 100,
+    password: $('aPass').value.trim() || 'Free To Copy',
+    records: []
+  };
+
+  const rank = Math.max(1, Number($('aRank').value) || 1);
+  const newList = LIST.slice();
+  newList.splice(rank - 1, 0, key);
+
+  const code =
+    'const LIST = [\n' +
+    newList.map(function (k) { return '  "' + k + '"'; }).join(',\n') +
+    '\n];\n\n' +
+    'Add this inside LEVELS_DATA:\n\n' +
+    '  "' + key + '": ' + JSON.stringify(level, null, 2).replace(/\n/g, '\n  ') + ',';
+
+  showOutput(code, 'Replace LIST with the new one, then add the level block inside LEVELS_DATA. Watch the commas.');
+}
+
+function genRecord() {
+  const key = $('rLevel').value;
+  const user = $('rUser').value.trim();
+  const link = $('rLink').value.trim();
+
+  if (!user) {
+    alert('Player name is required.');
+    return;
+  }
+  if (!link) {
+    alert('Proof video is required, or the record scores nothing.');
+    return;
+  }
+
+  const record = {
+    user: user,
+    percent: Number($('rPct').value) || 100,
+    link: link,
+    mobile: $('rMobile').checked
+  };
+
+  const existing = (LEVELS_DATA[key] && LEVELS_DATA[key].records) || [];
+  const all = existing.concat([record]);
+
+  const code =
+    '"records": ' + JSON.stringify(all, null, 2).replace(/\n/g, '\n    ');
+
+  showOutput(code, 'Replace the "records" line inside "' + key + '" with this.');
+}
+
 function setTab(name) {
   if (!$('tabList')) return;
   $('tabList').classList.toggle('active', name === 'list');
   $('tabScores').classList.toggle('active', name === 'scores');
   $('tabStaff').classList.toggle('active', name === 'staff');
+  $('tabAdmin').classList.toggle('active', name === 'admin');
   $('levels').hidden = name !== 'list';
   $('scores').hidden = name !== 'scores';
   $('staff').hidden = name !== 'staff';
+  $('admin').hidden = name !== 'admin';
   $('detail').hidden = true;
 }
 
@@ -306,7 +490,7 @@ function getUsers() {
 }
 
 function showUser() {
-  const name = localStorage.getItem('gd_user');
+  const name = currentUser();
   const btn = $('profile');
   if (name && btn) btn.textContent = name;
 }
@@ -320,7 +504,7 @@ onClick('register', function () {
 });
 
 onClick('profile', function () {
-  const name = localStorage.getItem('gd_user');
+  const name = currentUser();
   if (!name) {
     window.location.href = 'html/login.html';
     return;
@@ -338,6 +522,7 @@ onClick('back', function () {
 onClick('tabList', function () { setTab('list'); });
 onClick('tabScores', function () { setTab('scores'); });
 onClick('tabStaff', function () { setTab('staff'); });
+onClick('tabAdmin', function () { setTab('admin'); });
 
 onClick('loginGo', function () {
   const user = $('userInput').value.trim();
@@ -408,6 +593,12 @@ function init() {
   renderLevels();
   renderScores();
   renderStaff();
+
+  if (isAdmin()) {
+    $('tabAdmin').hidden = false;
+    renderAdmin();
+  }
+
   setTab('list');
 }
 
