@@ -593,6 +593,14 @@ onClick('regGo', function () {
 function init() {
   showUser();
 
+  document.querySelectorAll('[data-goto]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      setTab(a.dataset.goto);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
   if (!$('levels')) return;
 
   LEVELS = loadLevels();
