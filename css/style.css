@@ -308,6 +308,35 @@ button:focus-visible {
   text-decoration: underline;
 }
 
+.rec.no-proof {
+  opacity: .55;
+  border-style: dashed;
+}
+
+.rec-none {
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: #8A7A66;
+  color: #fff;
+  font-family: 'Chango', cursive;
+  font-size: 9px;
+}
+
+.note-small {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 3px solid rgba(107, 68, 35, .4);
+  background: rgba(107, 68, 35, .16);
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pending {
+  color: #FFD9A0;
+}
+
 .form-box {
   max-width: 420px;
   margin: 0 auto;
