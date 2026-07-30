@@ -590,7 +590,34 @@ onClick('regGo', function () {
   }, 800);
 });
 
+function setupLogo() {
+  const img = $('logoImg');
+  const text = $('logoText');
+  if (!img) return;
+
+  const tries = [
+    'logo/image.png',
+    'logo./image.png',
+    'assets/logo.png',
+    'assets/gdgcll.svg',
+    'list_icon.png'
+  ];
+
+  let n = 0;
+
+  img.onerror = function () {
+    n++;
+    if (n < tries.length) {
+      img.src = tries[n];
+    } else {
+      img.hidden = true;
+      if (text) text.hidden = false;
+    }
+  };
+}
+
 function init() {
+  setupLogo();
   showUser();
 
   document.querySelectorAll('[data-goto]').forEach(function (a) {
