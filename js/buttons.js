@@ -1,7 +1,4 @@
-const DIR = 'data';
-
 let LEVELS = [];
-let BROKEN = [];
 
 function $(id) {
   return document.getElementById(id);
@@ -47,8 +44,6 @@ function rankClass(i) {
 }
 
 function normalize(raw, path) {
-  if (!raw || typeof raw !== 'object') throw new Error('not an object');
-
   let creators = [];
   if (Array.isArray(raw.creators)) creators = raw.creators.filter(Boolean);
   else if (raw.creators) creators = [raw.creators];
@@ -87,23 +82,24 @@ function normalize(raw, path) {
   };
 }
 
-async function loadLevels() {
-  const res = await fetch(DIR + '/list.json');
-  if (!res.ok) throw new Error('list.json not found');
-
-  const index = await res.json();
-  if (!Array.isArray(index)) throw new Error('list.json must be a list');
-
+function loadLevels() {
   const out = [];
+  const missing = [];
 
-  for (const path of index) {
-    try {
-      const r = await fetch(DIR + '/levels/' + path + '.json');
-      if (!r.ok) throw new Error('file not found (' + r.status + ')');
-      out.push(normalize(await r.json(), path));
-    } catch (err) {
-      BROKEN.push({ path: path, why: err.message });
+  LIST.forEach(function (path) {
+    const raw = LEVELS_DATA[path];
+    if (!raw) {
+      missing.push(path);
+      return;
     }
+    out.push(normalize(raw, path));
+  });
+
+  if (missing.length && $('msg')) {
+    $('msg').innerHTML =
+      '<div class="note"><b>Missing level data</b>' +
+      missing.map(esc).join('<br>') +
+      '<br><br>Add them to data/data.js</div>';
   }
 
   return out;
@@ -157,7 +153,7 @@ function renderLevels() {
   if (!el) return;
 
   if (!LEVELS.length) {
-    el.innerHTML = '<div class="empty">No levels yet. Add a name to data/list.json.</div>';
+    el.innerHTML = '<div class="empty">No levels yet. Add one to data/data.js</div>';
     return;
   }
 
@@ -244,30 +240,33 @@ function renderScores() {
   }).join('');
 }
 
-function renderMessages() {
-  const el = $('msg');
+function renderStaff() {
+  const el = $('staff');
   if (!el) return;
 
-  if (!BROKEN.length) {
-    el.innerHTML = '';
-    return;
-  }
+  el.innerHTML = STAFF.map(function (s) {
+    const name = s.link
+      ? '<a href="' + esc(s.link) + '" target="_blank" rel="noopener">' + esc(s.name) + '</a>'
+      : esc(s.name);
 
-  el.innerHTML =
-    '<div class="note">' +
-      '<b>' + BROKEN.length + ' level file(s) could not load</b>' +
-      BROKEN.map(function (b) {
-        return esc(b.path) + '.json &mdash; ' + esc(b.why);
-      }).join('<br>') +
-    '</div>';
+    return '' +
+      '<div class="level">' +
+        '<span class="level-info">' +
+          '<span class="level-name">' + name + '</span>' +
+          '<span class="level-by">' + esc(s.role) + '</span>' +
+        '</span>' +
+      '</div>';
+  }).join('');
 }
 
 function setTab(name) {
   if (!$('tabList')) return;
   $('tabList').classList.toggle('active', name === 'list');
   $('tabScores').classList.toggle('active', name === 'scores');
+  $('tabStaff').classList.toggle('active', name === 'staff');
   $('levels').hidden = name !== 'list';
   $('scores').hidden = name !== 'scores';
+  $('staff').hidden = name !== 'staff';
   $('detail').hidden = true;
 }
 
@@ -311,6 +310,7 @@ onClick('back', function () {
 
 onClick('tabList', function () { setTab('list'); });
 onClick('tabScores', function () { setTab('scores'); });
+onClick('tabStaff', function () { setTab('staff'); });
 
 onClick('loginGo', function () {
   const user = $('userInput').value.trim();
@@ -372,22 +372,15 @@ onClick('regGo', function () {
   }, 800);
 });
 
-async function init() {
+function init() {
   showUser();
 
   if (!$('levels')) return;
 
-  try {
-    LEVELS = await loadLevels();
-  } catch (err) {
-    $('msg').innerHTML =
-      '<div class="note"><b>Could not read data/list.json</b>' +
-      esc(err.message) + '</div>';
-  }
-
-  renderMessages();
+  LEVELS = loadLevels();
   renderLevels();
   renderScores();
+  renderStaff();
   setTab('list');
 }
 
