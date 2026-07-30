@@ -1,4 +1,3 @@
-
 const body = document.body;
 const lightBtn = document.getElementById('light');
 const loginBtn = document.getElementById('login');
@@ -6,10 +5,10 @@ const loginBtn = document.getElementById('login');
 function setTheme(light) {
   body.classList.toggle('light-mode', light);
   lightBtn.textContent = light ? 'Dark Mode' : 'Light Mode';
-  localStorage.setItem('gdgcll-theme', light ? 'light' : 'dark');
+  localStorage.setItem('theme', light ? 'light' : 'dark');
 }
 
-setTheme(localStorage.getItem('gdgcll-theme') === 'light');
+setTheme(localStorage.getItem('theme') === 'light');
 
 lightBtn.addEventListener('click', () => {
   setTheme(!body.classList.contains('light-mode'));
