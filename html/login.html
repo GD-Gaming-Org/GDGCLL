@@ -1,4 +1,42 @@
 <!DOCTYPE html>
 <html>
-  
+  <head>
+    <title>Log in — GDGCLL</title>
+    <link rel="icon" href="../icon.png" />
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <script src="../js/button.js" defer></script>
+    <link rel="stylesheet" href="../css/style.css">
+  </head>
+  <body>
+
+    <div class="header">
+      <img class="logo" src="../logo./image.png" alt="GDGCLL">
+      <button class="profile" id="back">Back</button>
+    </div>
+
+    <div class="content">
+      <div class="form-box">
+        <h2 class="form-title">Log in</h2>
+
+        <label class="field">
+          <span>Geometry Dash username</span>
+          <input type="text" id="userInput" autocomplete="username">
+        </label>
+
+        <label class="field">
+          <span>Password</span>
+          <input type="password" id="passInput" autocomplete="current-password">
+        </label>
+
+        <button class="login" id="loginGo">Log in</button>
+
+        <p class="form-note" id="loginMsg"></p>
+      </div>
+    </div>
+
+    <footer>
+      Logo by <a href="https://www.youtube.com/@WALTUH3636">valtuh3636</a>
+    </footer>
+
+  </body>
 </html>
