@@ -27,6 +27,25 @@ body {
   filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .45));
 }
 
+.logo[hidden] {
+  display: none;
+}
+
+.logo-text {
+  flex: 0 0 auto;
+  margin: 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 28px;
+  color: #8AE23C;
+  -webkit-text-stroke: 5px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 5px 0 rgba(0, 0, 0, .5);
+}
+
+.logo-text[hidden] {
+  display: none;
+}
+
 button {
   font-family: 'Chango', cursive;
   font-size: 13px;
