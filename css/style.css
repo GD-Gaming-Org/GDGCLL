@@ -349,6 +349,22 @@ button:focus-visible {
   font-weight: 600;
 }
 
+.form-link {
+  margin: 14px 0 0;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+}
+
+.form-link a {
+  color: #1D4ED8;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.form-link a:hover {
+  text-decoration: underline;
+}
+
 .note {
   margin-bottom: 16px;
   padding: 15px 17px;
