@@ -2,7 +2,6 @@ const DIR = 'data';
 
 let LEVELS = [];
 let BROKEN = [];
-let TAB = 'list';
 
 function $(id) {
   return document.getElementById(id);
@@ -38,6 +37,13 @@ function score(rank, percent, minPercent) {
 
 function round(n) {
   return Math.round(n * 100) / 100;
+}
+
+function rankClass(i) {
+  if (i === 0) return 'gold';
+  if (i === 1) return 'silver';
+  if (i === 2) return 'bronze';
+  return '';
 }
 
 function normalize(raw, path) {
@@ -146,15 +152,9 @@ function buildLeaderboard() {
     .sort(function (a, b) { return b.total - a.total; });
 }
 
-function rankClass(i) {
-  if (i === 0) return 'gold';
-  if (i === 1) return 'silver';
-  if (i === 2) return 'bronze';
-  return '';
-}
-
 function renderLevels() {
   const el = $('levels');
+  if (!el) return;
 
   if (!LEVELS.length) {
     el.innerHTML = '<div class="empty">No levels yet. Add a name to data/list.json.</div>';
@@ -183,7 +183,7 @@ function renderLevels() {
 function showDetail(i) {
   const lv = LEVELS[i];
   const el = $('detail');
-  if (!lv) return;
+  if (!lv || !el) return;
 
   const vid = ytid(lv.verification);
 
@@ -217,12 +217,13 @@ function showDetail(i) {
 
   el.hidden = false;
   onClick('closeDetail', function () { el.hidden = true; });
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function renderScores() {
-  const board = buildLeaderboard();
   const el = $('scores');
+  if (!el) return;
+
+  const board = buildLeaderboard();
 
   if (!board.length) {
     el.innerHTML = '<div class="empty">No records yet.</div>';
@@ -244,22 +245,25 @@ function renderScores() {
 }
 
 function renderMessages() {
+  const el = $('msg');
+  if (!el) return;
+
   if (!BROKEN.length) {
-    $('msg').innerHTML = '';
+    el.innerHTML = '';
     return;
   }
 
-  $('msg').innerHTML =
+  el.innerHTML =
     '<div class="note">' +
       '<b>' + BROKEN.length + ' level file(s) could not load</b>' +
       BROKEN.map(function (b) {
-        return b.path + '.json &mdash; ' + esc(b.why);
+        return esc(b.path) + '.json &mdash; ' + esc(b.why);
       }).join('<br>') +
     '</div>';
 }
 
 function setTab(name) {
-  TAB = name;
+  if (!$('tabList')) return;
   $('tabList').classList.toggle('active', name === 'list');
   $('tabScores').classList.toggle('active', name === 'scores');
   $('levels').hidden = name !== 'list';
@@ -267,35 +271,109 @@ function setTab(name) {
   $('detail').hidden = true;
 }
 
+function getUsers() {
+  try {
+    return JSON.parse(localStorage.getItem('gd_users') || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function showUser() {
+  const name = localStorage.getItem('gd_user');
+  const btn = $('profile');
+  if (name && btn) btn.textContent = name;
+}
+
 onClick('login', function () {
   window.location.href = 'html/login.html';
 });
 
-onClick('profile', function () {
-  window.location.href = 'html/profile.html';
+onClick('register', function () {
+  window.location.href = 'html/register.html';
 });
 
-onClick('tabList', function () { setTab('list'); });
-onClick('tabScores', function () { setTab('scores'); });
+onClick('profile', function () {
+  const name = localStorage.getItem('gd_user');
+  if (!name) {
+    window.location.href = 'html/login.html';
+    return;
+  }
+  if (confirm('Logged in as ' + name + '. Log out?')) {
+    localStorage.removeItem('gd_user');
+    location.reload();
+  }
+});
 
 onClick('back', function () {
   window.location.href = '../index.html';
 });
 
+onClick('tabList', function () { setTab('list'); });
+onClick('tabScores', function () { setTab('scores'); });
+
 onClick('loginGo', function () {
   const user = $('userInput').value.trim();
+  const pass = $('passInput').value;
   const msg = $('loginMsg');
+  const users = getUsers();
+
   if (user === '') {
-    msg.textContent = 'Enter your username first.';
+    msg.textContent = 'Enter your username.';
     return;
   }
-  localStorage.setItem('gdgcll-user', user);
+  if (!users[user]) {
+    msg.textContent = 'No account with that name. Register first.';
+    return;
+  }
+  if (users[user] !== pass) {
+    msg.textContent = 'Wrong password.';
+    return;
+  }
+
+  localStorage.setItem('gd_user', user);
   msg.textContent = 'Logged in as ' + user;
+  setTimeout(function () {
+    window.location.href = '../index.html';
+  }, 800);
+});
+
+onClick('regGo', function () {
+  const user = $('regUser').value.trim();
+  const pass = $('regPass').value;
+  const pass2 = $('regPass2').value;
+  const msg = $('regMsg');
+
+  if (user.length < 3) {
+    msg.textContent = 'Username must be at least 3 letters.';
+    return;
+  }
+  if (pass.length < 6) {
+    msg.textContent = 'Password must be at least 6 characters.';
+    return;
+  }
+  if (pass !== pass2) {
+    msg.textContent = 'Passwords do not match.';
+    return;
+  }
+
+  const users = getUsers();
+  if (users[user]) {
+    msg.textContent = 'That username is taken.';
+    return;
+  }
+
+  users[user] = pass;
+  localStorage.setItem('gd_users', JSON.stringify(users));
+  localStorage.setItem('gd_user', user);
+  msg.textContent = 'Registered as ' + user;
+  setTimeout(function () {
+    window.location.href = '../index.html';
+  }, 800);
 });
 
 async function init() {
-  const saved = localStorage.getItem('gdgcll-user');
-  if (saved && $('profile')) $('profile').textContent = saved;
+  showUser();
 
   if (!$('levels')) return;
 
