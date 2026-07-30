@@ -93,7 +93,8 @@ button:focus-visible {
 }
 
 #levels,
-#scores {
+#scores,
+#staff {
   display: flex;
   flex-direction: column;
   gap: 11px;
@@ -101,6 +102,7 @@ button:focus-visible {
 
 #levels[hidden],
 #scores[hidden],
+#staff[hidden],
 .detail[hidden] {
   display: none;
 }
@@ -156,11 +158,21 @@ button:focus-visible {
   text-overflow: ellipsis;
 }
 
+.level-name a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.level-name a:hover {
+  text-decoration: underline;
+}
+
 .level-by {
   display: block;
   margin-top: 4px;
   font-family: system-ui, sans-serif;
   font-size: 13px;
+  text-transform: capitalize;
   text-shadow: 0 2px 0 rgba(0, 0, 0, .45);
 }
 
