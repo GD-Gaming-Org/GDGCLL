@@ -595,13 +595,17 @@ function setupLogo() {
   const text = $('logoText');
   if (!img) return;
 
-  const tries = [
+  const names = [
     'logo/image.png',
     'logo./image.png',
     'assets/logo.png',
     'assets/gdgcll.svg',
     'list_icon.png'
   ];
+
+  const tries = [];
+  names.forEach(function (n) { tries.push(n); });
+  names.forEach(function (n) { tries.push('../' + n); });
 
   let n = 0;
 
@@ -610,10 +614,13 @@ function setupLogo() {
     if (n < tries.length) {
       img.src = tries[n];
     } else {
+      img.onerror = null;
       img.hidden = true;
       if (text) text.hidden = false;
     }
   };
+
+  img.src = tries[0];
 }
 
 function init() {
