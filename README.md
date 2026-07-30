@@ -1,4 +1,4 @@
-Hello guys this is how to use the Data.js
+How to use the Data.js...
 
 const LIST = [
   "bloodbath",
