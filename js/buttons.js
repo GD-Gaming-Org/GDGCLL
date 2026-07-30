@@ -308,6 +308,7 @@ function renderAdmin() {
   if (!el) return;
 
   const who = staffEntry(currentUser());
+  if (!who) return;
 
   el.innerHTML = '' +
     '<div class="admin-box">' +
@@ -469,16 +470,21 @@ function genRecord() {
 }
 
 function setTab(name) {
-  if (!$('tabList')) return;
-  $('tabList').classList.toggle('active', name === 'list');
-  $('tabScores').classList.toggle('active', name === 'scores');
-  $('tabStaff').classList.toggle('active', name === 'staff');
-  $('tabAdmin').classList.toggle('active', name === 'admin');
-  $('levels').hidden = name !== 'list';
-  $('scores').hidden = name !== 'scores';
-  $('staff').hidden = name !== 'staff';
-  $('admin').hidden = name !== 'admin';
-  $('detail').hidden = true;
+  const map = {
+    list:   { tab: 'tabList',   panel: 'levels' },
+    scores: { tab: 'tabScores', panel: 'scores' },
+    staff:  { tab: 'tabStaff',  panel: 'staff'  },
+    admin:  { tab: 'tabAdmin',  panel: 'admin'  }
+  };
+
+  Object.keys(map).forEach(function (k) {
+    const t = $(map[k].tab);
+    const p = $(map[k].panel);
+    if (t) t.classList.toggle('active', k === name);
+    if (p) p.hidden = k !== name;
+  });
+
+  if ($('detail')) $('detail').hidden = true;
 }
 
 function getUsers() {
@@ -595,8 +601,11 @@ function init() {
   renderStaff();
 
   if (isAdmin()) {
-    $('tabAdmin').hidden = false;
+    if ($('tabAdmin')) $('tabAdmin').hidden = false;
     renderAdmin();
+  } else if (currentUser()) {
+    console.log('Not staff: ' + currentUser() +
+      '. Name must match STAFF in data/data.js exactly.');
   }
 
   setTab('list');
