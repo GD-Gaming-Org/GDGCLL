@@ -59,10 +59,12 @@ function normalize(raw, path) {
   const records = (Array.isArray(raw.records) ? raw.records : [])
     .filter(function (r) { return r && typeof r === 'object'; })
     .map(function (r) {
+      const link = r.link || '';
       return {
         user: r.user || 'Unknown',
         percent: Number(r.percent) || 0,
-        link: r.link || '',
+        link: link,
+        proof: link !== '',
         mobile: !!r.mobile
       };
     })
@@ -115,22 +117,41 @@ function buildLeaderboard() {
     return found || name;
   }
 
+  function slot(name) {
+    const u = key(name);
+    if (!players[u]) {
+      players[u] = { verified: 0, beaten: 0, progress: 0, pending: 0, total: 0 };
+    }
+    return players[u];
+  }
+
   LEVELS.forEach(function (lv, i) {
     const rank = i + 1;
 
+    // Verifying only counts if there is a verification video.
     if (lv.verifier) {
-      const u = key(lv.verifier);
-      if (!players[u]) players[u] = { verified: 0, beaten: 0, progress: 0, total: 0 };
-      players[u].verified++;
-      players[u].total += score(rank, 100, lv.percentToQualify);
+      const p = slot(lv.verifier);
+      if (lv.verification) {
+        p.verified++;
+        p.total += score(rank, 100, lv.percentToQualify);
+      } else {
+        p.pending++;
+      }
     }
 
     lv.records.forEach(function (r) {
-      const u = key(r.user);
-      if (!players[u]) players[u] = { verified: 0, beaten: 0, progress: 0, total: 0 };
-      if (r.percent >= 100) players[u].beaten++;
-      else players[u].progress++;
-      players[u].total += score(rank, r.percent, lv.percentToQualify);
+      const p = slot(r.user);
+
+      // No proof video, no points.
+      if (!r.proof) {
+        p.pending++;
+        return;
+      }
+
+      if (r.percent >= 100) p.beaten++;
+      else p.progress++;
+
+      p.total += score(rank, r.percent, lv.percentToQualify);
     });
   });
 
@@ -142,8 +163,12 @@ function buildLeaderboard() {
         verified: p.verified,
         beaten: p.beaten,
         progress: p.progress,
+        pending: p.pending,
         total: round(p.total)
       };
+    })
+    .filter(function (p) {
+      return p.total > 0;
     })
     .sort(function (a, b) { return b.total - a.total; });
 }
@@ -192,7 +217,7 @@ function showDetail(i) {
       ? '<a class="thumb" href="' + esc(lv.verification) + '" target="_blank" rel="noopener">' +
           '<img src="https://img.youtube.com/vi/' + vid + '/hqdefault.jpg" alt="Verification video">' +
         '</a>'
-      : '') +
+      : '<div class="note-small">No verification video yet &mdash; this level gives no points.</div>') +
     '<div class="facts">' +
       '<div class="fact"><b>Level ID</b>' + (lv.id || '-') + '</div>' +
       '<div class="fact"><b>Password</b>' + esc(lv.password) + '</div>' +
@@ -202,11 +227,13 @@ function showDetail(i) {
     '<p class="detail-sub">Records (' + lv.records.length + ')</p>' +
     (lv.records.length
       ? lv.records.map(function (r) {
-          return '<div class="rec">' +
+          return '<div class="rec' + (r.proof ? '' : ' no-proof') + '">' +
             '<span class="rec-pct">' + r.percent + '%</span>' +
             '<span class="rec-who">' + esc(r.user) + '</span>' +
             (r.mobile ? '<span class="rec-mob">MOBILE</span>' : '') +
-            (r.link ? '<a href="' + esc(r.link) + '" target="_blank" rel="noopener">Watch</a>' : '') +
+            (r.proof
+              ? '<a href="' + esc(r.link) + '" target="_blank" rel="noopener">Watch</a>'
+              : '<span class="rec-none">NO PROOF</span>') +
           '</div>';
         }).join('')
       : '<div class="rec"><span class="rec-who">No records yet.</span></div>');
@@ -222,18 +249,24 @@ function renderScores() {
   const board = buildLeaderboard();
 
   if (!board.length) {
-    el.innerHTML = '<div class="empty">No records yet.</div>';
+    el.innerHTML =
+      '<div class="empty">No proven records yet.<br>' +
+      'A record needs a video link before it counts.</div>';
     return;
   }
 
   el.innerHTML = board.map(function (p, i) {
+    const extra = p.pending
+      ? ' &middot; <span class="pending">' + p.pending + ' unproven</span>'
+      : '';
+
     return '' +
       '<div class="level">' +
         '<span class="rank ' + rankClass(i) + '">' + (i + 1) + '</span>' +
         '<span class="level-info">' +
           '<span class="level-name">' + esc(p.user) + '</span>' +
           '<span class="level-by">' + p.verified + ' verified &middot; ' +
-            p.beaten + ' beaten &middot; ' + p.progress + ' in progress</span>' +
+            p.beaten + ' beaten &middot; ' + p.progress + ' in progress' + extra + '</span>' +
         '</span>' +
         '<span class="level-pct">' + p.total + '</span>' +
       '</div>';
