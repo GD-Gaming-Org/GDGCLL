@@ -1,1 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Chango&family=Press+Start+2P&display=swap');
 
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Chango', cursive;
+  background: radial-gradient(120% 80% at 50% 10%, #3E90F0, #0A3A9C);
+}
+
+body.light-mode {
+  background: radial-gradient(120% 80% at 50% 10%, #9FD4FF, #3E8FE0);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 22px;
+  background: rgba(0, 0, 0, 0.26);
+  border-bottom: 5px solid rgba(255, 255, 255, 0.35);
+}
+
+.header h2 {
+  flex: 1;
+  margin: 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 30px;
+  color: #8AE23C;
+  -webkit-text-stroke: 5px #000;
+  paint-order: stroke fill;
+}
