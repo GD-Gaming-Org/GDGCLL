@@ -1,2 +1,0 @@
-# GDGCLL
-GD List
