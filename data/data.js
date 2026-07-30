@@ -1,8 +1,6 @@
-
 const LIST = [
   "spiral2005"
 ];
-
 
 const LEVELS_DATA = {
 
@@ -19,7 +17,6 @@ const LEVELS_DATA = {
   }
 
 };
-
 
 const STAFF = [
 
