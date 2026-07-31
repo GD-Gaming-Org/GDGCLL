@@ -891,3 +891,30 @@ footer {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+.or-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0 16px;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: rgba(74, 46, 18, .7);
+}
+
+.or-line::before,
+.or-line::after {
+  content: '';
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(107, 68, 35, .35);
+}
+
+.wide {
+  width: 100%;
+  margin-left: 0;
+}
