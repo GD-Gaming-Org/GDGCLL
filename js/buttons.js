@@ -588,7 +588,8 @@ const THEMES = [
   { key: 'purple', label: 'Purple', cls: 'sw-purple' },
   { key: 'red',    label: 'Red',    cls: 'sw-red'    },
   { key: 'dark',   label: 'Dark',   cls: 'sw-dark'   },
-  { key: 'mint',   label: 'Mint',   cls: 'sw-mint'   }
+  { key: 'mint',   label: 'Mint',   cls: 'sw-mint'   },
+  { key: 'classic', label: 'Classic', cls: 'sw-classic' }
 ];
 
 function applyTheme(key) {
