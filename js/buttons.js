@@ -510,15 +510,7 @@ onClick('register', function () {
 });
 
 onClick('profile', function () {
-  const name = currentUser();
-  if (!name) {
-    window.location.href = 'html/login.html';
-    return;
-  }
-  if (confirm('Logged in as ' + name + '. Log out?')) {
-    localStorage.removeItem('gd_user');
-    location.reload();
-  }
+  window.location.href = 'html/profile.html';
 });
 
 onClick('back', function () {
@@ -590,12 +582,137 @@ onClick('regGo', function () {
   }, 800);
 });
 
+
+const THEMES = [
+  { key: 'blue',   label: 'Blue',   cls: 'sw-blue'   },
+  { key: 'purple', label: 'Purple', cls: 'sw-purple' },
+  { key: 'red',    label: 'Red',    cls: 'sw-red'    },
+  { key: 'dark',   label: 'Dark',   cls: 'sw-dark'   },
+  { key: 'mint',   label: 'Mint',   cls: 'sw-mint'   }
+];
+
+function applyTheme(key) {
+  const t = key || localStorage.getItem('gd_theme') || 'blue';
+  document.body.setAttribute('data-theme', t);
+  localStorage.setItem('gd_theme', t);
+  document.querySelectorAll('.theme-btn').forEach(function (b) {
+    b.classList.toggle('on', b.dataset.theme === t);
+  });
+}
+
+function myStats(name) {
+  const out = { beaten: 0, progress: 0, points: 0, records: [] };
+  if (!name) return out;
+
+  LIST.forEach(function (key, i) {
+    const raw = LEVELS_DATA[key];
+    if (!raw) return;
+
+    const lv = normalize(raw, key);
+    const rank = i + 1;
+
+    lv.records.forEach(function (r) {
+      if (r.user.toLowerCase() !== name.toLowerCase()) return;
+      if (!r.proof) return;
+
+      if (r.percent >= 100) out.beaten++;
+      else out.progress++;
+
+      out.points += score(rank, r.percent, lv.percentToQualify);
+      out.records.push({ level: lv.name, rank: rank, percent: r.percent, link: r.link });
+    });
+  });
+
+  out.points = round(out.points);
+  return out;
+}
+
+function renderProfile() {
+  const el = $('profile-page');
+  if (!el) return;
+
+  const name = currentUser();
+
+  if (!name) {
+    el.innerHTML =
+      '<div class="card">' +
+        '<h3 class="card-title">Not logged in</h3>' +
+        '<p class="admin-hint">Log in to see your profile and pick a theme.</p>' +
+        '<br><button class="login" id="goLogin">Log in</button>' +
+      '</div>';
+    onClick('goLogin', function () { window.location.href = 'login.html'; });
+    return;
+  }
+
+  const s = staffEntry(name);
+  const stats = myStats(name);
+
+  el.innerHTML = '' +
+    '<div class="card">' +
+      '<div class="who-row">' +
+        '<span class="who-badge">' + esc(name.charAt(0).toUpperCase()) + '</span>' +
+        '<div>' +
+          '<h3 class="who-name">' + esc(name) + '</h3>' +
+          '<p class="who-role">' + (s ? esc(s.role) : 'Player') + '</p>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<h3 class="card-title">Stats</h3>' +
+      '<div class="stat-grid">' +
+        '<div class="stat-cell"><b>' + stats.points + '</b><span>POINTS</span></div>' +
+        '<div class="stat-cell"><b>' + stats.beaten + '</b><span>BEATEN</span></div>' +
+        '<div class="stat-cell"><b>' + stats.progress + '</b><span>PROGRESS</span></div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<h3 class="card-title">My records</h3>' +
+      (stats.records.length
+        ? stats.records.map(function (r) {
+            return '<div class="my-rec">' +
+              '<span class="pc">' + r.percent + '%</span>' +
+              '<span class="lv">#' + r.rank + ' ' + esc(r.level) + '</span>' +
+              '<a href="' + esc(r.link) + '" target="_blank" rel="noopener">Watch</a>' +
+            '</div>';
+          }).join('')
+        : '<p class="admin-hint">No records yet. Submit one in Discord to get on the list.</p>') +
+    '</div>' +
+
+    '<div class="card">' +
+      '<h3 class="card-title">Theme</h3>' +
+      '<div class="theme-grid">' +
+        THEMES.map(function (t) {
+          return '<button class="theme-btn ' + t.cls + '" data-theme="' + t.key + '">' +
+            t.label + '</button>';
+        }).join('') +
+      '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<button class="logout" id="doLogout">Log out</button>' +
+    '</div>';
+
+  el.querySelectorAll('.theme-btn').forEach(function (b) {
+    b.addEventListener('click', function () { applyTheme(b.dataset.theme); });
+  });
+
+  onClick('doLogout', function () {
+    localStorage.removeItem('gd_user');
+    window.location.href = '../index.html';
+  });
+
+  applyTheme();
+}
+
 function setupLogo() {
   const img = $('logoImg');
   const text = $('logoText');
   if (!img) return;
 
   const names = [
+    'image.png',
     'logo/image.png',
     'logo./image.png',
     'assets/logo.png',
@@ -624,8 +741,10 @@ function setupLogo() {
 }
 
 function init() {
+  applyTheme();
   setupLogo();
   showUser();
+  renderProfile();
 
   document.querySelectorAll('[data-goto]').forEach(function (a) {
     a.addEventListener('click', function (e) {
