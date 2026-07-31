@@ -56,10 +56,35 @@ function staffEntry(name) {
   }) || null;
 }
 
+function h32(str, salt) {
+  let h = 2166136261 >>> 0;
+  const t = salt + str + salt;
+  for (let r = 0; r < 3000; r++) {
+    for (let i = 0; i < t.length; i++) {
+      h ^= t.charCodeAt(i);
+      h = Math.imul(h, 16777619) >>> 0;
+    }
+    h = (h ^ (h >>> 13)) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
+}
+
+function hashCode(str) {
+  return h32(str, 'gdgcll-a') + h32(str, 'gdgcll-b');
+}
+
+function staffByKey(hash) {
+  if (!hash) return null;
+  return STAFF.find(function (s) {
+    return s.key && s.key === hash;
+  }) || null;
+}
+
 function isAdmin() {
   const s = staffEntry(currentUser());
-  if (!s) return false;
-  return ADMIN_ROLES.indexOf(s.role.toLowerCase()) !== -1;
+  if (!s || !s.key) return false;
+  if (ADMIN_ROLES.indexOf(s.role.toLowerCase()) === -1) return false;
+  return localStorage.getItem('gd_key') === s.key;
 }
 
 function normalize(raw, path) {
@@ -542,7 +567,33 @@ onClick('loginGo', function () {
   }
 
   localStorage.setItem('gd_user', user);
+  localStorage.removeItem('gd_key');
   msg.textContent = 'Logged in as ' + user;
+  setTimeout(function () {
+    window.location.href = '../index.html';
+  }, 800);
+});
+
+onClick('codeGo', function () {
+  const raw = $('codeInput').value.trim().toUpperCase();
+  const msg = $('loginMsg');
+
+  if (!raw) {
+    msg.textContent = 'Enter your account code.';
+    return;
+  }
+
+  const hash = hashCode(raw);
+  const who = staffByKey(hash);
+
+  if (!who) {
+    msg.textContent = 'That code is not valid.';
+    return;
+  }
+
+  localStorage.setItem('gd_user', who.name);
+  localStorage.setItem('gd_key', hash);
+  msg.textContent = 'Welcome back, ' + who.name + '.';
   setTimeout(function () {
     window.location.href = '../index.html';
   }, 800);
@@ -572,10 +623,15 @@ onClick('regGo', function () {
     msg.textContent = 'That username is taken.';
     return;
   }
+  if (staffEntry(user)) {
+    msg.textContent = 'That name belongs to staff. Log in with your account code.';
+    return;
+  }
 
   users[user] = pass;
   localStorage.setItem('gd_users', JSON.stringify(users));
   localStorage.setItem('gd_user', user);
+  localStorage.removeItem('gd_key');
   msg.textContent = 'Registered as ' + user;
   setTimeout(function () {
     window.location.href = '../index.html';
@@ -701,6 +757,7 @@ function renderProfile() {
 
   onClick('doLogout', function () {
     localStorage.removeItem('gd_user');
+    localStorage.removeItem('gd_key');
     window.location.href = '../index.html';
   });
 
