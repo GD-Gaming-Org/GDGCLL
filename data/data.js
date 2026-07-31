@@ -27,26 +27,20 @@ const STAFF = [
   },
 
   {
-    "role": "Owner",
+    "role": "Admin",
     "name": "Valtuh3636",
     "link": "https://www.youtube.com/@WALTUH3636"
   },
 
   {
-    "role": "Owner",
+    "role": "Admin",
     "name": "Nevlo",
     "link": "https://www.youtube.com/channel/UC1FU8iD-xd_zuATLXf1pH1w"
   },
 
-    {
-    "role": "Admin",
-    "name": ".",
-    "link": ""
-  },
-
   {
     "role": "Helper",
-    "name": ".",
+    "name": "Null",
     "link": ""
   },
 
