@@ -63,9 +63,15 @@ body {
 
 .logo {
   flex: 0 0 auto;
-  height: 70px;
-  width: auto;
-  filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .45));
+  width: 210px;
+  height: 86px;
+  padding: 8px 18px;
+  object-fit: contain;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  background: rgba(0, 0, 0, .22);
+  box-shadow: 0 5px 0 rgba(0, 0, 0, .45);
 }
 
 .logo[hidden] {
@@ -668,8 +674,10 @@ footer {
     gap: 9px;
   }
   .logo {
-    flex: 1 1 100%;
-    height: 56px;
+    flex: 0 0 auto;
+    width: 175px;
+    height: 72px;
+    padding: 6px 14px;
     margin: 0 auto 4px;
   }
   .profile {
