@@ -33,6 +33,35 @@ body[data-theme="dark"] {
   --accent-lo: #2E3866;
 }
 
+body[data-theme="classic"] {
+  --sky-hi: #D6CEF5;
+  --sky-lo: #8B7BD8;
+  --accent-hi: #FFFFFF;
+  --accent-mid: #E4DDF8;
+  --accent-lo: #B5A8E8;
+  --gold: #6B4FC4;
+}
+
+body[data-theme="classic"] .level-name,
+body[data-theme="classic"] .level-pct,
+body[data-theme="classic"] .rank,
+body[data-theme="classic"] .tab.active,
+body[data-theme="classic"] .login {
+  color: #3B2A78;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+body[data-theme="classic"] .level-by {
+  color: #4A3A8C;
+  text-shadow: none;
+}
+
+body[data-theme="classic"] .level,
+body[data-theme="classic"] .rank {
+  border-color: #B5A8E8;
+}
+
 body[data-theme="mint"] {
   --sky-hi: #3FD9C0;
   --sky-lo: #0A5E60;
@@ -819,6 +848,8 @@ footer {
 .sw-red    { background: linear-gradient(180deg, #F06A5C, #7A0F0A) }
 .sw-dark   { background: linear-gradient(180deg, #2A3050, #0A0C18) }
 .sw-mint   { background: linear-gradient(180deg, #3FD9C0, #0A5E60) }
+.sw-classic { background: linear-gradient(180deg, #FFFFFF, #B5A8E8) }
+.sw-classic { color: #3B2A78; -webkit-text-stroke: 0 }
 
 .logout {
   width: 100%;
