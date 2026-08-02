@@ -14,7 +14,14 @@ const LEVELS_DATA = {
     "verification": "https://youtu.be/RXoyU6oMkBA",
     "percentToQualify": 50,
     "password": "Free To Copy",
-    "records": []
+    "records": [
+      {
+        "user": "Alminx",
+        "percent": 100,
+        "link": "https://youtu.be/GF5vlqJNGNU",
+        "mobile": false
+      }
+    ]
   },
 
   "spiral2005": {
