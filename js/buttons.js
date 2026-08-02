@@ -1,3 +1,4 @@
+
 const ADMIN_ROLES = ['owner', 'admin', 'developer'];
 
 let LEVELS = [];
@@ -23,7 +24,7 @@ function ytid(url) {
 }
 
 function levelValue(rank) {
-  return 200 * Math.pow(0.93, rank - 1);
+  return 200 * Math.pow(0.97, rank - 1);
 }
 
 function score(rank, percent, minPercent) {
