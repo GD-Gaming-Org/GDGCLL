@@ -1,8 +1,21 @@
 const LIST = [
+  "blackblizzard1",
   "spiral2005"
 ];
 
 const LEVELS_DATA = {
+
+  "blackblizzard1": {
+    "id": 145957744,
+    "name": "Black Blizzard Lv1",
+    "author": "Yolkstar",
+    "creators": ["Yolkstar"],
+    "verifier": "Yolkstar",
+    "verification": "https://youtu.be/RXoyU6oMkBA",
+    "percentToQualify": 50,
+    "password": "Free To Copy",
+    "records": []
+  },
 
   "spiral2005": {
     "id": 139077917,
