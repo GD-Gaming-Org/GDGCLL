@@ -1,4 +1,3 @@
-
 const ADMIN_ROLES = ['owner', 'admin', 'developer'];
 
 let LEVELS = [];
@@ -174,7 +173,13 @@ function buildLeaderboard() {
     const rank = i + 1;
 
     if (lv.verifier) {
-      slot(lv.verifier).verified++;
+      const v = slot(lv.verifier);
+      v.verified++;
+      if (lv.verification) {
+        v.total += score(rank, 100, lv.percentToQualify);
+      } else {
+        v.pending++;
+      }
     }
 
     lv.records.forEach(function (r) {
