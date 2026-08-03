@@ -1,4 +1,3 @@
-
 const LIST = [
   "blackblizzard1",
   "spiral2005"
@@ -30,8 +29,8 @@ const LEVELS_DATA = {
       },
       {
         "user": "rtyrekguy",
-        "percent": 57,
-        "link": "https://youtu.be/D-4kP3nnZpc",
+        "percent": 100,
+        "link": "https://youtu.be/PkHIPfulm_A",
         "mobile": true
       }
     ]
