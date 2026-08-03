@@ -20,6 +20,12 @@ const LEVELS_DATA = {
         "percent": 100,
         "link": "https://youtu.be/GF5vlqJNGNU",
         "mobile": false
+      },
+      {
+        "user": "TowerOfDaBaby_Gaming",
+        "percent": 100,
+        "link": "https://youtu.be/hnXPFszV4VU",
+        "mobile": false
       }
     ]
   },
