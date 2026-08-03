@@ -122,6 +122,7 @@ function normalize(raw, path) {
     creators: creators,
     verifier: verifier,
     verification: raw.verification || '',
+    banner: raw.banner || '',
     percentToQualify: isFinite(pct) ? pct : 100,
     password: raw.password || 'Not provided',
     records: records
@@ -225,8 +226,14 @@ function renderLevels() {
   }
 
   el.innerHTML = LEVELS.map(function (lv, i) {
+    const vid = ytid(lv.verification);
+    const banner = lv.banner
+      ? lv.banner
+      : (vid ? 'https://img.youtube.com/vi/' + vid + '/mqdefault.jpg' : '');
+
     return '' +
-      '<div class="level" data-i="' + i + '">' +
+      '<div class="level' + (banner ? ' has-banner' : '') + '" data-i="' + i + '"' +
+        (banner ? ' style="--banner:url(' + banner + ')"' : '') + '>' +
         '<span class="rank ' + rankClass(i) + '">' + (i + 1) + '</span>' +
         '<span class="level-info">' +
           '<span class="level-name">' + esc(lv.name) + '</span>' +
@@ -836,4 +843,4 @@ function init() {
   setTab('list');
 }
 
-init();
+init();;
