@@ -843,4 +843,4 @@ function init() {
   setTab('list');
 }
 
-init();;
+init();
