@@ -918,3 +918,42 @@ footer {
   width: 100%;
   margin-left: 0;
 }
+
+.level.has-banner {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.level.has-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: var(--banner);
+  background-size: cover;
+  background-position: center;
+}
+
+.level.has-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, .82) 0%,
+    rgba(0, 0, 0, .62) 45%,
+    rgba(0, 0, 0, .3) 100%
+  );
+}
+
+.level.has-banner .level-name,
+.level.has-banner .level-by,
+.level.has-banner .level-pct {
+  position: relative;
+}
+
+.level.has-banner .level-by {
+  color: #EDEAFF;
+}
