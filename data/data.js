@@ -1,5 +1,6 @@
 const LIST = [
   "blackblizzard1",
+  "supabrizzlauncher",
   "spiral2005"
 ];
 
@@ -34,6 +35,18 @@ const LEVELS_DATA = {
         "mobile": true
       }
     ]
+  },
+
+  "supabrizzlauncher": {
+    "id": 146201260,
+    "name": "SUPA Brizz Launcher Buffdate",
+    "author": "Proton53",
+    "creators": ["Proton53"],
+    "verifier": "Proton53",
+    "verification": "https://youtu.be/DAGJyensPqk",
+    "percentToQualify": 50,
+    "password": "Free To Copy",
+    "records": []
   },
 
   "spiral2005": {
