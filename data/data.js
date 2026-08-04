@@ -33,6 +33,12 @@ const LEVELS_DATA = {
         "percent": 100,
         "link": "https://youtu.be/PkHIPfulm_A",
         "mobile": true
+      },
+      {
+        "user": "Proton53",
+        "percent": 100,
+        "link": "https://youtu.be/IIdKsRJSbXQ",
+        "mobile": false
       }
     ]
   },
