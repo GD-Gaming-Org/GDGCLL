@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Chango&family=Press+Start+2P&display=swap');
 
 :root {
@@ -1044,4 +1043,5 @@ footer {
   font-size: 9px;
   -webkit-text-stroke: 2px #000;
   paint-order: stroke fill;
-}
+    }
+
