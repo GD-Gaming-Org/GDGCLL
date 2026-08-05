@@ -88,3 +88,7 @@ const STAFF = [
 
 ];
 
+const AVATARS = {
+};
+
+
