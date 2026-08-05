@@ -275,10 +275,13 @@ function showDetail(i) {
     '</div>' +
     '<p class="detail-sub">Records (' + lv.records.length + ')</p>' +
     (lv.records.length
-      ? lv.records.map(function (r) {
+      ? lv.records.map(function (r, idx) {
           return '<div class="rec' + (r.proof ? '' : ' no-proof') + '">' +
             '<span class="rec-pct">' + r.percent + '%</span>' +
-            '<span class="rec-who">' + esc(r.user) + '</span>' +
+            '<span class="pfp pfp-xs">' + avatarFor(r.user) + '</span>' +
+            '<span class="rec-who rec-link" data-player="' + esc(r.user) + '">' +
+              esc(r.user) + '</span>' +
+            (idx === 0 && r.percent >= 100 ? '<span class="first-tag">FIRST</span>' : '') +
             (r.mobile ? '<span class="rec-mob">MOBILE</span>' : '') +
             (r.proof
               ? '<a href="' + esc(r.link) + '" target="_blank" rel="noopener">Watch</a>'
@@ -289,6 +292,12 @@ function showDetail(i) {
 
   el.hidden = false;
   onClick('closeDetail', function () { el.hidden = true; });
+
+  el.querySelectorAll('.rec-link').forEach(function (n) {
+    n.addEventListener('click', function () {
+      showPlayer(n.dataset.player);
+    });
+  });
 }
 
 function renderScores() {
@@ -310,8 +319,9 @@ function renderScores() {
       : '';
 
     return '' +
-      '<div class="level">' +
+      '<div class="level player-row" data-player="' + esc(p.user) + '">' +
         '<span class="rank ' + rankClass(i) + '">' + (i + 1) + '</span>' +
+        '<span class="pfp pfp-sm">' + avatarFor(p.user) + '</span>' +
         '<span class="level-info">' +
           '<span class="level-name">' + esc(p.user) + '</span>' +
           '<span class="level-by">' + p.verified + ' verified &middot; ' +
@@ -320,6 +330,12 @@ function renderScores() {
         '<span class="level-pct">' + p.total + '</span>' +
       '</div>';
   }).join('');
+
+  el.querySelectorAll('.player-row').forEach(function (row) {
+    row.addEventListener('click', function () {
+      showPlayer(row.dataset.player);
+    });
+  });
 }
 
 function renderStaff() {
@@ -670,177 +686,4 @@ function applyTheme(key) {
   });
 }
 
-function myStats(name) {
-  const out = { beaten: 0, progress: 0, points: 0, records: [] };
-  if (!name) return out;
-
-  LIST.forEach(function (key, i) {
-    const raw = LEVELS_DATA[key];
-    if (!raw) return;
-
-    const lv = normalize(raw, key);
-    const rank = i + 1;
-
-    lv.records.forEach(function (r) {
-      if (r.user.toLowerCase() !== name.toLowerCase()) return;
-      if (!r.proof) return;
-
-      if (r.percent >= 100) out.beaten++;
-      else out.progress++;
-
-      out.points += score(rank, r.percent, lv.percentToQualify);
-      out.records.push({ level: lv.name, rank: rank, percent: r.percent, link: r.link });
-    });
-  });
-
-  out.points = round(out.points);
-  return out;
-}
-
-function renderProfile() {
-  const el = $('profile-page');
-  if (!el) return;
-
-  const name = currentUser();
-
-  if (!name) {
-    el.innerHTML =
-      '<div class="card">' +
-        '<h3 class="card-title">Not logged in</h3>' +
-        '<p class="admin-hint">Log in to see your profile and pick a theme.</p>' +
-        '<br><button class="login" id="goLogin">Log in</button>' +
-      '</div>';
-    onClick('goLogin', function () { window.location.href = 'login.html'; });
-    return;
-  }
-
-  const s = staffEntry(name);
-  const stats = myStats(name);
-
-  el.innerHTML = '' +
-    '<div class="card">' +
-      '<div class="who-row">' +
-        '<span class="who-badge">' + esc(name.charAt(0).toUpperCase()) + '</span>' +
-        '<div>' +
-          '<h3 class="who-name">' + esc(name) + '</h3>' +
-          '<p class="who-role">' + (s ? esc(s.role) : 'Player') + '</p>' +
-        '</div>' +
-      '</div>' +
-    '</div>' +
-
-    '<div class="card">' +
-      '<h3 class="card-title">Stats</h3>' +
-      '<div class="stat-grid">' +
-        '<div class="stat-cell"><b>' + stats.points + '</b><span>POINTS</span></div>' +
-        '<div class="stat-cell"><b>' + stats.beaten + '</b><span>BEATEN</span></div>' +
-        '<div class="stat-cell"><b>' + stats.progress + '</b><span>PROGRESS</span></div>' +
-      '</div>' +
-    '</div>' +
-
-    '<div class="card">' +
-      '<h3 class="card-title">My records</h3>' +
-      (stats.records.length
-        ? stats.records.map(function (r) {
-            return '<div class="my-rec">' +
-              '<span class="pc">' + r.percent + '%</span>' +
-              '<span class="lv">#' + r.rank + ' ' + esc(r.level) + '</span>' +
-              '<a href="' + esc(r.link) + '" target="_blank" rel="noopener">Watch</a>' +
-            '</div>';
-          }).join('')
-        : '<p class="admin-hint">No records yet. Submit one in Discord to get on the list.</p>') +
-    '</div>' +
-
-    '<div class="card">' +
-      '<h3 class="card-title">Theme</h3>' +
-      '<div class="theme-grid">' +
-        THEMES.map(function (t) {
-          return '<button class="theme-btn ' + t.cls + '" data-theme="' + t.key + '">' +
-            t.label + '</button>';
-        }).join('') +
-      '</div>' +
-    '</div>' +
-
-    '<div class="card">' +
-      '<button class="logout" id="doLogout">Log out</button>' +
-    '</div>';
-
-  el.querySelectorAll('.theme-btn').forEach(function (b) {
-    b.addEventListener('click', function () { applyTheme(b.dataset.theme); });
-  });
-
-  onClick('doLogout', function () {
-    localStorage.removeItem('gd_user');
-    localStorage.removeItem('gd_key');
-    window.location.href = '../index.html';
-  });
-
-  applyTheme();
-}
-
-function setupLogo() {
-  const img = $('logoImg');
-  const text = $('logoText');
-  if (!img) return;
-
-  const names = [
-    'image.png',
-    'logo/image.png',
-    'logo./image.png',
-    'assets/logo.png',
-    'assets/gdgcll.svg',
-    'list_icon.png'
-  ];
-
-  const tries = [];
-  names.forEach(function (n) { tries.push(n); });
-  names.forEach(function (n) { tries.push('../' + n); });
-
-  let n = 0;
-
-  img.onerror = function () {
-    n++;
-    if (n < tries.length) {
-      img.src = tries[n];
-    } else {
-      img.onerror = null;
-      img.hidden = true;
-      if (text) text.hidden = false;
-    }
-  };
-
-  img.src = tries[0];
-}
-
-function init() {
-  applyTheme();
-  setupLogo();
-  showUser();
-  renderProfile();
-
-  document.querySelectorAll('[data-goto]').forEach(function (a) {
-    a.addEventListener('click', function (e) {
-      e.preventDefault();
-      setTab(a.dataset.goto);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  });
-
-  if (!$('levels')) return;
-
-  LEVELS = loadLevels();
-  renderLevels();
-  renderScores();
-  renderStaff();
-
-  if (isAdmin()) {
-    if ($('tabAdmin')) $('tabAdmin').hidden = false;
-    renderAdmin();
-  } else if (currentUser()) {
-    console.log('Not staff: ' + currentUser() +
-      '. Name must match STAFF in data/data.js exactly.');
-  }
-
-  setTab('list');
-}
-
-init();
+func
