@@ -1,6 +1,5 @@
 const LIST = [
-  "blackblizzard1",
-  "spiral2005"
+  "blackblizzard1"
 ];
 
 const LEVELS_DATA = {
@@ -38,24 +37,11 @@ const LEVELS_DATA = {
         "percent": 100,
         "link": "https://youtu.be/IIdKsRJSbXQ",
         "mobile": false
-      }
-    ]
-  },
-
-  "spiral2005": {
-    "id": 139077917,
-    "name": "Spiral 2005",
-    "author": "valtuh3636",
-    "creators": ["valtuh3636"],
-    "verifier": "valtuh3636",
-    "verification": "https://youtu.be/QJpXrFig7fQ",
-    "percentToQualify": 50,
-    "password": "Free To Copy",
-    "records": [
+      },
       {
-        "user": "rtyrekguy",
+        "user": "neoplist",
         "percent": 100,
-        "link": "https://youtu.be/4G7xBzFpjkc",
+        "link": "https://youtu.be/Q6IqNdbsyRM",
         "mobile": false
       }
     ]
@@ -101,3 +87,4 @@ const STAFF = [
   }
 
 ];
+
