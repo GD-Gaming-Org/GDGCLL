@@ -43,6 +43,12 @@ const LEVELS_DATA = {
         "percent": 100,
         "link": "https://youtu.be/Q6IqNdbsyRM",
         "mobile": false
+      },
+      {
+        "user": "Canadianboi",
+        "percent": 100,
+        "link": "https://youtu.be/ZZCRVWur-o4",
+        "mobile": false
       }
     ]
   }
