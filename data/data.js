@@ -1,8 +1,8 @@
-const LIST = [
+var LIST = [
   "blackblizzard1"
 ];
 
-const LEVELS_DATA = {
+var LEVELS_DATA = {
 
   "blackblizzard1": {
     id: 145957744,
@@ -25,7 +25,7 @@ const LEVELS_DATA = {
 
 };
 
-const STAFF = [
+var STAFF = [
   { role: "Owner",     name: "TuffTheo",   key: "59364368ce70ef95", link: "https://www.youtube.com/@TuffTheo" },
   { role: "Owner",     name: "Valtuh3636", key: "e8f7e6dc86e8b5f9", link: "https://www.youtube.com/@WALTUH3636" },
   { role: "Owner",     name: "Nevlo",      key: "6fccfcaa6e51e4e2", link: "https://www.youtube.com/channel/UC1FU8iD-xd_zuATLXf1pH1w" },
@@ -35,7 +35,9 @@ const STAFF = [
   { role: "Developer", name: "Pester44",   key: "e2e7b77571e19f26", link: "https://www.youtube.com/@pester22" }
 ];
 
-const AVATARS = {
-  
+var AVATARS = {
+  "Nevlo": "icons/nevlo.png",
+  "Pester44": "icons/pester44.png"
 };
+
 
