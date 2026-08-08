@@ -36,7 +36,6 @@ const STAFF = [
 ];
 
 const AVATARS = {
-  "Nevlo": "icons/nevlo.png",
-  "Pester44": "icons/pester44.png"
+  
 };
 
