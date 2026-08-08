@@ -94,7 +94,6 @@ function ico(kind){
   };
   return '<svg viewBox="0 0 64 64" fill="none" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">'+paths[kind]+'</svg>';
 }
-document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
 
 let active=0;
 
@@ -284,193 +283,194 @@ function renderAdmin(){
   if(!who) return;
 
   $('p-admin').innerHTML =
-    '<div class="head"><h1>Admin</h1><p>' + esc(who.name) + ' &middot; ' + esc(who.role) + '</p></div>' +
+    '<div class="head"><h1>Admin</h1><p>Signed in as '+esc(who.name)+' &middot; '+esc(who.role)+'</p></div>'+
 
-    '<div class="adm-tabs">' +
-      '<button class="adm-tab" data-adm="record">Add record</button>' +
-      '<button class="adm-tab" data-adm="level">Add level</button>' +
-      '<button class="adm-tab" data-adm="order">Reorder list</button>' +
-      '<button class="adm-tab" data-adm="icon">Set icon</button>' +
-    '</div>' +
+    '<div class="adm">'+
+      '<h3>Add a record</h3>'+
+      '<p class="hint">Fill this in, press Generate, then paste the result into <b>data/data.js</b> and commit it.</p>'+
+      '<label class="field"><span>LEVEL</span><select id="rLevel">'+
+        LIST.map(k=>'<option value="'+esc(k)+'">'+esc(LEVELS_DATA[k].name)+'</option>').join('')+
+      '</select></label>'+
+      '<label class="field"><span>PLAYER</span><input type="text" id="rUser" placeholder="Username"></label>'+
+      '<label class="field"><span>PERCENT</span><input type="number" id="rPct" value="100" min="1" max="100"></label>'+
+      '<label class="field"><span>PROOF VIDEO</span><input type="text" id="rLink" placeholder="https://youtu.be/..."></label>'+
+      '<label class="field"><span>MOBILE?</span><select id="rMob"><option value="false">No &mdash; PC</option><option value="true">Yes &mdash; Mobile</option></select></label>'+
+      '<button class="go" id="genRec">Generate record code</button>'+
+    '</div>'+
 
-    '<div class="adm" id="adm-record">' +
-      '<h3>Add a record</h3>' +
-      '<p class="hint">Paste the Discord submission below and it fills itself in, or type it manually.</p>' +
+    '<div class="adm">'+
+      '<h3>Set a profile picture</h3>'+
+      '<p class="hint">Admins only. Pick a person and set their GD icon. It shows on the leaderboard, the records list and the staff page.</p>'+
+      '<label class="field"><span>WHO</span><select id="aWho">'+
+        allPeople().map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('')+
+      '</select></label>'+
+      '<div class="pfp-row">'+
+        '<span class="pfp pfp-big" id="aPreview"></span>'+
+        '<div class="pfp-side">'+
+          '<label class="upload">Choose image<input type="file" id="aFile" accept="image/*"></label>'+
+        '</div>'+
+      '</div>'+
+      '<button class="go" id="aGen" style="margin-top:14px">Generate picture code</button>'+
+    '</div>'+
 
-      '<label class="field"><span>PASTE SUBMISSION</span>' +
-        '<textarea id="rPaste" rows="3" placeholder="Paste the message with the YouTube link and username"></textarea></label>' +
-      '<button class="go go-alt" id="rParse" style="margin-bottom:20px">Read it</button>' +
-
-      '<div class="two">' +
-        '<label class="field"><span>LEVEL</span><select id="rLevel">' +
-          LIST.map(function(k){ return '<option value="' + esc(k) + '">#' + (LIST.indexOf(k)+1) + ' ' + esc(LEVELS_DATA[k].name) + '</option>' }).join('') +
-        '</select></label>' +
-        '<label class="field"><span>PERCENT</span><input type="number" id="rPct" value="100" min="1" max="100"></label>' +
-      '</div>' +
-
-      '<label class="field"><span>PLAYER</span><input type="text" id="rUser" placeholder="Username" list="peopleList"></label>' +
-      '<datalist id="peopleList">' + allPeople().map(function(n){ return '<option value="' + esc(n) + '">' }).join('') + '</datalist>' +
-
-      '<label class="field"><span>PROOF VIDEO</span><input type="text" id="rLink" placeholder="https://youtu.be/..."></label>' +
-
-      '<label class="field"><span>DEVICE</span><select id="rMob">' +
-        '<option value="false">PC</option><option value="true">Mobile</option></select></label>' +
-
-      '<div id="rCheck" class="check" hidden></div>' +
-      '<button class="go" id="genRec">Generate record</button>' +
-    '</div>' +
-
-    '<div class="adm" id="adm-level" hidden>' +
-      '<h3>Add a level</h3>' +
-      '<p class="hint">The key is the file name. Lowercase, no spaces.</p>' +
-
-      '<div class="two">' +
-        '<label class="field"><span>KEY</span><input type="text" id="aKey" placeholder="ninecircles"></label>' +
-        '<label class="field"><span>LEVEL ID</span><input type="text" id="aId" placeholder="4322194"></label>' +
-      '</div>' +
-
-      '<label class="field"><span>NAME</span><input type="text" id="aName" placeholder="Nine Circles"></label>' +
-      '<label class="field"><span>CREATORS</span><input type="text" id="aCreators" placeholder="Comma separated"></label>' +
-      '<label class="field"><span>VERIFIER</span><input type="text" id="aVerifier" placeholder="Who verified it"></label>' +
-      '<label class="field"><span>VERIFICATION VIDEO</span><input type="text" id="aVideo" placeholder="https://youtu.be/..."></label>' +
-
-      '<div class="two">' +
-        '<label class="field"><span>QUALIFY AT %</span><input type="number" id="aPct" value="50" min="1" max="100"></label>' +
-        '<label class="field"><span>PLACE AT RANK</span><input type="number" id="aRank" value="1" min="1" max="' + (LIST.length+1) + '"></label>' +
-      '</div>' +
-
-      '<label class="field"><span>PASSWORD</span><input type="text" id="aPass" value="Free To Copy"></label>' +
-
-      '<div id="aCheck" class="check" hidden></div>' +
-      '<button class="go" id="genLevel">Generate level</button>' +
-    '</div>' +
-
-    '<div class="adm" id="adm-order" hidden>' +
-      '<h3>Reorder the list</h3>' +
-      '<p class="hint">Move levels up and down, then generate the new LIST.</p>' +
-      '<div id="orderList" class="order"></div>' +
-      '<button class="go" id="genOrder" style="margin-top:16px">Generate LIST</button>' +
-    '</div>' +
-
-    '<div class="adm" id="adm-icon" hidden>' +
-      '<h3>Set a profile icon</h3>' +
-      '<p class="hint">Admins only. Shows on the leaderboard, records and staff page.</p>' +
-      '<label class="field"><span>WHO</span><select id="aWho">' +
-        allPeople().map(function(n){ return '<option value="' + esc(n) + '">' + esc(n) + '</option>' }).join('') +
-      '</select></label>' +
-      '<div class="pfp-row">' +
-        '<span class="pfp pfp-big" id="aPreview"></span>' +
-        '<div class="pfp-side">' +
-          '<label class="upload">Choose image<input type="file" id="aFile" accept="image/*"></label>' +
-        '</div>' +
-      '</div>' +
-      '<button class="go" id="aGen" style="margin-top:14px">Generate icon code</button>' +
-    '</div>' +
-
-    '<div class="adm" id="outBox" hidden>' +
-      '<h3>Paste this into data/data.js</h3>' +
-      '<div class="out" id="outCode"></div>' +
-      '<button class="go" id="copyOut">Copy</button>' +
+    '<div class="adm" id="outBox" hidden>'+
+      '<h3>Copy this</h3>'+
+      '<div class="out" id="outCode"></div>'+
+      '<button class="go go-alt" id="copyOut">Copy</button>'+
     '</div>';
 
-  admTab('record');
+  $('genRec').addEventListener('click',()=>{
+    const key=$('rLevel').value;
+    const user=$('rUser').value.trim();
+    const link=$('rLink').value.trim();
+    if(!user){ alert('Player name is required.'); return }
+    if(!link){ alert('Proof video is required, or the record scores nothing.'); return }
 
-  document.querySelectorAll('.adm-tab').forEach(function(b){
-    b.addEventListener('click', function(){ admTab(b.dataset.adm) });
+    const all = LEVELS_DATA[key].records.concat([{
+      user:user,
+      percent:Number($('rPct').value)||100,
+      link:link,
+      mobile:$('rMob').value==='true'
+    }]);
+
+    $('outCode').textContent = '"records": '+JSON.stringify(all,null,2).replace(/\n/g,'\n    ');
+    $('outBox').hidden=false;
   });
 
-  wireRecord();
-  wireLevel();
-  wireOrder();
-  wireIcon();
+  let aData = null;
 
-  $('copyOut').addEventListener('click', function(){
+  function drawWho(){
+    $('aPreview').innerHTML = avatar($('aWho').value);
+    aData = null;
+  }
+  $('aWho').addEventListener('change', drawWho);
+  drawWho();
+
+  $('aFile').addEventListener('change', function(){
+    const f = $('aFile').files && $('aFile').files[0];
+    if(!f) return;
+    if(f.size > 6*1024*1024){ alert('That image is too big. Use one under 6MB.'); return }
+    shrinkImage(f, function(data){
+      if(!data){ alert('Could not read that image.'); return }
+      aData = data;
+      $('aPreview').innerHTML = '<img src="'+data+'" style="width:100%;height:100%;object-fit:cover">';
+    });
+  });
+
+  $('aGen').addEventListener('click', function(){
+    if(!aData){ alert('Choose an image first.'); return }
+    const who = $('aWho').value;
+    $('outCode').textContent =
+      'Add this line inside AVATARS in data/data.js:\n\n' +
+      '  "' + who + '": "' + aData + '",';
+    $('outBox').hidden = false;
+    $('outBox').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+
+  $('copyOut').addEventListener('click',()=>{
     navigator.clipboard.writeText($('outCode').textContent);
-    $('copyOut').textContent = 'Copied';
-    setTimeout(function(){ $('copyOut').textContent = 'Copy' }, 1200);
+    $('copyOut').textContent='Copied';
+    setTimeout(()=>{$('copyOut').textContent='Copy'},1200);
   });
 }
 
-function admTab(name){
-  ['record','level','order','icon'].forEach(function(n){
-    const el = $('adm-' + n);
-    if(el) el.hidden = (n !== name);
+function allPeople(){
+  const set = {};
+  STAFF.forEach(s=>{ set[s.name]=1 });
+  LIST.forEach(k=>{
+    const lv = LEVELS_DATA[k];
+    if(lv.verifier) set[lv.verifier]=1;
+    lv.records.forEach(r=>{ set[r.user]=1 });
   });
-  document.querySelectorAll('.adm-tab').forEach(function(b){
-    b.classList.toggle('on', b.dataset.adm === name);
-  });
-  const o = $('outBox');
-  if(o) o.hidden = true;
+  return Object.keys(set).sort((a,b)=>a.toLowerCase()<b.toLowerCase()?-1:1);
 }
 
-function showOut(code){
-  $('outCode').textContent = code;
-  $('outBox').hidden = false;
-  $('outBox').scrollIntoView({behavior:'smooth', block:'start'});
-}
+const PAGES=['home','list','board','staff','login','register','profile','admin'];
 
-function note(id, msg, ok){
-  const el = $(id);
-  el.innerHTML = msg;
-  el.className = 'check ' + (ok ? 'ok' : 'bad');
-  el.hidden = false;
-}
-
-function wireRecord(){
-  $('rParse').addEventListener('click', function(){
-    const txt = $('rPaste').value;
-    if(!txt.trim()) return;
-
-    const url = (txt.match(/https?:\/\/[^\s]+/) || [])[0];
-    if(url) $('rLink').value = url.split('?si=')[0].split('&')[0];
-
-    const pct = txt.match(/(\d{1,3})\s*%/);
-    if(pct) $('rPct').value = Math.min(100, Number(pct[1]));
-
-    const u = txt.match(/(?:user|username|account)\s*(?:is|:)\s*([A-Za-z0-9_\-]+)/i);
-    if(u) $('rUser').value = u[1];
-
-    if(/mobile/i.test(txt)) $('rMob').value = 'true';
-
-    note('rCheck', 'Read what I could. Check the fields before generating.', true);
+function go(name){
+  PAGES.forEach(p=>{ const el=$('p-'+p); if(el) el.hidden = (p!==name) });
+  document.querySelectorAll('.nav button').forEach(b=>{
+    b.setAttribute('aria-selected', b.dataset.go===name);
   });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
-  $('genRec').addEventListener('click', function(){
-    const key  = $('rLevel').value;
-    const user = $('rUser').value.trim();
-    const link = $('rLink').value.trim();
-    const pct  = Number($('rPct').value) || 100;
-    const lv   = LEVELS_DATA[key];
-    const rank = LIST.indexOf(key) + 1;
-
-    if(!user) return note('rCheck', 'Player name is required.', false);
-    if(!link) return note('rCheck', 'Proof video is required, or the record scores nothing.', false);
-    if(!ytid(link)) return note('rCheck', 'That does not look like a YouTube link.', false);
-
-    const dupe = lv.records.find(function(r){ return r.user.toLowerCase() === user.toLowerCase() });
-    if(dupe) return note('rCheck',
-      user + ' already has ' + dupe.percent + '% on this level. Replace that line instead of adding a second one.', false);
-
-    if(pct < lv.percentToQualify) return note('rCheck',
-      pct + '% is below the ' + lv.percentToQualify + '% qualify mark, so it scores 0.', false);
-
-    const rec = { user: user, percent: pct, link: link, mobile: $('rMob').value === 'true' };
-    const all = lv.records.concat([rec]);
-    const worth = score(rank, pct, lv.percentToQualify);
-
-    note('rCheck', 'Looks good. ' + esc(user) + ' earns <b>' + fix(worth) + '</b> points.', true);
-
-    showOut(
-      'In "' + key + '", replace the records list with:\n\n' +
-      '    records: ' + JSON.stringify(all, null, 2).replace(/\n/g, '\n    ')
-    );
+function wireGo(){
+  document.querySelectorAll('[data-go]').forEach(el=>{
+    if(el.dataset.wired) return;
+    el.dataset.wired='1';
+    el.addEventListener('click',()=>{
+      const t=el.dataset.go;
+      if(t==='profile') showProfile();
+      else if(t==='admin'){ renderAdmin(); go('admin') }
+      else go(t);
+    });
   });
 }
 
-function wireLevel(){
-  $('genLevel').addEventListener('click', function(){
-    const key = $('aKey').value.trim().toLowerCase().replace(/\s+/g,'');
-    const name = $('aName').value.trim();
+function refreshNav(){
+  const u=currentUser();
+  $('navLogin').hidden = !!u;
+  $('navProfile').hidden = !u;
+  if(u) $('navProfile').textContent = u;
+  $('navAdmin').hidden = !isAdmin();
+}
 
-    if(!key)  return note('aCheck', 'Key is required.', false);
-    if(!name) return note('aC
+function say(id,text,kind){
+  const n=$(id); n.textContent=text; n.className='note '+(kind||'');
+}
+function getUsers(){
+  try{ return JSON.parse(localStorage.getItem('gd_users')||'{}') }catch(e){ return {} }
+}
+
+$('loginGo').addEventListener('click',()=>{
+  const user=$('userInput').value.trim();
+  const pass=$('passInput').value;
+  const users=getUsers();
+  if(!user) return say('loginMsg','Enter your username.','bad');
+  if(!users[user]) return say('loginMsg','No account with that name.','bad');
+  if(users[user]!==pass) return say('loginMsg','Wrong password.','bad');
+  localStorage.setItem('gd_user',user);
+  localStorage.removeItem('gd_key');
+  say('loginMsg','Logged in as '+user,'good');
+  refreshNav(); setTimeout(()=>showProfile(),600);
+});
+
+$('codeGo').addEventListener('click',()=>{
+  const raw=$('codeInput').value.trim().toUpperCase();
+  if(!raw) return say('loginMsg','Enter your account code.','bad');
+  const hash=hashCode(raw);
+  const who=STAFF.find(s=>s.key&&s.key===hash);
+  if(!who) return say('loginMsg','That code is not valid.','bad');
+  localStorage.setItem('gd_user',who.name);
+  localStorage.setItem('gd_key',hash);
+  say('loginMsg','Welcome back, '+who.name+'.','good');
+  refreshNav(); setTimeout(()=>showProfile(),600);
+});
+
+$('regGo').addEventListener('click',()=>{
+  const user=$('regUser').value.trim();
+  const pass=$('regPass').value;
+  const pass2=$('regPass2').value;
+  if(user.length<3) return say('regMsg','Username must be at least 3 letters.','bad');
+  if(pass.length<6) return say('regMsg','Password must be at least 6 characters.','bad');
+  if(pass!==pass2) return say('regMsg','Passwords do not match.','bad');
+  const users=getUsers();
+  if(users[user]) return say('regMsg','That username is taken.','bad');
+  if(staffEntry(user)) return say('regMsg','That name belongs to staff. Use your account code.','bad');
+  users[user]=pass;
+  localStorage.setItem('gd_users',JSON.stringify(users));
+  localStorage.setItem('gd_user',user);
+  localStorage.removeItem('gd_key');
+  say('regMsg','Registered as '+user,'good');
+  refreshNav(); setTimeout(()=>showProfile(),600);
+});
+
+$('navLogin').addEventListener('click',()=>go('login'));
+$('navProfile').addEventListener('click',()=>showProfile());
+
+document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
+applyTheme();
+renderRows(); renderDetail(); renderBoard(); renderStaff();
+refreshNav(); wireGo(); go('home');
+
