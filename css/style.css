@@ -284,7 +284,6 @@ a{color:inherit;text-decoration:none}
 }
 .brand{font-weight:900;font-size:18px;letter-spacing:-1px;cursor:pointer;flex:0 0 auto}
 .brand span{color:var(--accent)}
-.brand small{font-size:10px;font-weight:800;color:var(--dim);letter-spacing:0;margin-left:2px}
 
 .nav{display:flex;gap:2px;overflow-x:auto}
 .nav button{
@@ -330,7 +329,9 @@ a{color:inherit;text-decoration:none}
 .tile:hover .tile-name{color:var(--accent-2)}
 .tile-name{font-size:clamp(18px,4.4vw,25px);font-weight:900;letter-spacing:-.6px}
 .tile-art{width:72px;height:72px}
-.tile-art svg{width:100%;height:100%}
+.tile-art svg{width:100%;height:100%;stroke:var(--dim)}
+.tile-art svg .acc{stroke:var(--accent)}
+.tile:hover .tile-art svg{stroke:var(--text)}
 .tile-soon{font-size:9px;letter-spacing:1.1px;font-weight:900;padding:4px 8px;color:var(--dim);border:1px dashed var(--dash)}
 .tile.locked{cursor:default;opacity:.5}
 .tile.locked:hover{transform:none}
@@ -507,4 +508,4 @@ a{color:inherit;text-decoration:none}
   font-family:inherit;font-weight:900;font-size:12px;
   padding:11px 18px;cursor:pointer;
   border:1px dashed var(--dash);
-  background:transparent;color:var(--tex
+  background:transparent;color
