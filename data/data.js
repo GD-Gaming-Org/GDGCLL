@@ -36,8 +36,7 @@ var STAFF = [
 ];
 
 var AVATARS = {
-  "Nevlo": "icons/nevlo.png",
-  "Pester44": "icons/pester44.png"
+  "Nevlo": "nevlo.png",
+  "Pester44": "pester44.png"
 };
-
 
