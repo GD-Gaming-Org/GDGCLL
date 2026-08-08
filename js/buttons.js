@@ -87,12 +87,12 @@ function applyTheme(k){
 
 function ico(kind){
   const paths={
-    ranking:'<path d="M8 18h4M8 32h4M8 46h4" stroke="var(--accent)"/><path d="M22 18h34M22 32h34M22 46h34"/>',
-    trophy:'<path d="M20 10h24v16a12 12 0 0 1-24 0z" stroke="var(--accent)"/><path d="M20 14H12v6a8 8 0 0 0 8 8M44 14h8v6a8 8 0 0 1-8 8"/><path d="M32 38v10M22 54h20"/>',
-    staff:'<circle cx="32" cy="22" r="10" stroke="var(--accent)"/><path d="M12 54a20 20 0 0 1 40 0"/>',
+    ranking:'<path class="acc" d="M8 18h4M8 32h4M8 46h4"/><path d="M22 18h34M22 32h34M22 46h34"/>',
+    trophy:'<path class="acc" d="M20 10h24v16a12 12 0 0 1-24 0z"/><path d="M20 14H12v6a8 8 0 0 0 8 8M44 14h8v6a8 8 0 0 1-8 8"/><path d="M32 38v10M22 54h20"/>',
+    staff:'<circle class="acc" cx="32" cy="22" r="10"/><path d="M12 54a20 20 0 0 1 40 0"/>',
     info:'<circle cx="32" cy="32" r="24"/><path d="M32 28v16M32 20v.5"/>'
   };
-  return '<svg viewBox="0 0 64 64" fill="none" stroke="var(--dim)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">'+paths[kind]+'</svg>';
+  return '<svg viewBox="0 0 64 64" fill="none" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">'+paths[kind]+'</svg>';
 }
 document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
 
@@ -472,4 +472,5 @@ function wireLevel(){
     const key = $('aKey').value.trim().toLowerCase().replace(/\s+/g,'');
     const name = $('aName').value.trim();
 
-    if(!key)  return note('aCheck', 'Key
+    if(!key)  return note('aCheck', 'Key is required.', false);
+    if(!name) return note('aC
