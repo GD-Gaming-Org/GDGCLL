@@ -1,6 +1,7 @@
 var LIST = [
   "fracture",
   "googolplex",
+  "mixmash",
   "zure",
   "blackblizzard1"
 ];
@@ -25,6 +26,17 @@ var LEVELS_DATA = {
     verifier: "nepechatatcpg",
     verification: "https://youtu.be/SFwQxEp8Xh0",
     percentToQualify: 38,
+    password: "Free To Copy",
+    records: []
+  },
+
+  "mixmash": {
+    id: 138335902,
+    name: "Mix Mash",
+    creators: ["AmoriGD"],
+    verifier: "AmoriGD",
+    verification: "https://youtu.be/nTOv1ATgsP0",
+    percentToQualify: 31,
     password: "Free To Copy",
     records: []
   },
@@ -77,4 +89,3 @@ var AVATARS = {
   "Pester44": "pester44.png",
   "Nothing": "nothing.png"
 };
-
