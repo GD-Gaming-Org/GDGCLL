@@ -1,9 +1,21 @@
 var LIST = [
+  "fracture",
   "googolplex",
   "blackblizzard1"
 ];
 
 var LEVELS_DATA = {
+
+  "fracture": {
+    id: 137471550,
+    name: "Fracture",
+    creators: ["rensaiii"],
+    verifier: "rensaiii",
+    verification: "https://youtu.be/75703plH8dI",
+    percentToQualify: 41,
+    password: "Free To Copy",
+    records: []
+  },
 
   "googolplex": {
     id: 144071656,
@@ -53,4 +65,3 @@ var AVATARS = {
   "Pester44": "pester44.png",
   "Nothing": "nothing.png"
 };
-
