@@ -10,7 +10,7 @@ var LEVELS_DATA = {
     creators: ["Yolkstar"],
     verifier: "Yolkstar",
     verification: "https://youtu.be/RXoyU6oMkBA",
-    percentToQualify: 50,
+    percentToQualify: 53,
     password: "Free To Copy",
     records: [
       { user: "Alminx",               percent: 100, link: "https://youtu.be/GF5vlqJNGNU", mobile: false },
