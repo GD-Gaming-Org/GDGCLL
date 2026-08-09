@@ -1,4 +1,4 @@
-How to use the Data.js.....
+How to use the Data.js..... funky ehhhhhhh
 
 const LIST = [
   "bloodbath",
