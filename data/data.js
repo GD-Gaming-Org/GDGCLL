@@ -1,8 +1,20 @@
 var LIST = [
+  "googolplex",
   "blackblizzard1"
 ];
 
 var LEVELS_DATA = {
+
+  "googolplex": {
+    id: 144071656,
+    name: "Googolplex",
+    creators: ["vynz"],
+    verifier: "nepechatatcpg",
+    verification: "https://youtu.be/SFwQxEp8Xh0",
+    percentToQualify: 38,
+    password: "Free To Copy",
+    records: []
+  },
 
   "blackblizzard1": {
     id: 145957744,
@@ -10,7 +22,7 @@ var LEVELS_DATA = {
     creators: ["Yolkstar"],
     verifier: "Yolkstar",
     verification: "https://youtu.be/RXoyU6oMkBA",
-    percentToQualify: 53,
+    percentToQualify: 50,
     password: "Free To Copy",
     records: [
       { user: "Alminx",               percent: 100, link: "https://youtu.be/GF5vlqJNGNU", mobile: false },
