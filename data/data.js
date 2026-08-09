@@ -1,6 +1,7 @@
 var LIST = [
   "fracture",
   "googolplex",
+  "zure",
   "blackblizzard1"
 ];
 
@@ -24,6 +25,17 @@ var LEVELS_DATA = {
     verifier: "nepechatatcpg",
     verification: "https://youtu.be/SFwQxEp8Xh0",
     percentToQualify: 38,
+    password: "Free To Copy",
+    records: []
+  },
+
+  "zure": {
+    id: 137832282,
+    name: "Zure",
+    creators: ["antidipyramid"],
+    verifier: "alqib",
+    verification: "https://youtu.be/mmMLgTvccag",
+    percentToQualify: 47,
     password: "Free To Copy",
     records: []
   },
@@ -65,3 +77,4 @@ var AVATARS = {
   "Pester44": "pester44.png",
   "Nothing": "nothing.png"
 };
+
