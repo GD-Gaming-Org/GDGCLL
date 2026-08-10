@@ -1,6 +1,7 @@
 var LIST = [
   "hideyourheart",
   "bdaybrotita1628",
+  "northfunkxd",
   "blackblizzard1"
 ];
 
@@ -28,6 +29,17 @@ var LEVELS_DATA = {
     records: [
       { user: "redlulz", percent: 100, link: "https://youtu.be/jy148BZHvE8", mobile: false }
     ]
+  },
+
+  "northfunkxd": {
+    id: 146687085,
+    name: "Northfunk XD",
+    creators: ["exterior"],
+    verifier: "rensaiii",
+    verification: "https://youtu.be/n08z-F2ZgpY",
+    percentToQualify: 50,
+    password: "Free To Copy",
+    records: []
   },
 
   "blackblizzard1": {
