@@ -1,6 +1,7 @@
 var LIST = [
   "hideyourheart",
-  "bdaybrotita1628"
+  "bdaybrotita1628",
+  "blackblizzard1"
 ];
 
 var LEVELS_DATA = {
@@ -26,6 +27,27 @@ var LEVELS_DATA = {
     password: "Free To Copy",
     records: [
       { user: "redlulz", percent: 100, link: "https://youtu.be/jy148BZHvE8", mobile: false }
+    ]
+  },
+
+  "blackblizzard1": {
+    id: 145957744,
+    name: "Black Blizzard Lv1",
+    creators: ["Yolkstar"],
+    verifier: "Yolkstar",
+    verification: "https://youtu.be/RXoyU6oMkBA",
+    percentToQualify: 53,
+    password: "Free To Copy",
+    records: [
+      { user: "Alminx",               percent: 100, link: "https://youtu.be/GF5vlqJNGNU", mobile: false },
+      { user: "TowerOfDaBaby_Gaming", percent: 100, link: "https://youtu.be/hnXPFszV4VU", mobile: false },
+      { user: "rtyrekguy",            percent: 100, link: "https://youtu.be/PkHIPfulm_A", mobile: true  },
+      { user: "Proton53",             percent: 100, link: "https://youtu.be/IIdKsRJSbXQ", mobile: false },
+      { user: "neoplist",             percent: 100, link: "https://youtu.be/Q6IqNdbsyRM", mobile: false },
+      { user: "Canadianboi",          percent: 100, link: "https://youtu.be/ZZCRVWur-o4", mobile: false },
+      { user: "polopolo",             percent: 100, link: "https://youtu.be/WMKVw2AOixI", mobile: false },
+      { user: "Pester44",             percent: 94,  link: "https://youtu.be/bkcm_leTOEo", mobile: false },
+      { user: "redlulz",              percent: 100, link: "https://youtu.be/WRb1ur1gtTo", mobile: false }
     ]
   }
 
