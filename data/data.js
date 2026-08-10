@@ -1,21 +1,9 @@
 var LIST = [
-  "bdaybrotita1628",
   "hideyourheart",
-  "blackblizzard1"
+  "bdaybrotita1628"
 ];
 
 var LEVELS_DATA = {
-
-  "bdaybrotita1628": {
-    id: 146660125,
-    name: "Bday brotita1628",
-    creators: ["yolkstar"],
-    verifier: "yolkstar",
-    verification: "https://youtu.be/GELggBOXi0w",
-    percentToQualify: 49,
-    password: "Free To Copy",
-    records: []
-  },
 
   "hideyourheart": {
     id: 146682920,
@@ -28,24 +16,16 @@ var LEVELS_DATA = {
     records: []
   },
 
-  "blackblizzard1": {
-    id: 145957744,
-    name: "Black Blizzard Lv1",
-    creators: ["Yolkstar"],
-    verifier: "Yolkstar",
-    verification: "https://youtu.be/RXoyU6oMkBA",
-    percentToQualify: 53,
+  "bdaybrotita1628": {
+    id: 146660125,
+    name: "Bday brotita1628",
+    creators: ["yolkstar"],
+    verifier: "yolkstar",
+    verification: "https://youtu.be/GELggBOXi0w",
+    percentToQualify: 49,
     password: "Free To Copy",
     records: [
-      { user: "Alminx",               percent: 100, link: "https://youtu.be/GF5vlqJNGNU", mobile: false },
-      { user: "TowerOfDaBaby_Gaming", percent: 100, link: "https://youtu.be/hnXPFszV4VU", mobile: false },
-      { user: "rtyrekguy",            percent: 100, link: "https://youtu.be/PkHIPfulm_A", mobile: true  },
-      { user: "Proton53",             percent: 100, link: "https://youtu.be/IIdKsRJSbXQ", mobile: false },
-      { user: "neoplist",             percent: 100, link: "https://youtu.be/Q6IqNdbsyRM", mobile: false },
-      { user: "Canadianboi",          percent: 100, link: "https://youtu.be/ZZCRVWur-o4", mobile: false },
-      { user: "polopolo",             percent: 100, link: "https://youtu.be/WMKVw2AOixI", mobile: false },
-      { user: "Pester44",             percent: 94,  link: "https://youtu.be/bkcm_leTOEo", mobile: false },
-      { user: "redlulz",              percent: 100, link: "https://youtu.be/WRb1ur1gtTo", mobile: false }
+      { user: "redlulz", percent: 100, link: "https://youtu.be/jy148BZHvE8", mobile: false }
     ]
   }
 
@@ -66,5 +46,4 @@ var AVATARS = {
   "Pester44": "pester44.png",
   "Nothing": "nothing.png"
 };
-
 
