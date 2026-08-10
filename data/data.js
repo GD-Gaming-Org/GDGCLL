@@ -44,7 +44,8 @@ var LEVELS_DATA = {
       { user: "neoplist",             percent: 100, link: "https://youtu.be/Q6IqNdbsyRM", mobile: false },
       { user: "Canadianboi",          percent: 100, link: "https://youtu.be/ZZCRVWur-o4", mobile: false },
       { user: "polopolo",             percent: 100, link: "https://youtu.be/WMKVw2AOixI", mobile: false },
-      { user: "Pester44",             percent: 94,  link: "https://youtu.be/bkcm_leTOEo", mobile: false }
+      { user: "Pester44",             percent: 94,  link: "https://youtu.be/bkcm_leTOEo", mobile: false },
+      { user: "redlulz",              percent: 100, link: "https://youtu.be/WRb1ur1gtTo", mobile: false }
     ]
   }
 
@@ -65,4 +66,5 @@ var AVATARS = {
   "Pester44": "pester44.png",
   "Nothing": "nothing.png"
 };
+
 
