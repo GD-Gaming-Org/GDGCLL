@@ -1,53 +1,29 @@
 var LIST = [
-  "fracture",
-  "googolplex",
-  "mixmash",
-  "zure",
+  "bdaybrotita1628",
+  "hideyourheart",
   "blackblizzard1"
 ];
 
 var LEVELS_DATA = {
 
-  "fracture": {
-    id: 137471550,
-    name: "Fracture",
-    creators: ["rensaiii"],
-    verifier: "rensaiii",
-    verification: "https://youtu.be/75703plH8dI",
-    percentToQualify: 41,
+  "bdaybrotita1628": {
+    id: 146660125,
+    name: "Bday brotita1628",
+    creators: ["yolkstar"],
+    verifier: "yolkstar",
+    verification: "https://youtu.be/GELggBOXi0w",
+    percentToQualify: 49,
     password: "Free To Copy",
     records: []
   },
 
-  "googolplex": {
-    id: 144071656,
-    name: "Googolplex",
-    creators: ["vynz"],
-    verifier: "nepechatatcpg",
-    verification: "https://youtu.be/SFwQxEp8Xh0",
-    percentToQualify: 38,
-    password: "Free To Copy",
-    records: []
-  },
-
-  "mixmash": {
-    id: 138335902,
-    name: "Mix Mash",
-    creators: ["AmoriGD"],
-    verifier: "AmoriGD",
-    verification: "https://youtu.be/nTOv1ATgsP0",
-    percentToQualify: 31,
-    password: "Free To Copy",
-    records: []
-  },
-
-  "zure": {
-    id: 137832282,
-    name: "Zure",
-    creators: ["antidipyramid"],
-    verifier: "alqib",
-    verification: "https://youtu.be/mmMLgTvccag",
-    percentToQualify: 47,
+  "hideyourheart": {
+    id: 146682920,
+    name: "HIDEYOURHEART",
+    creators: ["polopoloGD"],
+    verifier: "rtyrekguy",
+    verification: "https://youtu.be/JQ3j_Eb7KOE",
+    percentToQualify: 46,
     password: "Free To Copy",
     records: []
   },
@@ -58,7 +34,7 @@ var LEVELS_DATA = {
     creators: ["Yolkstar"],
     verifier: "Yolkstar",
     verification: "https://youtu.be/RXoyU6oMkBA",
-    percentToQualify: 50,
+    percentToQualify: 53,
     password: "Free To Copy",
     records: [
       { user: "Alminx",               percent: 100, link: "https://youtu.be/GF5vlqJNGNU", mobile: false },
@@ -89,3 +65,4 @@ var AVATARS = {
   "Pester44": "pester44.png",
   "Nothing": "nothing.png"
 };
+
