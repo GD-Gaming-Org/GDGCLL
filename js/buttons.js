@@ -5,6 +5,16 @@ const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const fix = n => (Math.round(n*100)/100).toFixed(2);
 const ytid = u => (String(u).match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/)||[])[1]||null;
 
+function host(u){
+  const s = String(u).toLowerCase();
+  if(s.includes('medal.tv')) return 'MEDAL';
+  if(s.includes('youtu'))    return 'YOUTUBE';
+  if(s.includes('twitch'))   return 'TWITCH';
+  if(s.includes('drive.google')) return 'DRIVE';
+  if(s.includes('streamable')) return 'STREAMABLE';
+  return '';
+}
+
 function levelValue(r){ return 200*Math.pow(0.97,r-1) }
 function score(r,p,m){
   const f = levelValue(r);
@@ -138,6 +148,7 @@ function renderDetail(){
           '<span class="rec-name" data-player="'+esc(r.user)+'">'+esc(r.user)+'</span>'+
           (idx===0&&r.percent>=100?'<span class="tag tag-first">FIRST</span>':'')+
           (r.mobile?'<span class="tag tag-mob">MOBILE</span>':'')+
+          (host(r.link)?'<span class="tag tag-host">'+host(r.link)+'</span>':'')+
           '<span class="rec-pct">'+r.percent+'%</span>'+
           '<a class="rec-watch" href="'+esc(r.link)+'" target="_blank" rel="noopener">Watch</a>'+
         '</div>').join('')+
@@ -473,4 +484,3 @@ document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.datase
 applyTheme();
 renderRows(); renderDetail(); renderBoard(); renderStaff();
 refreshNav(); wireGo(); go('home');
-
