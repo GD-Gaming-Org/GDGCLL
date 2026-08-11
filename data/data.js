@@ -60,7 +60,7 @@ var LEVELS_DATA = {
       { user: "polopolo",             percent: 100, link: "https://youtu.be/WMKVw2AOixI", mobile: false },
       { user: "Pester44",             percent: 94,  link: "https://youtu.be/bkcm_leTOEo", mobile: false },
       { user: "redlulz",              percent: 100, link: "https://youtu.be/WRb1ur1gtTo", mobile: false },
-      { user: "rensaiii",             percent: 97,  link: "https://medal.tv/games/geometry-dash/clips/nikIGOncD__F1-E94", mobile: false }
+      { user: "rensaiii",             percent: 100, link: "https://medal.tv/games/geometry-dash/clips/nikIGOncD__F1-E94", mobile: false }
     ]
   }
 
@@ -82,4 +82,3 @@ var AVATARS = {
   "Nothing": "nothing.png",
   "Null": "snapshot.png"
 };
-
