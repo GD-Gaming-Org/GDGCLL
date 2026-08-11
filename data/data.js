@@ -23,7 +23,7 @@ var LEVELS_DATA = {
     name: "Bday brotita1628",
     creators: ["yolkstar"],
     verifier: "yolkstar",
-    verification: "https://youtu.be/GELggBOXi0w",
+    verification: "https://youtu.be/udQNUD3GsLc?si=Gwn3RyhXRcF_gBmC",
     percentToQualify: 49,
     password: "Free To Copy",
     records: [
