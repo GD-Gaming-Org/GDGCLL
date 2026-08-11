@@ -79,6 +79,7 @@ var STAFF = [
 var AVATARS = {
   "Nevlo": "nevlo.png",
   "Pester44": "pester44.png",
-  "Nothing": "nothing.png"
+  "Nothing": "nothing.png",
   "Null": "snapshot.png"
 };
+
