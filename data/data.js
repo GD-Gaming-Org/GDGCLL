@@ -19,11 +19,11 @@ var LEVELS_DATA = {
   },
 
   "bdaybrotita1628": {
-    id: 146712505,
+    id: 146660125,
     name: "Bday brotita1628",
     creators: ["yolkstar"],
     verifier: "yolkstar",
-    verification: "https://youtu.be/udQNUD3GsLc?si=Gwn3RyhXRcF_gBmC",
+    verification: "https://youtu.be/GELggBOXi0w",
     percentToQualify: 49,
     password: "Free To Copy",
     records: [
@@ -59,7 +59,8 @@ var LEVELS_DATA = {
       { user: "Canadianboi",          percent: 100, link: "https://youtu.be/ZZCRVWur-o4", mobile: false },
       { user: "polopolo",             percent: 100, link: "https://youtu.be/WMKVw2AOixI", mobile: false },
       { user: "Pester44",             percent: 94,  link: "https://youtu.be/bkcm_leTOEo", mobile: false },
-      { user: "redlulz",              percent: 100, link: "https://youtu.be/WRb1ur1gtTo", mobile: false }
+      { user: "redlulz",              percent: 100, link: "https://youtu.be/WRb1ur1gtTo", mobile: false },
+      { user: "rensaiii",             percent: 97,  link: "https://medal.tv/games/geometry-dash/clips/nikIGOncD__F1-E94", mobile: false }
     ]
   }
 
@@ -80,4 +81,3 @@ var AVATARS = {
   "Pester44": "pester44.png",
   "Nothing": "nothing.png"
 };
-
