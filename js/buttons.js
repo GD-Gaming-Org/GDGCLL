@@ -13,6 +13,19 @@ function host(u){
   return '';
 }
 
+function isVip(name){
+  try{
+    if(typeof VIPS === 'undefined' || !VIPS) return false;
+    return VIPS.some(function(v){
+      return String(v).toLowerCase() === String(name).toLowerCase();
+    });
+  }catch(e){ return false }
+}
+
+function vipTag(name){
+  return isVip(name) ? '<span class="tag tag-vip">VIP</span>' : '';
+}
+
 function hostTag(u){
   const h = host(u);
   if(!h) return '';
@@ -149,7 +162,7 @@ function renderDetail(){
       '<div class="d-label">RECORDS ('+lv.records.length+')</div>'+
       lv.records.map((r,idx)=>
         '<div class="rec">'+avatar(r.user)+
-          '<span class="rec-name" data-player="'+esc(r.user)+'">'+esc(r.user)+'</span>'+
+          '<span class="rec-name" data-player="'+esc(r.user)+'">'+esc(r.user)+'</span>'+vipTag(r.user)+
           (idx===0&&r.percent>=100?'<span class="tag tag-first">FIRST</span>':'')+
           (r.mobile?'<span class="tag tag-mob">MOBILE</span>':'')+
           hostTag(r.link)+
@@ -189,7 +202,7 @@ function renderBoard(){
     '<div class="lb-row" data-player="'+esc(x.user)+'">'+
       '<span class="lb-rank '+(i<3?'top':'')+'">#'+(i+1)+'</span>'+
       avatar(x.user)+
-      '<span class="lb-name">'+esc(x.user)+
+      '<span class="lb-name">'+esc(x.user)+vipTag(x.user)+
         '<span class="lb-meta">'+x.beaten+' beaten &middot; '+x.progress+' progress &middot; '+x.verified+' verified</span>'+
       '</span>'+
       '<span class="lb-pts">'+fix(x.total)+'</span>'+
@@ -203,7 +216,7 @@ function renderBoard(){
 function renderStaff(){
   $('staff').innerHTML = STAFF.map(s=>
     '<div class="staff-card">'+avatar(s.name)+
-      '<div><div class="staff-name">'+esc(s.name)+'</div>'+
+      '<div><div class="staff-name">'+esc(s.name)+vipTag(s.name)+'</div>'+
       '<span class="staff-role">'+esc(s.role.toUpperCase())+'</span></div>'+
     '</div>').join('');
 }
@@ -252,7 +265,7 @@ function showProfile(name){
 
   el.innerHTML =
     '<div class="pf-head">'+avatar(who)+
-      '<div><div class="pf-name">'+esc(who)+'</div>'+
+      '<div><div class="pf-name">'+esc(who)+vipTag(who)+'</div>'+
       '<span class="pf-role">'+(s?esc(s.role.toUpperCase()):'PLAYER')+
         (p.firsts?' &middot; '+p.firsts+' FIRST':'')+'</span></div>'+
     '</div>'+
