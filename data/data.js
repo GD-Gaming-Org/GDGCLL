@@ -16,7 +16,8 @@ var LEVELS_DATA = {
     percentToQualify: 46,
     password: "Free To Copy",
     records: [
-      { user: "yYuixxwasTaken", percent: 100, link: "https://youtu.be/KH4pQvLmFOM", mobile: false }
+      { user: "yYuixxwasTaken", percent: 100, link: "https://youtu.be/KH4pQvLmFOM", mobile: false },
+      { user: "rensaiii",       percent: 100, link: "https://medal.tv/games/geometry-dash/clips/niXrOeRcR21tDR5FL", mobile: false }
     ]
   },
 
@@ -35,14 +36,16 @@ var LEVELS_DATA = {
   },
 
   "northfunkxd": {
-    id: 146835307,
+    id: 146687085,
     name: "Northfunk XD",
     creators: ["exterior"],
     verifier: "rensaiii",
     verification: "https://youtu.be/n08z-F2ZgpY",
     percentToQualify: 50,
     password: "Free To Copy",
-    records: []
+    records: [
+      { user: "yYuixxwasTaken", percent: 100, link: "https://youtu.be/-bN6jR812NM", mobile: false }
+    ]
   },
 
   "blackblizzard1": {
