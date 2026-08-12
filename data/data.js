@@ -14,7 +14,7 @@ var LEVELS_DATA = {
     creators: ["rensaiii"],
     verifier: "gdchicken000",
     verification: "https://youtu.be/ts1Rx4nGI-o",
-    percentToQualify: 43,
+    percentToQualify: 50,
     password: "Free To Copy",
     records: []
   },
@@ -29,7 +29,8 @@ var LEVELS_DATA = {
     password: "Free To Copy",
     records: [
       { user: "yYuixxwasTaken", percent: 100, link: "https://youtu.be/KH4pQvLmFOM", mobile: false },
-      { user: "rensaiii",       percent: 100, link: "https://medal.tv/games/geometry-dash/clips/niXrOeRcR21tDR5FL", mobile: false }
+      { user: "rensaiii",       percent: 100, link: "https://medal.tv/games/geometry-dash/clips/niXrOeRcR21tDR5FL", mobile: false },
+      { user: "gdchicken000",   percent: 100, link: "https://youtu.be/M0USjCQQ3yA", mobile: false }
     ]
   },
 
@@ -79,7 +80,8 @@ var LEVELS_DATA = {
       { user: "Pester44",             percent: 94,  link: "https://youtu.be/bkcm_leTOEo", mobile: false },
       { user: "redlulz",              percent: 100, link: "https://youtu.be/WRb1ur1gtTo", mobile: false },
       { user: "rensaiii",             percent: 100, link: "https://medal.tv/games/geometry-dash/clips/nikIGOncD__F1-E94", mobile: false },
-      { user: "yYuixxwasTaken",       percent: 100, link: "https://youtu.be/iJI6ed_BTa0", mobile: false }
+      { user: "yYuixxwasTaken",       percent: 100, link: "https://youtu.be/iJI6ed_BTa0", mobile: false },
+      { user: "gdchicken000",         percent: 100, link: "https://youtu.be/M0USjCQQ3yA", mobile: false }
     ]
   }
 
@@ -101,3 +103,7 @@ var AVATARS = {
   "Nothing": "nothing.png",
   "Null": "snapshot.png"
 };
+
+var VIPS = [
+  "rtyrekguy"
+];
