@@ -35,7 +35,7 @@ var LEVELS_DATA = {
   },
 
   "northfunkxd": {
-    id: 146687085,
+    id: 146835307,
     name: "Northfunk XD",
     creators: ["exterior"],
     verifier: "rensaiii",
