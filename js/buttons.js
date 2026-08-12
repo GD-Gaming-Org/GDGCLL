@@ -5,6 +5,20 @@ const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const fix = n => (Math.round(n*100)/100).toFixed(2);
 const ytid = u => (String(u).match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/)||[])[1]||null;
 
+function host(u){
+  const t = String(u).toLowerCase();
+  if(t.indexOf('medal.tv') !== -1)  return 'medal';
+  if(t.indexOf('discord') !== -1)   return 'discord';
+  if(t.indexOf('youtu') !== -1)     return 'youtube';
+  return '';
+}
+
+function hostTag(u){
+  const h = host(u);
+  if(!h) return '';
+  return '<span class="tag tag-' + h + '">' + h.toUpperCase() + '</span>';
+}
+
 function levelValue(r){ return 200*Math.pow(0.97,r-1) }
 function score(r,p,m){
   const f = levelValue(r);
@@ -138,6 +152,7 @@ function renderDetail(){
           '<span class="rec-name" data-player="'+esc(r.user)+'">'+esc(r.user)+'</span>'+
           (idx===0&&r.percent>=100?'<span class="tag tag-first">FIRST</span>':'')+
           (r.mobile?'<span class="tag tag-mob">MOBILE</span>':'')+
+          hostTag(r.link)+
           '<span class="rec-pct">'+r.percent+'%</span>'+
           '<a class="rec-watch" href="'+esc(r.link)+'" target="_blank" rel="noopener">Watch</a>'+
         '</div>').join('')+
