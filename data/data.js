@@ -102,6 +102,7 @@ var AVATARS = {
   "Pester44": "pester44.png",
   "Nothing": "nothing.png",
   "Null": "snapshot.png"
+  "rtyrekguy": ""
 };
 
 var VIPS = [
