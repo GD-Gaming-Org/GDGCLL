@@ -14,7 +14,7 @@ var LEVELS_DATA = {
     creators: ["rensaiii"],
     verifier: "gdchicken000",
     verification: "https://youtu.be/ts1Rx4nGI-o",
-    percentToQualify: 50,
+    percentToQualify: 43,
     password: "Free To Copy",
     records: []
   },
@@ -64,8 +64,8 @@ var LEVELS_DATA = {
   "blackblizzard1": {
     id: 145957744,
     name: "Black Blizzard Lv1",
-    creators: ["Yolkstar"],
-    verifier: "Yolkstar",
+    creators: ["yolkstar"],
+    verifier: "yolkstar",
     verification: "https://youtu.be/RXoyU6oMkBA",
     percentToQualify: 53,
     password: "Free To Copy",
