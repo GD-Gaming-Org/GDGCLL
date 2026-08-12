@@ -14,7 +14,7 @@ var LEVELS_DATA = {
     creators: ["rensaiii"],
     verifier: "gdchicken000",
     verification: "https://youtu.be/ts1Rx4nGI-o",
-    percentToQualify: 50,
+    percentToQualify: 43,
     password: "Free To Copy",
     records: []
   },
