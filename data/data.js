@@ -15,7 +15,9 @@ var LEVELS_DATA = {
     verification: "https://youtu.be/JQ3j_Eb7KOE",
     percentToQualify: 46,
     password: "Free To Copy",
-    records: []
+    records: [
+      { user: "yYuixxwasTaken", percent: 100, link: "https://youtu.be/KH4pQvLmFOM", mobile: false }
+    ]
   },
 
   "bdaybrotita1628": {
@@ -23,11 +25,12 @@ var LEVELS_DATA = {
     name: "Bday brotita1628",
     creators: ["yolkstar"],
     verifier: "yolkstar",
-    verification: "https://youtu.be/udQNUD3GsLc?si=Gwn3RyhXRcF_gBmC",
+    verification: "https://youtu.be/GELggBOXi0w",
     percentToQualify: 49,
     password: "Free To Copy",
     records: [
-      { user: "redlulz", percent: 100, link: "https://youtu.be/jy148BZHvE8", mobile: false }
+      { user: "redlulz",        percent: 100, link: "https://youtu.be/jy148BZHvE8", mobile: false },
+      { user: "yYuixxwasTaken", percent: 100, link: "https://youtu.be/W3kjF3HQZE4", mobile: false }
     ]
   },
 
@@ -60,7 +63,8 @@ var LEVELS_DATA = {
       { user: "polopolo",             percent: 100, link: "https://youtu.be/WMKVw2AOixI", mobile: false },
       { user: "Pester44",             percent: 94,  link: "https://youtu.be/bkcm_leTOEo", mobile: false },
       { user: "redlulz",              percent: 100, link: "https://youtu.be/WRb1ur1gtTo", mobile: false },
-      { user: "rensaiii",             percent: 100, link: "https://medal.tv/games/geometry-dash/clips/nikIGOncD__F1-E94", mobile: false }
+      { user: "rensaiii",             percent: 100, link: "https://medal.tv/games/geometry-dash/clips/nikIGOncD__F1-E94", mobile: false },
+      { user: "yYuixxwasTaken",       percent: 100, link: "https://youtu.be/iJI6ed_BTa0", mobile: false }
     ]
   }
 
