@@ -5,7 +5,8 @@ var LIST = [
   "sinewavsrebirth",
   "bdaybrotita1628",
   "northfunkxd",
-  "blackblizzard1"
+  "blackblizzard1",
+  "oxford"
 ];
 
 var LEVELS_DATA = {
@@ -107,6 +108,17 @@ var LEVELS_DATA = {
       { user: "yYuixxwasTaken",       percent: 100, link: "https://youtu.be/iJI6ed_BTa0", mobile: false },
       { user: "gdchicken000",         percent: 100, link: "https://youtu.be/M0USjCQQ3yA", mobile: false }
     ]
+  },
+
+  "oxford": {
+    id: 146902831,
+    name: "Oxford",
+    creators: ["thomOxznice"],
+    verifier: "thomOxznice",
+    verification: "https://youtu.be/z1SJwwk8o20",
+    percentToQualify: 50,
+    password: "Free To Copy",
+    records: []
   }
 
 };
