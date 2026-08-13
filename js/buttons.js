@@ -504,4 +504,14 @@ $('regGo').addEventListener('click',()=>{
   localStorage.setItem('gd_users',JSON.stringify(users));
   localStorage.setItem('gd_user',user);
   localStorage.removeItem('gd_key');
-  say('regMsg','Registered as '+user,'goo
+  say('regMsg','Registered as '+user,'good');
+  refreshNav(); setTimeout(()=>showProfile(),600);
+});
+
+$('navLogin').addEventListener('click',()=>go('login'));
+$('navProfile').addEventListener('click',()=>showProfile());
+
+document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
+applyTheme();
+renderRows(); renderDetail(); renderBoard(); renderStaff();
+refreshNav(); wireGo(); go('home');
