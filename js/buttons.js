@@ -26,6 +26,21 @@ function vipTag(name){
   return isVip(name) ? '<span class="tag tag-vip">VIP</span>' : '';
 }
 
+function titleOf(name){
+  try{
+    if(typeof TITLES === 'undefined' || !TITLES) return '';
+    var key = Object.keys(TITLES).find(function(k){
+      return k.toLowerCase() === String(name).toLowerCase();
+    });
+    return key ? TITLES[key] : '';
+  }catch(e){ return '' }
+}
+
+function titleTag(name){
+  var t = titleOf(name);
+  return t ? '<span class="tag tag-title">' + esc(t) + '</span>' : '';
+}
+
 function hostTag(u){
   const h = host(u);
   if(!h) return '';
@@ -162,7 +177,7 @@ function renderDetail(){
       '<div class="d-label">RECORDS ('+lv.records.length+')</div>'+
       lv.records.map((r,idx)=>
         '<div class="rec">'+avatar(r.user)+
-          '<span class="rec-name" data-player="'+esc(r.user)+'">'+esc(r.user)+'</span>'+vipTag(r.user)+
+          '<span class="rec-name" data-player="'+esc(r.user)+'">'+esc(r.user)+'</span>'+vipTag(r.user)+titleTag(r.user)+
           (idx===0&&r.percent>=100?'<span class="tag tag-first">FIRST</span>':'')+
           (r.mobile?'<span class="tag tag-mob">MOBILE</span>':'')+
           hostTag(r.link)+
@@ -202,7 +217,7 @@ function renderBoard(){
     '<div class="lb-row" data-player="'+esc(x.user)+'">'+
       '<span class="lb-rank '+(i<3?'top':'')+'">#'+(i+1)+'</span>'+
       avatar(x.user)+
-      '<span class="lb-name">'+esc(x.user)+vipTag(x.user)+
+      '<span class="lb-name">'+esc(x.user)+vipTag(x.user)+titleTag(x.user)+
         '<span class="lb-meta">'+x.beaten+' beaten &middot; '+x.progress+' progress &middot; '+x.verified+' verified</span>'+
       '</span>'+
       '<span class="lb-pts">'+fix(x.total)+'</span>'+
@@ -216,7 +231,7 @@ function renderBoard(){
 function renderStaff(){
   $('staff').innerHTML = STAFF.map(s=>
     '<div class="staff-card">'+avatar(s.name)+
-      '<div><div class="staff-name">'+esc(s.name)+vipTag(s.name)+'</div>'+
+      '<div><div class="staff-name">'+esc(s.name)+vipTag(s.name)+titleTag(s.name)+'</div>'+
       '<span class="staff-role">'+esc(s.role.toUpperCase())+'</span></div>'+
     '</div>').join('');
 }
@@ -265,7 +280,7 @@ function showProfile(name){
 
   el.innerHTML =
     '<div class="pf-head">'+avatar(who)+
-      '<div><div class="pf-name">'+esc(who)+vipTag(who)+'</div>'+
+      '<div><div class="pf-name">'+esc(who)+vipTag(who)+titleTag(who)+'</div>'+
       '<span class="pf-role">'+(s?esc(s.role.toUpperCase()):'PLAYER')+
         (p.firsts?' &middot; '+p.firsts+' FIRST':'')+'</span></div>'+
     '</div>'+
@@ -491,13 +506,4 @@ $('regGo').addEventListener('click',()=>{
   localStorage.setItem('gd_user',user);
   localStorage.removeItem('gd_key');
   say('regMsg','Registered as '+user,'good');
-  refreshNav(); setTimeout(()=>showProfile(),600);
-});
-
-$('navLogin').addEventListener('click',()=>go('login'));
-$('navProfile').addEventListener('click',()=>showProfile());
-
-document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
-applyTheme();
-renderRows(); renderDetail(); renderBoard(); renderStaff();
-refreshNav(); wireGo(); go('home');
+  
