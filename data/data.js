@@ -1,6 +1,7 @@
 var LIST = [
   "silenttoe",
   "hideyourheart",
+  "sinewavsrebirth",
   "bdaybrotita1628",
   "northfunkxd",
   "blackblizzard1"
@@ -32,6 +33,17 @@ var LEVELS_DATA = {
       { user: "rensaiii",       percent: 100, link: "https://medal.tv/games/geometry-dash/clips/niXrOeRcR21tDR5FL", mobile: false },
       { user: "gdchicken000",   percent: 100, link: "https://youtu.be/M0USjCQQ3yA", mobile: false }
     ]
+  },
+
+  "sinewavsrebirth": {
+    id: 146702236,
+    name: "Sine Wavs Rebirth",
+    creators: ["MacroFyber"],
+    verifier: "yYuixxwasTaken",
+    verification: "https://youtu.be/c_LBs7GyfbI",
+    percentToQualify: 50,
+    password: "Free To Copy",
+    records: []
   },
 
   "bdaybrotita1628": {
