@@ -1,6 +1,7 @@
 var LIST = [
   "silenttoe",
   "hideyourheart",
+  "loveletter4",
   "sinewavsrebirth",
   "bdaybrotita1628",
   "northfunkxd",
@@ -33,6 +34,17 @@ var LEVELS_DATA = {
       { user: "rensaiii",       percent: 100, link: "https://medal.tv/games/geometry-dash/clips/niXrOeRcR21tDR5FL", mobile: false },
       { user: "gdchicken000",   percent: 100, link: "https://youtu.be/M0USjCQQ3yA", mobile: false }
     ]
+  },
+
+  "loveletter4": {
+    id: 146893559,
+    name: "love letter gaming 4",
+    creators: ["exterior"],
+    verifier: "yYuixxwasTaken",
+    verification: "https://youtu.be/7FJ2IVyVmVA",
+    percentToQualify: 50,
+    password: "Free To Copy",
+    records: []
   },
 
   "sinewavsrebirth": {
