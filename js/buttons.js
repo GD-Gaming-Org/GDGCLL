@@ -22,23 +22,18 @@ function isVip(name){
   }catch(e){ return false }
 }
 
-function vipTag(name){
-  return isVip(name) ? '<span class="tag tag-vip">VIP</span>' : '';
-}
-
-function titleOf(name){
+function titleFor(name){
   try{
     if(typeof TITLES === 'undefined' || !TITLES) return '';
-    var key = Object.keys(TITLES).find(function(k){
-      return k.toLowerCase() === String(name).toLowerCase();
+    const k = Object.keys(TITLES).find(function(x){
+      return String(x).toLowerCase() === String(name).toLowerCase();
     });
-    return key ? TITLES[key] : '';
+    return k ? TITLES[k] : '';
   }catch(e){ return '' }
 }
 
-function titleTag(name){
-  var t = titleOf(name);
-  return t ? '<span class="tag tag-title">' + esc(t) + '</span>' : '';
+function vipTag(name){
+  return isVip(name) ? '<span class="tag tag-vip">VIP</span>' : '';
 }
 
 function hostTag(u){
@@ -177,7 +172,7 @@ function renderDetail(){
       '<div class="d-label">RECORDS ('+lv.records.length+')</div>'+
       lv.records.map((r,idx)=>
         '<div class="rec">'+avatar(r.user)+
-          '<span class="rec-name" data-player="'+esc(r.user)+'">'+esc(r.user)+'</span>'+vipTag(r.user)+titleTag(r.user)+
+          '<span class="rec-name" data-player="'+esc(r.user)+'">'+esc(r.user)+'</span>'+vipTag(r.user)+
           (idx===0&&r.percent>=100?'<span class="tag tag-first">FIRST</span>':'')+
           (r.mobile?'<span class="tag tag-mob">MOBILE</span>':'')+
           hostTag(r.link)+
@@ -217,8 +212,10 @@ function renderBoard(){
     '<div class="lb-row" data-player="'+esc(x.user)+'">'+
       '<span class="lb-rank '+(i<3?'top':'')+'">#'+(i+1)+'</span>'+
       avatar(x.user)+
-      '<span class="lb-name">'+esc(x.user)+vipTag(x.user)+titleTag(x.user)+
-        '<span class="lb-meta">'+x.beaten+' beaten &middot; '+x.progress+' progress &middot; '+x.verified+' verified</span>'+
+      '<span class="lb-name">'+esc(x.user)+vipTag(x.user)+
+        '<span class="lb-meta">'+
+          (titleFor(x.user)?'<b class="lb-title">'+esc(titleFor(x.user))+'</b><br>':'')+
+          x.beaten+' beaten &middot; '+x.progress+' progress &middot; '+x.verified+' verified</span>'+
       '</span>'+
       '<span class="lb-pts">'+fix(x.total)+'</span>'+
     '</div>').join('');
@@ -231,7 +228,7 @@ function renderBoard(){
 function renderStaff(){
   $('staff').innerHTML = STAFF.map(s=>
     '<div class="staff-card">'+avatar(s.name)+
-      '<div><div class="staff-name">'+esc(s.name)+vipTag(s.name)+titleTag(s.name)+'</div>'+
+      '<div><div class="staff-name">'+esc(s.name)+vipTag(s.name)+'</div>'+
       '<span class="staff-role">'+esc(s.role.toUpperCase())+'</span></div>'+
     '</div>').join('');
 }
@@ -280,9 +277,11 @@ function showProfile(name){
 
   el.innerHTML =
     '<div class="pf-head">'+avatar(who)+
-      '<div><div class="pf-name">'+esc(who)+vipTag(who)+titleTag(who)+'</div>'+
+      '<div><div class="pf-name">'+esc(who)+vipTag(who)+'</div>'+
       '<span class="pf-role">'+(s?esc(s.role.toUpperCase()):'PLAYER')+
-        (p.firsts?' &middot; '+p.firsts+' FIRST':'')+'</span></div>'+
+        (p.firsts?' &middot; '+p.firsts+' FIRST':'')+'</span>'+
+      (titleFor(who)?'<div class="pf-title">'+esc(titleFor(who))+'</div>':'')+
+      '</div>'+
     '</div>'+
 
     '<div class="pf-stats">'+
@@ -505,5 +504,4 @@ $('regGo').addEventListener('click',()=>{
   localStorage.setItem('gd_users',JSON.stringify(users));
   localStorage.setItem('gd_user',user);
   localStorage.removeItem('gd_key');
-  say('regMsg','Registered as '+user,'good');
-  
+  say('regMsg','Registered as '+user,'goo
