@@ -24,32 +24,6 @@ var LEVELS_DATA = {
   "hideyourheart": {
     id: 146682920,
     name: "HIDEYOURHEART",
-var LIST = [
-  "silenttoe",
-  "loveletter4",
-  "hideyourheart",
-  "sinewavsrebirth",
-  "bdaybrotita1628",
-  "northfunkxd",
-  "blackblizzard1"
-];
-
-var LEVELS_DATA = {
-
-  "silenttoe": {
-    id: 139541162,
-    name: "Silent ToE",
-    creators: ["rensaiii"],
-    verifier: "gdchicken000",
-    verification: "https://youtu.be/ts1Rx4nGI-o",
-    percentToQualify: 43,
-    password: "Free To Copy",
-    records: []
-  },
-
-  "hideyourheart": {
-    id: 146682920,
-    name: "HIDEYOURHEART",
     creators: ["polopoloGD"],
     verifier: "rtyrekguy",
     verification: "https://youtu.be/JQ3j_Eb7KOE",
@@ -163,3 +137,4 @@ var TITLES = {
   "Pester44": "Developer of GDGCLL",
   "yYuixxwasTaken": "Zoink of GDGCLL"
 };
+
