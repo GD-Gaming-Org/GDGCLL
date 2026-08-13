@@ -21,6 +21,17 @@ var LEVELS_DATA = {
     records: []
   },
 
+  "loveletter4": {
+    id: 146893559,
+    name: "love letter gaming 4",
+    creators: ["exterior"],
+    verifier: "yYuixxwasTaken",
+    verification: "https://youtu.be/7FJ2IVyVmVA",
+    percentToQualify: 50,
+    password: "Free To Copy",
+    records: []
+  },
+
   "hideyourheart": {
     id: 146682920,
     name: "HIDEYOURHEART",
@@ -34,17 +45,6 @@ var LEVELS_DATA = {
       { user: "rensaiii",       percent: 100, link: "https://medal.tv/games/geometry-dash/clips/niXrOeRcR21tDR5FL", mobile: false },
       { user: "gdchicken000",   percent: 100, link: "https://youtu.be/M0USjCQQ3yA", mobile: false }
     ]
-  },
-
-  "loveletter4": {
-    id: 146893559,
-    name: "love letter gaming 4",
-    creators: ["exterior"],
-    verifier: "yYuixxwasTaken",
-    verification: "https://youtu.be/7FJ2IVyVmVA",
-    percentToQualify: 50,
-    password: "Free To Copy",
-    records: []
   },
 
   "sinewavsrebirth": {
@@ -137,4 +137,3 @@ var TITLES = {
   "Pester44": "Developer of GDGCLL",
   "yYuixxwasTaken": "Zoink of GDGCLL"
 };
-
