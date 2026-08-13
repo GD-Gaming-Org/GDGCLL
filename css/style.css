@@ -394,6 +394,7 @@ a{color:inherit;text-decoration:none}
 .tag{font-size:8.5px;letter-spacing:.6px;padding:3px 6px;font-weight:900}
 .tag-first{color:var(--gold);border:1px solid var(--gold)}
 .tag-mob{color:var(--accent-2);border:1px solid var(--accent)}
+.tag-title{color:var(--accent-2);border:1px solid var(--accent);background:rgba(160,110,255,.12);border-radius:4px;letter-spacing:.3px;text-transform:none;font-size:9px}
 .rec-pct{font-weight:900;color:var(--dim);font-size:11.5px}
 .rec-watch{color:var(--accent);font-size:10.5px;font-weight:800}
 .rec-watch:hover{text-decoration:underline}
@@ -504,8 +505,4 @@ a{color:inherit;text-decoration:none}
 .pfp-side{flex:1;min-width:170px}
 
 .upload{
-  display:inline-block;
-  font-family:inherit;font-weight:900;font-size:12px;
-  padding:11px 18px;cursor:pointer;
-  border:1px dashed var(--dash);
-  background:transparent;color
+  displ
