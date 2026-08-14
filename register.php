@@ -1,18 +1,25 @@
 <?php
+header('Content-Type: application/json');
 require_once 'db.php';
 
-header('Content-Type: application/json');
+$raw = file_get_contents('php://input');
+$json = json_decode($raw, true);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user = trim($_POST['username'] ?? '');
-    $pass = trim($_POST['password'] ?? '');
+$user = trim($_POST['username'] ?? $json['username'] ?? '');
+$pass = trim($_POST['password'] ?? $json['password'] ?? '');
 
-    if (empty($user) || empty($pass)) {
-        echo json_encode(['status' => 'error', 'message' => 'Username and password are required.']);
-        exit;
-    }
+if (empty($user) || empty($pass)) {
+    echo json_encode(['status' => 'error', 'message' => 'Username and password are required.']);
+    exit;
+}
 
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+if (strlen($user) < 3) {
+    echo json_encode(['status' => 'error', 'message' => 'Username must be at least 3 characters.']);
+    exit;
+}
+
+try {
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1");
     $stmt->execute([$user]);
     if ($stmt->fetch()) {
         echo json_encode(['status' => 'error', 'message' => 'Username already taken.']);
@@ -25,9 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($stmt->execute([$user, $hashedPassword])) {
         echo json_encode(['status' => 'success', 'message' => 'Registration successful!']);
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to register user.']);
+        echo json_encode(['status' => 'error', 'message' => 'Failed to register account.']);
     }
-} else {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method.']);
+} catch (PDOException $e) {
+    echo json_encode(['status' => 'error', 'message' => 'Server query error.']);
 }
 ?>
