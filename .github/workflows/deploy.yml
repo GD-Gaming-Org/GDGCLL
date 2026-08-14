@@ -21,8 +21,10 @@ jobs:
             set ftp:ssl-allow no;
             set net:timeout 15;
             set net:max-retries 3;
+            set ftp:use-site-chmod no;
+            set mirror:set-permissions no;
             open -u if0_42655486,GDGCLL123 ftpupload.net;
-            mirror --reverse --delete --verbose \
+            mirror --reverse --no-perms --verbose \
               --exclude .git/ \
               --exclude .github/ \
               --exclude README.md \
