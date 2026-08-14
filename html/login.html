@@ -1,29 +1,58 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<title>Log in</title>
-</head>
-<body>
-<form id="loginForm">
-<input type="text" id="username" placeholder="Username" required>
-<input type="password" id="password" placeholder="Password" required>
-<button type="submit">Log in</button>
-<p id="msg"></p>
-</form>
-<script src="js/login.js"></script>
-<script>
-document.getElementById("loginForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-  const result = await loginUser(username, password);
-  if (result.ok) {
-    window.location.href = "profile.html";
-  } else {
-    document.getElementById("msg").textContent = result.error;
-  }
-});
-</script>
-</body>
+  <head>
+    <title>Log in — GDGCLL</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <script src="../data/data.js?v=4" defer></script>
+    <script src="../js/buttons.js?v=4" defer></script>
+    <link rel="stylesheet" href="../css/style.css?v=4">
+  </head>
+  <body>
+    <div class="header">
+      <img class="logo" id="logoImg" alt="GDGCLL">
+      <h2 class="logo-text" id="logoText" hidden>GDGCLL</h2>
+      <button class="profile" id="back">Back</button>
+    </div>
+    <div class="content">
+      <div class="form-box">
+        <h2 class="form-title">Log in</h2>
+        <label class="field">
+          <span>Username</span>
+          <input type="text" id="loginUser" autocomplete="username">
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input type="password" id="loginPass" autocomplete="current-password">
+        </label>
+        <button class="login" id="loginGo">Log in</button>
+        <p class="form-note" id="loginMsg"></p>
+        <p class="form-link">No account? <a href="register.html">Register here</a></p>
+      </div>
+    </div>
+    <footer>
+      <div class="foot-cols">
+        <div class="foot-col">
+          <h4>GDGCLL</h4>
+          <a href="../index.html">Back to the list</a>
+        </div>
+        <div class="foot-col">
+          <h4>Account</h4>
+          <a href="login.html">Log in</a>
+          <a href="register.html">Register</a>
+        </div>
+        <div class="foot-col">
+          <h4>Community</h4>
+          <a href="https://discord.gg/7B5erApgk" target="_blank" rel="noopener">Discord</a>
+        </div>
+      </div>
+      <div class="foot-bar">
+        <p>
+          Logo by <a href="https://www.youtube.com/@WALTUH3636">valtuh3636</a>
+          &middot; Made by
+          <a href="https://github.com/pester33">pester33</a> and
+          <a href="https://www.youtube.com/@TuffTheo">TuffTheo</a>
+        </p>
+      </div>
+    </footer>
+  </body>
 </html>
