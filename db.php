@@ -1,6 +1,6 @@
 <?php
 $host     = 'sql206.infinityfree.com';
-$db_name  = 'if0_42655486_mydb';
+$db_name  = 'if0_42655486_XXX';
 $username = 'if0_42655486';
 $password = 'GDGCLL123';
 
