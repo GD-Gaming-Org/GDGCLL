@@ -118,7 +118,9 @@ var LEVELS_DATA = {
     verification: "https://youtu.be/z1SJwwk8o20",
     percentToQualify: 50,
     password: "Free To Copy",
-    records: []
+    records: [
+      { user: "yYuixxwasTaken", percent: 100, link: "https://youtu.be/rPwlflpC5cU", mobile: false }
+    ]
   }
 
 };
@@ -147,5 +149,6 @@ var VIPS = [
 
 var TITLES = {
   "Pester44": "Developer of GDGCLL",
-  "yYuixxwasTaken": "Zoink of GDGCLL"
+  "yYuixxwasTaken": "Zoink of GDGCLL",
+  "gdchicken000": "New GDG Zoink"
 };
