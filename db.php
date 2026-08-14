@@ -1,6 +1,6 @@
 <?php
 $host     = 'sql206.infinityfree.com';
-$db_name  = 'if0_42655486_XXX';
+$db_name  = 'if0_42655486_mydb';
 $username = 'if0_42655486';
 $password = 'GDGCLL123';
 
@@ -11,6 +11,8 @@ try {
         PDO::ATTR_EMULATE_PREPARES   => false,
     ]);
 } catch (PDOException $e) {
-    die("Database connection failed: " . $e->getMessage());
+    header('Content-Type: application/json');
+    echo json_encode(['status' => 'error', 'message' => 'Database connection failed.']);
+    exit;
 }
 ?>
