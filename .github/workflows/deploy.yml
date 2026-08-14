@@ -1,4 +1,3 @@
-
 name: Auto Deploy to InfinityFree
 
 on:
@@ -21,5 +20,10 @@ jobs:
           server: ftpupload.net
           username: if0_42655486
           password: "GDGCLL123"
-          server-dir: htdocs/
-          dangerous-clean-slate: false
+          server-dir: ./htdocs/
+          state-name: sync-state.json
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            README.md
