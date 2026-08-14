@@ -1,1 +1,25 @@
 
+name: Auto Deploy to InfinityFree
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  web-deploy:
+    name: Sync Repository Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fetch Latest Code
+        uses: actions/checkout@v4
+
+      - name: Upload Files to htdocs
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftpupload.net
+          username: if0_42655486
+          password: "GDGCLL123"
+          server-dir: htdocs/
+          dangerous-clean-slate: false
