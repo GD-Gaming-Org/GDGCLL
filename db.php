@@ -1,18 +1,37 @@
 <?php
 $host = "sql206.infinityfree.com";
-$db = "if0_42655486_gdgcll";
 $user = "if0_42655486";
 $pass = "GDGCLL123";
+$db   = "if0_42655486_gdgcll";
 
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ]);
-} catch (PDOException $e) {
-    header("Content-Type: application/json");
-    echo json_encode(["ok" => false, "error" => "db_connect_failed"]);
+$conn = new mysqli($host, $user, $pass, $db);
+if ($conn->connect_error) {
+    http_response_code(500);
+    echo json_encode(["error" => "db_connect_failed"]);
     exit;
 }
-?>
+
+$conn->set_charset("utf8mb4");
+
+function requireLogin() {
+    session_start();
+    if (!isset($_SESSION["username"])) {
+        http_response_code(401);
+        echo json_encode(["error" => "not_logged_in"]);
+        exit;
+    }
+    return $_SESSION["username"];
+}
+
+function requireAdmin($conn) {
+    $username = requireLogin();
+    $stmt = $conn->prepare("SELECT role FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    if (!$row || !in_array($row["role"], ["admin", "owner", "developer"])) {
+        http_response_code(403);
+        echo json_encode(["error" => "not_admin"]);
+        exit;
+    }
+}
