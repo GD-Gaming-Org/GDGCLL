@@ -3,9 +3,9 @@
   <head>
     <title>Log in — GDGCLL</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <script src="../data/data.js?v=4" defer></script>
-    <script src="../js/app.js?v=5" defer></script>
-    <link rel="stylesheet" href="../css/style.css?v=4">
+    <!-- ONLY LOAD APP.JS NOW -->
+    <script src="../js/app.js?v=6" defer></script>
+    <link rel="stylesheet" href="../css/style.css?v=6">
   </head>
   <body>
     <div class="header">
@@ -16,16 +16,18 @@
     <div class="content">
       <div class="form-box">
         <h2 class="form-title">Log in</h2>
-        <label class="field">
-          <span>Username</span>
-          <input type="text" id="loginUser" autocomplete="username">
-        </label>
-        <label class="field">
-          <span>Password</span>
-          <input type="password" id="loginPass" autocomplete="current-password">
-        </label>
-        <button class="login" id="loginGo" type="button">Log in</button>
-        <p class="form-note" id="loginMsg"></p>
+        <form id="loginForm"> 
+          <label class="field">
+            <span>Username</span>
+            <input type="text" id="username" autocomplete="username" required>
+          </label>
+          <label class="field">
+            <span>Password</span>
+            <input type="password" id="password" autocomplete="current-password" required>
+          </label>
+          <button class="login" id="loginGo" type="submit">Log in</button>
+          <p class="form-note" id="loginMsg"></p>
+        </form>
         <p class="form-link">No account? <a href="register.html">Register here</a></p>
       </div>
     </div>
