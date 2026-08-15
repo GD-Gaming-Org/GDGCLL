@@ -446,11 +446,17 @@ onClick('login', function(){ window.location.href = 'html/login.html' });
 onClick('register', function(){ window.location.href = 'html/register.html' });
 onClick('back', function(){ window.location.href = '../index.html' });
 
-onClick('loginGo', function(){
+// ==========================================
+// FIX APPLIED HERE: Added (e) and e.preventDefault()
+// ==========================================
+onClick('loginGo', function(e){
+  if (e) e.preventDefault();
+  
   const user = $('loginUser').value.trim();
   const pass = $('loginPass').value;
   const msg = $('loginMsg');
   if(!user || !pass){ msg.textContent = 'Enter your username and password.'; return }
+  
   apiLogin(user, pass).then(function(result){
     if(result.ok){
       sessionStorage.setItem('gd_user', result.username);
@@ -466,14 +472,18 @@ onClick('loginGo', function(){
   });
 });
 
-onClick('regGo', function(){
+onClick('regGo', function(e){
+  if (e) e.preventDefault();
+  
   const user = $('regUser').value.trim();
   const pass = $('regPass').value;
   const pass2 = $('regPass2').value;
   const msg = $('regMsg');
+  
   if(user.length < 3){ msg.textContent = 'Username must be at least 3 letters.'; return }
   if(pass.length < 6){ msg.textContent = 'Password must be at least 6 characters.'; return }
   if(pass !== pass2){ msg.textContent = 'Passwords do not match.'; return }
+  
   apiRegister(user, pass).then(function(result){
     if(result.ok){
       msg.textContent = 'Registered. You can log in now.';
