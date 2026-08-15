@@ -38,7 +38,7 @@ function avatar(name){
 
 function vipTag(name){
   const p = person(name);
-  return (p && p.vip) ? '<span class="tag tag-vip">VIP</span>' : '';
+  return (p && p.vip == 1) ? '<span class="tag tag-vip">VIP</span>' : '';
 }
 
 function titleTag(name){
@@ -52,13 +52,30 @@ function roleOf(name){
 }
 
 async function api(path, opts){
-  const res = await fetch(path, Object.assign({ credentials:'include' }, opts||{}));
-  return res.json();
+  try {
+    const res = await fetch(path, Object.assign({ credentials:'include' }, opts||{}));
+    return await res.json();
+  } catch (e) {
+    return { ok: false, error: 'network_error' };
+  }
 }
 
-async function loadMe(){ ME = await api('/me.php'); }
-async function loadLevels(){ LEVELS = await api('/levels.php'); }
-async function loadPeople(){ PEOPLE = await api('/people.php'); }
+// Fixed: Loads user straight from local storage so we don't need me.php
+async function loadMe(){ 
+  try {
+    const stored = localStorage.getItem('currentUser');
+    if (stored) {
+      ME = JSON.parse(stored);
+      ME.loggedIn = true;
+    } else {
+      ME = { loggedIn: false };
+    }
+  } catch (e) {
+    ME = { loggedIn: false };
+  }
+}
+async function loadLevels(){ LEVELS = (await api('/levels.php')).data || []; }
+async function loadPeople(){ PEOPLE = (await api('/people.php')).data || []; }
 
 async function apiRegister(username, password){
   return api('/register.php', {
@@ -74,7 +91,9 @@ async function apiLogin(username, password){
   });
 }
 
-async function apiLogout(){ return api('/logout.php', { method:'POST' }); }
+async function apiLogout(){ 
+  return api('/logout.php', { method:'POST' }); 
+}
 
 async function apiPostComment(levelId, text){
   return api('/comments.php', {
@@ -84,10 +103,12 @@ async function apiPostComment(levelId, text){
 }
 
 async function loadComments(levelId){
-  return api('/comments.php?level_id='+levelId);
+  const res = await api('/comments.php?level_id='+levelId);
+  return res.data || [];
 }
 
 function renderRows(){
+  if(!$('rows')) return;
   $('rows').innerHTML = LEVELS.map((lv,i)=>{
     const vid = ytid(lv.verification);
     const min = score(i+1, lv.percent_to_qualify, lv.percent_to_qualify);
@@ -104,11 +125,13 @@ function renderRows(){
 }
 
 async function renderDetail(){
+  if(!$('detail')) return;
   const lv = LEVELS[active];
   if(!lv) return;
   const vid = ytid(lv.verification);
-  const vics = lv.records.filter(r=>r.percent>=100).length;
+  const vics = lv.records ? lv.records.filter(r=>r.percent>=100).length : 0;
   const comments = await loadComments(lv.id);
+  const recs = lv.records || [];
 
   $('detail').innerHTML =
     (vid?'<a class="d-banner" href="'+esc(lv.verification)+'" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/'+vid+'/hqdefault.jpg" alt=""><span class="d-play"><i></i></span></a>':'')+
@@ -122,8 +145,8 @@ async function renderDetail(){
       '</div>'+
       '<div class="d-label">LEVEL INFO</div>'+
       '<div class="chips"><span class="chip"><b>ID</b>'+lv.gd_id+'</span><span class="chip"><b>PASS</b>'+esc(lv.password)+'</span></div>'+
-      '<div class="d-label">RECORDS ('+lv.records.length+')</div>'+
-      (lv.records.length ? lv.records.map((r,idx)=>
+      '<div class="d-label">RECORDS ('+recs.length+')</div>'+
+      (recs.length ? recs.map((r,idx)=>
         '<div class="rec">'+avatar(r.username)+
           '<span class="rec-name" data-player="'+esc(r.username)+'">'+esc(r.username)+'</span>'+vipTag(r.username)+
           (idx===0&&r.percent>=100?'<span class="tag tag-first">FIRST</span>':'')+
@@ -166,17 +189,20 @@ function buildBoard(){
       s.verified++;
       s.total += score(rank,100,lv.percent_to_qualify);
     }
-    lv.records.forEach(r=>{
-      const s = slot(r.username);
-      if(r.percent>=100) s.beaten++; else s.progress++;
-      s.total += score(rank,r.percent,lv.percent_to_qualify);
-    });
+    if(lv.records) {
+        lv.records.forEach(r=>{
+        const s = slot(r.username);
+        if(r.percent>=100) s.beaten++; else s.progress++;
+        s.total += score(rank,r.percent,lv.percent_to_qualify);
+        });
+    }
   });
   return Object.entries(p).map(([user,v])=>({user,...v}))
     .filter(x=>x.total>0).sort((a,b)=>b.total-a.total);
 }
 
 function renderBoard(){
+  if(!$('lb')) return;
   $('lb').innerHTML = buildBoard().map((x,i)=>
     '<div class="lb-row" data-player="'+esc(x.user)+'">'+
       '<span class="lb-rank '+(i<3?'top':'')+'">#'+(i+1)+'</span>'+
@@ -193,10 +219,11 @@ function renderBoard(){
 }
 
 function renderStaff(){
+  if(!$('staff')) return;
   const staffList = PEOPLE.filter(p=>p.role!=='player');
   $('staff').innerHTML = staffList.map(s=>
     '<div class="staff-card">'+avatar(s.username)+
-      '<div><div class="staff-name">'+esc(s.username)+(s.vip?'<span class="tag tag-vip">VIP</span>':'')+'</div>'+
+      '<div><div class="staff-name">'+esc(s.username)+(s.vip==1?'<span class="tag tag-vip">VIP</span>':'')+'</div>'+
       '<span class="staff-role">'+esc(s.role.toUpperCase())+'</span></div>'+
     '</div>').join('');
 }
@@ -209,13 +236,15 @@ function playerCard(name){
       out.verified.push({level:lv.name, rank, link:lv.verification});
       out.total += score(rank,100,lv.percent_to_qualify);
     }
-    lv.records.forEach((r,idx)=>{
-      if(r.username.toLowerCase()!==name.toLowerCase()) return;
-      const e = {level:lv.name, rank, percent:r.percent, link:r.link, mobile:r.mobile, first: idx===0 && r.percent>=100};
-      if(e.first) out.firsts++;
-      (r.percent>=100?out.beaten:out.progress).push(e);
-      out.total += score(rank,r.percent,lv.percent_to_qualify);
-    });
+    if(lv.records) {
+        lv.records.forEach((r,idx)=>{
+        if(r.username.toLowerCase()!==name.toLowerCase()) return;
+        const e = {level:lv.name, rank, percent:r.percent, link:r.link, mobile:r.mobile, first: idx===0 && r.percent>=100};
+        if(e.first) out.firsts++;
+        (r.percent>=100?out.beaten:out.progress).push(e);
+        out.total += score(rank,r.percent,lv.percent_to_qualify);
+        });
+    }
   });
   return out;
 }
@@ -233,6 +262,7 @@ function recLine(r){
 async function showProfile(name){
   const who = name || (ME.loggedIn ? ME.username : '');
   const el = $('p-profile');
+  if(!el) return;
   if(!who){
     el.innerHTML = '<div class="box"><h2>Not logged in</h2><p class="lead">Log in to see your profile.</p><button class="go" data-go="login">Log in</button></div>';
     go('profile'); wireGo(); return;
@@ -275,6 +305,7 @@ async function showProfile(name){
   const lo = $('doLogout');
   if(lo) lo.addEventListener('click', async ()=>{
     await apiLogout();
+    localStorage.removeItem('currentUser'); // Fixed: Clear local cache
     ME = { loggedIn:false };
     refreshNav(); go('home');
   });
@@ -285,7 +316,7 @@ function isAdmin(){
 }
 
 function renderAdmin(){
-  if(!isAdmin()) return;
+  if(!isAdmin() || !$('p-admin')) return;
 
   $('p-admin').innerHTML =
     '<div class="head"><h1>Admin</h1><p>Signed in as '+esc(ME.username)+' &middot; '+esc(ME.role)+'</p></div>'+
@@ -428,10 +459,12 @@ function wireGo(){
 
 function refreshNav(){
   const u = ME.loggedIn ? ME.username : '';
-  $('navLogin').hidden = !!u;
-  $('navProfile').hidden = !u;
-  if(u) $('navProfile').textContent = u;
-  $('navAdmin').hidden = !isAdmin();
+  if($('navLogin')) $('navLogin').hidden = !!u;
+  if($('navProfile')) {
+      $('navProfile').hidden = !u;
+      if(u) $('navProfile').textContent = u;
+  }
+  if($('navAdmin')) $('navAdmin').hidden = !isAdmin();
 }
 
 function onClick(id, fn){ const el = $(id); if(el) el.addEventListener('click', fn); }
@@ -461,7 +494,9 @@ onClick('loginGo', async ()=>{
   if(!user||!pass){ msg.textContent='Enter your username and password.'; return }
   const result = await apiLogin(user, pass);
   if(result.ok){
-    msg.textContent = 'Logged in as ' + result.username;
+    // Fixed: Save the returned user object directly into local storage!
+    localStorage.setItem('currentUser', JSON.stringify(result.user));
+    msg.textContent = 'Logged in as ' + result.user.username;
     setTimeout(()=>{ window.location.href = '../index.html' }, 800);
   } else if(result.error==='no_account'){ msg.textContent='No account with that name.'; }
   else if(result.error==='wrong_password'){ msg.textContent='Wrong password.'; }
@@ -489,6 +524,7 @@ onClick('profile', async ()=>{
   if(!ME.loggedIn){ window.location.href = 'html/login.html'; return }
   if(confirm('Logged in as ' + ME.username + '. Log out?')){
     await apiLogout();
+    localStorage.removeItem('currentUser'); // Fixed: Clear local cache on logout
     ME = { loggedIn:false };
     location.reload();
   }
