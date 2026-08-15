@@ -149,7 +149,12 @@ async function submitComment(levelId, text) {
     const res = await fetch('/comments.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ level_id: levelId, comment: text })
+      credentials: 'include',
+      body: JSON.stringify({ 
+        level_id: levelId, 
+        comment: text,
+        username: currentUser()
+      })
     });
     return await res.json();
   } catch (e) {
