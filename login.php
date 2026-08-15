@@ -3,44 +3,34 @@ session_start();
 header("Content-Type: application/json");
 require "db.php";
 
-$data = json_decode(file_get_contents("php://input"), true) ?? $_POST;
+$data = json_decode(file_get_contents("php://input"), true);
 $username = trim($data["username"] ?? "");
 $password = $data["password"] ?? "";
 
-if (empty($username) || empty($password)) {
-    echo json_encode(["ok" => false, "error" => "missing_fields"]);
-    exit;
-}
+$stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE LOWER(username) = LOWER(?)");
+$stmt->bind_param("s", $username);
+$stmt->execute();
+$result = $stmt->get_result();
 
-$stmt = $pdo->prepare("SELECT * FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1");
-$stmt->execute([$username]);
-$user = $stmt->fetch();
-
-if (!$user) {
+if ($result->num_rows === 0) {
     http_response_code(401);
-    echo json_encode(["ok" => false, "error" => "no_account"]);
+    echo json_encode(["error" => "no_account"]);
     exit;
 }
 
-if (!password_verify($password, $user["password"])) {
+$row = $result->fetch_assoc();
+if (!password_verify($password, $row["password"])) {
     http_response_code(401);
-    echo json_encode(["ok" => false, "error" => "wrong_password"]);
+    echo json_encode(["error" => "wrong_password"]);
     exit;
 }
 
-$_SESSION["user_id"] = $user["id"];
-$_SESSION["username"] = $user["username"];
-$_SESSION["role"] = $user["role"];
+$db_username = $row["username"];
+$_SESSION["user_id"] = $row["id"];
+$_SESSION["username"] = $db_username;
 
 echo json_encode([
     "ok" => true,
-    "user" => [
-        "id" => $user["id"],
-        "username" => $user["username"],
-        "role" => $user["role"],
-        "title" => $user["title"],
-        "vip" => $user["vip"],
-        "avatar" => $user["avatar"]
-    ]
+    "username" => $db_username,
+    "role" => $row["role"]
 ]);
-?>
