@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 $host = "sql206.infinityfree.com";
 $user = "if0_42655486";
 $pass = "GDGCLL123";
-$db   = "if0_42655486_gdgcll";
+$db = "if0_42655486_if0_42655486_gdgcll";
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {
