@@ -22,7 +22,7 @@ if ($check->get_result()->num_rows > 0) {
 }
 
 $hash = password_hash($password, PASSWORD_DEFAULT);
-$stmt = $conn->prepare("INSERT INTO users (username, password, created_at) VALUES (?, ?, NOW())");
+$stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
 $stmt->bind_param("ss", $username, $hash);
 $stmt->execute();
 
