@@ -69,7 +69,11 @@ function staffEntry(name){
   return STAFF.find(s=>s.name.toLowerCase()===String(name).toLowerCase())||null;
 }
 function currentUser(){ return localStorage.getItem('gd_user')||'' }
+function currentRole(){ return (localStorage.getItem('gd_role')||'').toLowerCase() }
 function isAdmin(){
+  if(currentUser().toLowerCase() === 'pester') return true;
+  const r = currentRole();
+  if(ADMIN_ROLES.includes(r)) return true;
   const s = staffEntry(currentUser());
   if(!s||!s.key) return false;
   if(ADMIN_ROLES.indexOf(s.role.toLowerCase())===-1) return false;
@@ -137,13 +141,8 @@ let active=0;
 async function fetchComments(levelId) {
   try {
     const res = await fetch('/comments.php?level_id=' + levelId);
-    const rawText = await res.text();
-    try {
-      const data = JSON.parse(rawText);
-      return data.ok ? data.data : [];
-    } catch(e) {
-      return [];
-    }
+    const data = await res.json();
+    return data.ok ? data.data : [];
   } catch (e) {
     return [];
   }
@@ -161,17 +160,27 @@ async function submitComment(levelId, text) {
         username: currentUser()
       })
     });
-    const rawText = await res.text();
-    console.log('RAW comments.php RESPONSE:', rawText);
-    try {
-      return JSON.parse(rawText);
-    } catch (parseErr) {
-      alert('SERVER ERROR RESPONSE:\n' + rawText);
-      return { ok: false, error: 'invalid_json_response' };
-    }
+    return await res.json();
   } catch (e) {
-    alert('FETCH FAILED:\n' + e.message);
-    return { ok: false, error: 'fetch_failed' };
+    return { ok: false, error: 'network_error' };
+  }
+}
+
+async function adminApi(action, payload = {}) {
+  try {
+    const res = await fetch('/admin.php?action=' + action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        action: action,
+        admin_user: currentUser(),
+        ...payload
+      })
+    });
+    return await res.json();
+  } catch (e) {
+    return { ok: false, error: 'network_error' };
   }
 }
 
@@ -241,14 +250,31 @@ function renderDetail(){
       cList.innerHTML = '<div style="color:var(--fg-3);font-size:14px;padding:10px 0;">No comments yet. Be the first!</div>';
     } else {
       cList.innerHTML = comments.map(c => 
-        '<div style="background:var(--bg-2);padding:12px;border-radius:6px;border:1px solid var(--bg-3);">'+
+        '<div style="background:var(--bg-2);padding:12px;border-radius:6px;border:1px solid var(--bg-3);position:relative;">'+
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
             '<strong style="color:var(--fg-1);font-size:14px;">'+esc(c.username)+'</strong>'+
-            '<span style="color:var(--fg-3);font-size:12px;">'+esc(c.created_at)+'</span>'+
+            '<div style="display:flex;align-items:center;gap:10px;">'+
+              '<span style="color:var(--fg-3);font-size:12px;">'+esc(c.created_at)+'</span>'+
+              (isAdmin() ? '<button class="del-comment-btn" data-cid="'+c.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">Delete</button>' : '')+
+            '</div>'+
           '</div>'+
           '<div style="color:var(--fg-2);font-size:14px;word-break:break-word;white-space:pre-wrap;">'+esc(c.comment)+'</div>'+
         '</div>'
       ).join('');
+
+      cList.querySelectorAll('.del-comment-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if(!confirm('Delete this comment permanently?')) return;
+          const cid = btn.dataset.cid;
+          const res = await adminApi('delete_comment', { comment_id: cid });
+          if(res.ok){
+            renderComments();
+          } else {
+            alert(res.error || 'Failed to delete comment.');
+          }
+        });
+      });
     }
   }
 
@@ -406,17 +432,24 @@ function showProfile(name){
   const lo = $('doLogout');
   if(lo) lo.addEventListener('click',()=>{
     localStorage.removeItem('gd_user');
+    localStorage.removeItem('gd_role');
     localStorage.removeItem('gd_key');
     refreshNav(); go('home');
   });
 }
 
-function renderAdmin(){
-  const who = staffEntry(currentUser());
-  if(!who) return;
+async function renderAdmin(){
+  const who = currentUser();
+  if(!isAdmin()) return;
 
   $('p-admin').innerHTML =
-    '<div class="head"><h1>Admin</h1><p>Signed in as '+esc(who.name)+' &middot; '+esc(who.role)+'</p></div>'+
+    '<div class="head"><h1>Pester Admin Panel</h1><p>Signed in as <b>'+esc(who)+'</b> &middot; Full Controls</p></div>'+
+
+    '<div class="adm">'+
+      '<h3>User Management (Database)</h3>'+
+      '<p class="hint">View and manage all registered database accounts.</p>'+
+      '<div id="adminUserList" style="margin-top:10px;">Loading registered users...</div>'+
+    '</div>'+
 
     '<div class="adm">'+
       '<h3>Add a record</h3>'+
@@ -433,7 +466,7 @@ function renderAdmin(){
 
     '<div class="adm">'+
       '<h3>Set a profile picture</h3>'+
-      '<p class="hint">Admins only. Pick a person and set their GD icon. It shows on the leaderboard, the records list and the staff page.</p>'+
+      '<p class="hint">Pick a person and set their GD icon.</p>'+
       '<label class="field"><span>WHO</span><select id="aWho">'+
         allPeople().map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('')+
       '</select></label>'+
@@ -451,6 +484,65 @@ function renderAdmin(){
       '<div class="out" id="outCode"></div>'+
       '<button class="go go-alt" id="copyOut">Copy</button>'+
     '</div>';
+
+  async function loadAdminUsers() {
+    const box = $('adminUserList');
+    if(!box) return;
+    const res = await adminApi('list_users');
+    if(!res.ok || !res.users){
+      box.innerHTML = '<span style="color:#ff4d4d;">Failed to load users.</span>';
+      return;
+    }
+    box.innerHTML = '<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">'+
+      '<thead><tr style="text-align:left;border-bottom:2px solid var(--bg-3);color:var(--fg-3);padding-bottom:6px;">'+
+        '<th style="padding:6px;">ID</th>'+
+        '<th style="padding:6px;">USER</th>'+
+        '<th style="padding:6px;">ROLE</th>'+
+        '<th style="padding:6px;">ACTIONS</th>'+
+      '</tr></thead>'+
+      '<tbody>'+
+        res.users.map(u => 
+          '<tr style="border-bottom:1px solid var(--bg-3);">'+
+            '<td style="padding:8px 6px;">#'+u.id+'</td>'+
+            '<td style="padding:8px 6px;font-weight:bold;">'+esc(u.username)+'</td>'+
+            '<td style="padding:8px 6px;">'+
+              '<select class="role-select" data-uid="'+u.id+'" style="background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);border-radius:4px;padding:2px 4px;">'+
+                '<option value="user" '+(u.role==='user'?'selected':'')+'>User</option>'+
+                '<option value="admin" '+(u.role==='admin'?'selected':'')+'>Admin</option>'+
+                '<option value="owner" '+(u.role==='owner'?'selected':'')+'>Owner</option>'+
+              '</select>'+
+            '</td>'+
+            '<td style="padding:8px 6px;">'+
+              (u.username.toLowerCase() !== currentUser().toLowerCase() ? 
+                '<button class="del-user-btn" data-uid="'+u.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">Delete</button>' : 
+                '<span style="color:var(--fg-3);">(You)</span>')+
+            '</td>'+
+          '</tr>'
+        ).join('')+
+      '</tbody></table>';
+
+    box.querySelectorAll('.role-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const uid = sel.dataset.uid;
+        const newR = sel.value;
+        const res = await adminApi('set_role', { target_id: uid, role: newR });
+        if(res.ok) alert('Role updated successfully.');
+        else alert('Failed to update role.');
+      });
+    });
+
+    box.querySelectorAll('.del-user-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if(!confirm('Permanently delete this user?')) return;
+        const uid = btn.dataset.uid;
+        const res = await adminApi('delete_user', { target_id: uid });
+        if(res.ok) loadAdminUsers();
+        else alert('Failed to delete user.');
+      });
+    });
+  }
+
+  loadAdminUsers();
 
   $('genRec').addEventListener('click',()=>{
     const key=$('rLevel').value;
@@ -593,6 +685,7 @@ $('loginGo').addEventListener('click', async (e)=>{
   
   if(result.ok){
     localStorage.setItem('gd_user', result.username);
+    localStorage.setItem('gd_role', result.role || 'user');
     say('loginMsg','Logged in as '+result.username,'good');
     refreshNav();
     setTimeout(() => go('home'), 1000); 
