@@ -1,36 +1,44 @@
 <?php
 session_start();
-header("Content-Type: application/json");
-require "db.php";
+header('Content-Type: application/json');
+require_once 'db.php';
 
-$data = json_decode(file_get_contents("php://input"), true);
-$username = trim($data["username"] ?? "");
-$password = $data["password"] ?? "";
+$raw = file_get_contents('php://input');
+$json = json_decode($raw, true);
 
-$stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE LOWER(username) = LOWER(?)");
-$stmt->bind_param("s", $username);
-$stmt->execute();
-$result = $stmt->get_result();
+$user = trim($_POST['username'] ?? $json['username'] ?? '');
+$pass = trim($_POST['password'] ?? $json['password'] ?? '');
 
-if ($result->num_rows === 0) {
-    http_response_code(401);
-    echo json_encode(["error" => "no_account"]);
+if (empty($user) || empty($pass)) {
+    echo json_encode(['status' => 'error', 'message' => 'Please fill in all fields.']);
     exit;
 }
 
-$row = $result->fetch_assoc();
-if (!password_verify($password, $row["password"])) {
-    http_response_code(401);
-    echo json_encode(["error" => "wrong_password"]);
-    exit;
+try {
+    $stmt = $pdo->prepare("SELECT id, username, password, role, avatar FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1");
+    $stmt->execute([$user]);
+    $account = $stmt->fetch();
+
+    if ($account && password_verify($pass, $account['password'])) {
+        $_SESSION['user_id'] = $account['id'];
+        $_SESSION['username'] = $account['username'];
+        $_SESSION['role'] = $account['role'];
+        $_SESSION['avatar'] = $account['avatar'];
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Login successful!',
+            'user' => [
+                'id' => $account['id'],
+                'username' => $account['username'],
+                'role' => $account['role'],
+                'avatar' => $account['avatar']
+            ]
+        ]);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Invalid username or password.']);
+    }
+} catch (PDOException $e) {
+    echo json_encode(['status' => 'error', 'message' => 'Server query error.']);
 }
-
-$db_username = $row["username"];
-$_SESSION["user_id"] = $row["id"];
-$_SESSION["username"] = $db_username;
-
-echo json_encode([
-    "ok" => true,
-    "username" => $db_username,
-    "role" => $row["role"]
-]);
+?>
