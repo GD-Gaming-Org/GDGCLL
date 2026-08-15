@@ -20,14 +20,20 @@ if (empty($actingUser)) {
     exit;
 }
 
-$stmt = $conn->prepare("SELECT role FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1");
+$stmt = $conn->prepare("SELECT role, is_banned FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1");
 $stmt->bind_param("s", $actingUser);
 $stmt->execute();
 $res = $stmt->get_result();
 $uRow = $res->fetch_assoc();
 
+if (!$uRow || intval($uRow['is_banned']) === 1) {
+    ob_clean();
+    echo json_encode(["ok" => false, "error" => "banned"]);
+    exit;
+}
+
 $adminRoles = ['owner', 'admin', 'developer'];
-if (!$uRow || !in_array(strtolower($uRow['role']), $adminRoles)) {
+if (!in_array(strtolower($uRow['role']), $adminRoles)) {
     ob_clean();
     echo json_encode(["ok" => false, "error" => "unauthorized"]);
     exit;
@@ -36,7 +42,7 @@ if (!$uRow || !in_array(strtolower($uRow['role']), $adminRoles)) {
 $action = $_GET['action'] ?? $data['action'] ?? '';
 
 if ($action === 'list_users') {
-    $q = $conn->query("SELECT id, username, role, created_at FROM users ORDER BY id ASC");
+    $q = $conn->query("SELECT id, username, role, is_banned, created_at FROM users ORDER BY id ASC");
     $users = [];
     while ($r = $q->fetch_assoc()) {
         $users[] = $r;
@@ -46,20 +52,28 @@ if ($action === 'list_users') {
     exit;
 }
 
+if ($action === 'toggle_ban') {
+    $targetId = intval($data['target_id'] ?? 0);
+    $banStatus = intval($data['is_banned'] ?? 0);
+    $stmt = $conn->prepare("UPDATE users SET is_banned = ? WHERE id = ?");
+    $stmt->bind_param("ii", $banStatus, $targetId);
+    $stmt->execute();
+    ob_clean();
+    echo json_encode(["ok" => true]);
+    exit;
+}
+
 if ($action === 'set_role') {
     $targetId = intval($data['target_id'] ?? 0);
     $newRole = trim($data['role'] ?? 'user');
-    
     if (!in_array($newRole, ['user', 'admin', 'owner'])) {
         ob_clean();
         echo json_encode(["ok" => false, "error" => "invalid_role"]);
         exit;
     }
-
     $stmt = $conn->prepare("UPDATE users SET role = ? WHERE id = ?");
     $stmt->bind_param("si", $newRole, $targetId);
     $stmt->execute();
-
     ob_clean();
     echo json_encode(["ok" => true]);
     exit;
@@ -70,7 +84,50 @@ if ($action === 'delete_user') {
     $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
     $stmt->bind_param("i", $targetId);
     $stmt->execute();
+    ob_clean();
+    echo json_encode(["ok" => true]);
+    exit;
+}
 
+if ($action === 'add_level') {
+    $name = trim($data['name'] ?? '');
+    $creators = trim($data['creators'] ?? '');
+    $verifier = trim($data['verifier'] ?? '');
+    $vLink = trim($data['link'] ?? '');
+    $qualify = intval($data['qualify'] ?? 100);
+    $lvlId = trim($data['level_id'] ?? '');
+    $pass = trim($data['password'] ?? 'Free to copy');
+
+    if (!$name || !$verifier || !$vLink) {
+        ob_clean();
+        echo json_encode(["ok" => false, "error" => "missing_fields"]);
+        exit;
+    }
+
+    $stmt = $conn->prepare("INSERT INTO custom_levels (name, creators, verifier, verification_link, percent_qualify, level_id_string, password) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssiss", $name, $creators, $verifier, $vLink, $qualify, $lvlId, $pass);
+    $stmt->execute();
+    ob_clean();
+    echo json_encode(["ok" => true]);
+    exit;
+}
+
+if ($action === 'add_record') {
+    $lvlName = trim($data['level_name'] ?? '');
+    $user = trim($data['username'] ?? '');
+    $pct = intval($data['percent'] ?? 100);
+    $link = trim($data['link'] ?? '');
+    $mob = intval($data['is_mobile'] ?? 0);
+
+    if (!$lvlName || !$user || !$link) {
+        ob_clean();
+        echo json_encode(["ok" => false, "error" => "missing_fields"]);
+        exit;
+    }
+
+    $stmt = $conn->prepare("INSERT INTO custom_records (level_name, username, percent, link, is_mobile) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssisi", $lvlName, $user, $pct, $link, $mob);
+    $stmt->execute();
     ob_clean();
     echo json_encode(["ok" => true]);
     exit;
@@ -81,7 +138,6 @@ if ($action === 'delete_comment') {
     $stmt = $conn->prepare("DELETE FROM comments WHERE id = ?");
     $stmt->bind_param("i", $commentId);
     $stmt->execute();
-
     ob_clean();
     echo json_encode(["ok" => true]);
     exit;
