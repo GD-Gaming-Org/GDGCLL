@@ -1,70 +1,66 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-header("Content-Type: application/json");
-require "db.php";
+ob_start();
+error_reporting(0);
+ini_set('display_errors', 0);
+header("Content-Type: application/json; charset=UTF-8");
+require_once "db.php";
 
-if ($_SERVER["REQUEST_METHOD"] === "GET") {
-    $levelId = intval($_GET["level_id"] ?? 0);
-    $stmt = $conn->prepare("SELECT username, text, created_at FROM comments WHERE level_id = ? ORDER BY created_at DESC");
-    $stmt->bind_param("i", $levelId);
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $level_id = isset($_GET['level_id']) ? intval($_GET['level_id']) : 0;
+    $stmt = $conn->prepare("SELECT username, comment, created_at FROM comments WHERE level_id = ? ORDER BY created_at DESC");
+    $stmt->bind_param("i", $level_id);
     $stmt->execute();
-    $res = $stmt->get_result();
-    $out = [];
-    while ($row = $res->fetch_assoc()) $out[] = $row;
-    echo json_encode($out);
+    $result = $stmt->get_result();
+    
+    $comments = [];
+    while ($row = $result->fetch_assoc()) {
+        $comments[] = $row;
+    }
+    
+    ob_clean();
+    echo json_encode(["ok" => true, "data" => $comments]);
     exit;
 }
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $username = requireLogin();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $raw = file_get_contents("php://input");
     $data = json_decode($raw, true);
-
-    $levelId = intval($data["level_id"] ?? 0);
-    $text = trim($data["text"] ?? "");
-
-    if (!$levelId || !$text || strlen($text) > 500) {
-        http_response_code(400);
-        echo json_encode(["error" => "invalid_input"]);
+    
+    $username = trim($_SESSION['username'] ?? $data['username'] ?? "");
+    $level_id = isset($data['level_id']) ? intval($data['level_id']) : 0;
+    $comment = trim($data['comment'] ?? "");
+    
+    if (empty($username)) {
+        ob_clean();
+        echo json_encode(["ok" => false, "error" => "not_logged_in"]);
         exit;
     }
-
-    $stmt = $conn->prepare("INSERT INTO comments (level_id, username, text) VALUES (?, ?, ?)");
-    $stmt->bind_param("iss", $levelId, $username, $text);
-    $stmt->execute();
-
-    echo json_encode(["ok" => true]);
-    exit;
-}
-
-if ($_SERVER["REQUEST_METHOD"] === "DELETE") {
-    $username = requireLogin();
-    $raw = file_get_contents("php://input");
-    $data = json_decode($raw, true);
-    $commentId = intval($data["id"] ?? 0);
-
-    $stmt = $conn->prepare("SELECT username FROM comments WHERE id = ?");
-    $stmt->bind_param("i", $commentId);
-    $stmt->execute();
-    $row = $stmt->get_result()->fetch_assoc();
-
-    $roleStmt = $conn->prepare("SELECT role FROM users WHERE username = ?");
-    $roleStmt->bind_param("s", $username);
-    $roleStmt->execute();
-    $roleRow = $roleStmt->get_result()->fetch_assoc();
-    $isMod = $roleRow && in_array($roleRow["role"], ["admin","owner","developer"]);
-
-    if (!$row || (strtolower($row["username"]) !== strtolower($username) && !$isMod)) {
-        http_response_code(403);
-        echo json_encode(["error" => "not_allowed"]);
+    
+    if (empty($comment)) {
+        ob_clean();
+        echo json_encode(["ok" => false, "error" => "empty_comment"]);
         exit;
     }
-
-    $del = $conn->prepare("DELETE FROM comments WHERE id = ?");
-    $del->bind_param("i", $commentId);
-    $del->execute();
-
-    echo json_encode(["ok" => true]);
+    
+    $stmt = $conn->prepare("INSERT INTO comments (level_id, username, comment) VALUES (?, ?, ?)");
+    if (!$stmt) {
+        ob_clean();
+        echo json_encode(["ok" => false, "error" => $conn->error ?: "prepare_failed"]);
+        exit;
+    }
+    
+    $stmt->bind_param("iss", $level_id, $username, $comment);
+    
+    if ($stmt->execute()) {
+        ob_clean();
+        echo json_encode(["ok" => true]);
+    } else {
+        ob_clean();
+        echo json_encode(["ok" => false, "error" => $stmt->error ?: "insert_failed"]);
+    }
     exit;
 }
