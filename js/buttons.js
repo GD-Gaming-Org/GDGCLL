@@ -16,19 +16,25 @@ function host(u){
 function isVip(name){
   try{
     if(typeof VIPS === 'undefined' || !VIPS) return false;
-    return VIPS.some(function(v){ return String(v).toLowerCase() === String(name).toLowerCase(); });
+    return VIPS.some(function(v){
+      return String(v).toLowerCase() === String(name).toLowerCase();
+    });
   }catch(e){ return false }
 }
 
 function titleFor(name){
   try{
     if(typeof TITLES === 'undefined' || !TITLES) return '';
-    const k = Object.keys(TITLES).find(function(x){ return String(x).toLowerCase() === String(name).toLowerCase(); });
+    const k = Object.keys(TITLES).find(function(x){
+      return String(x).toLowerCase() === String(name).toLowerCase();
+    });
     return k ? TITLES[k] : '';
   }catch(e){ return '' }
 }
 
-function vipTag(name){ return isVip(name) ? '<span class="tag tag-vip">VIP</span>' : ''; }
+function vipTag(name){
+  return isVip(name) ? '<span class="tag tag-vip">VIP</span>' : '';
+}
 
 function hostTag(u){
   const h = host(u);
@@ -62,14 +68,24 @@ function staffEntry(name){
   if(!name) return null;
   return STAFF.find(s=>s.name.toLowerCase()===String(name).toLowerCase())||null;
 }
-
-function currentUser(){ return sessionStorage.getItem('gd_user')||'' }
-
+function currentUser(){ return localStorage.getItem('gd_user')||'' }
 function isAdmin(){
   const s = staffEntry(currentUser());
-  if(!s) return false;
-  return ADMIN_ROLES.indexOf(s.role.toLowerCase())!==-1;
+  if(!s||!s.key) return false;
+  if(ADMIN_ROLES.indexOf(s.role.toLowerCase())===-1) return false;
+  return localStorage.getItem('gd_key')===s.key;
 }
+
+function h32(str,salt){
+  let h=2166136261>>>0;
+  const t=salt+str+salt;
+  for(let r=0;r<3000;r++){
+    for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)>>>0}
+    h=(h^(h>>>13))>>>0;
+  }
+  return h.toString(16).padStart(8,'0');
+}
+function hashCode(s){ return h32(s,'gdgcll-a')+h32(s,'gdgcll-b') }
 
 function shrinkImage(file, cb){
   const reader = new FileReader();
@@ -81,7 +97,9 @@ function shrinkImage(file, cb){
       c.width = S; c.height = S;
       const ctx = c.getContext('2d');
       const side = Math.min(img.width, img.height);
-      ctx.drawImage(img,(img.width-side)/2,(img.height-side)/2,side,side,0,0,S,S);
+      ctx.drawImage(img,
+        (img.width - side)/2, (img.height - side)/2, side, side,
+        0, 0, S, S);
       cb(c.toDataURL('image/jpeg', 0.82));
     };
     img.onerror = function(){ cb(null) };
@@ -128,6 +146,7 @@ function renderRows(){
       '<div class="card-pts">'+fix(min)+' ('+lv.percentToQualify+'%) &mdash; <b>'+fix(levelValue(i+1))+'</b> (100%) points</div>'+
     '</button>';
   }).join('');
+
   document.querySelectorAll('.card').forEach(b=>{
     b.addEventListener('click',()=>{active=+b.dataset.i;renderRows();renderDetail()});
   });
@@ -137,6 +156,7 @@ function renderDetail(){
   const lv=LEVELS_DATA[LIST[active]];
   const vid=ytid(lv.verification);
   const vics=lv.records.filter(r=>r.percent>=100&&r.link).length;
+
   $('detail').innerHTML =
     (vid?'<a class="d-banner" href="'+esc(lv.verification)+'" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/'+vid+'/hqdefault.jpg" alt=""><span class="d-play"><i></i></span></a>':'')+
     '<div class="d-body">'+
@@ -160,6 +180,7 @@ function renderDetail(){
           '<a class="rec-watch" href="'+esc(r.link)+'" target="_blank" rel="noopener">Watch</a>'+
         '</div>').join('')+
     '</div>';
+
   $('detail').querySelectorAll('.rec-name').forEach(n=>{
     n.addEventListener('click',()=>showProfile(n.dataset.player));
   });
@@ -198,6 +219,7 @@ function renderBoard(){
       '</span>'+
       '<span class="lb-pts">'+fix(x.total)+'</span>'+
     '</div>').join('');
+
   $('lb').querySelectorAll('.lb-row').forEach(r=>{
     r.addEventListener('click',()=>showProfile(r.dataset.player));
   });
@@ -240,16 +262,19 @@ function recLine(r){
   '</div>';
 }
 
-async function showProfile(name){
+function showProfile(name){
   const who = name || currentUser();
   const el = $('p-profile');
+
   if(!who){
     el.innerHTML='<div class="box"><h2>Not logged in</h2><p class="lead">Log in to see your profile.</p><button class="go" data-go="login">Log in</button></div>';
     go('profile'); wireGo(); return;
   }
+
   const p = playerCard(who);
   const s = staffEntry(who);
   const mine = who.toLowerCase() === currentUser().toLowerCase();
+
   el.innerHTML =
     '<div class="pf-head">'+avatar(who)+
       '<div><div class="pf-name">'+esc(who)+vipTag(who)+'</div>'+
@@ -258,32 +283,39 @@ async function showProfile(name){
       (titleFor(who)?'<div class="pf-title">'+esc(titleFor(who))+'</div>':'')+
       '</div>'+
     '</div>'+
+
     '<div class="pf-stats">'+
       '<div class="pf-stat"><b>'+fix(p.total)+'</b><span>POINTS</span></div>'+
       '<div class="pf-stat"><b>'+p.beaten.length+'</b><span>BEATEN</span></div>'+
       '<div class="pf-stat"><b>'+p.progress.length+'</b><span>PROGRESS</span></div>'+
       '<div class="pf-stat"><b>'+p.verified.length+'</b><span>VERIFIED</span></div>'+
     '</div>'+
+
     (p.beaten.length?'<div class="pf-sec"><h3>BEATEN ('+p.beaten.length+')</h3>'+p.beaten.map(recLine).join('')+'</div>':'')+
     (p.progress.length?'<div class="pf-sec"><h3>PROGRESS ('+p.progress.length+')</h3>'+p.progress.map(recLine).join('')+'</div>':'')+
     (p.verified.length?'<div class="pf-sec"><h3>VERIFIED ('+p.verified.length+')</h3>'+
       p.verified.map(v=>'<div class="rec"><span class="rec-pct">V</span><span class="rec-name">#'+v.rank+' '+esc(v.level)+'</span><a class="rec-watch" href="'+esc(v.link)+'" target="_blank" rel="noopener">Watch</a></div>').join('')+'</div>':'')+
+
     (!p.beaten.length&&!p.progress.length&&!p.verified.length?'<div class="pf-sec"><h3>RECORDS</h3><p class="lead" style="margin:0">No proven records yet.</p></div>':'')+
+
     (mine?
       '<div class="pf-sec"><h3>THEME</h3><div class="themes">'+
         THEMES.map(t=>'<button class="sw sw-'+t[0]+'" data-theme="'+t[0]+'" title="'+t[1]+'"></button>').join('')+
       '</div></div>'+
       '<div class="pf-sec"><button class="go go-alt" id="doLogout">Log out</button></div>'
     :'');
+
   go('profile');
+
   el.querySelectorAll('.sw').forEach(b=>{
     b.addEventListener('click',()=>applyTheme(b.dataset.theme));
   });
   applyTheme();
+
   const lo = $('doLogout');
-  if(lo) lo.addEventListener('click',async ()=>{
-    await apiLogout();
-    sessionStorage.removeItem('gd_user');
+  if(lo) lo.addEventListener('click',()=>{
+    localStorage.removeItem('gd_user');
+    localStorage.removeItem('gd_key');
     refreshNav(); go('home');
   });
 }
@@ -291,8 +323,10 @@ async function showProfile(name){
 function renderAdmin(){
   const who = staffEntry(currentUser());
   if(!who) return;
+
   $('p-admin').innerHTML =
     '<div class="head"><h1>Admin</h1><p>Signed in as '+esc(who.name)+' &middot; '+esc(who.role)+'</p></div>'+
+
     '<div class="adm">'+
       '<h3>Add a record</h3>'+
       '<p class="hint">Fill this in, press Generate, then paste the result into <b>data/data.js</b> and commit it.</p>'+
@@ -305,6 +339,7 @@ function renderAdmin(){
       '<label class="field"><span>MOBILE?</span><select id="rMob"><option value="false">No &mdash; PC</option><option value="true">Yes &mdash; Mobile</option></select></label>'+
       '<button class="go" id="genRec">Generate record code</button>'+
     '</div>'+
+
     '<div class="adm">'+
       '<h3>Set a profile picture</h3>'+
       '<p class="hint">Admins only. Pick a person and set their GD icon. It shows on the leaderboard, the records list and the staff page.</p>'+
@@ -319,6 +354,7 @@ function renderAdmin(){
       '</div>'+
       '<button class="go" id="aGen" style="margin-top:14px">Generate picture code</button>'+
     '</div>'+
+
     '<div class="adm" id="outBox" hidden>'+
       '<h3>Copy this</h3>'+
       '<div class="out" id="outCode"></div>'+
@@ -331,15 +367,24 @@ function renderAdmin(){
     const link=$('rLink').value.trim();
     if(!user){ alert('Player name is required.'); return }
     if(!link){ alert('Proof video is required, or the record scores nothing.'); return }
+
     const all = LEVELS_DATA[key].records.concat([{
-      user:user, percent:Number($('rPct').value)||100, link:link, mobile:$('rMob').value==='true'
+      user:user,
+      percent:Number($('rPct').value)||100,
+      link:link,
+      mobile:$('rMob').value==='true'
     }]);
+
     $('outCode').textContent = '"records": '+JSON.stringify(all,null,2).replace(/\n/g,'\n    ');
     $('outBox').hidden=false;
   });
 
   let aData = null;
-  function drawWho(){ $('aPreview').innerHTML = avatar($('aWho').value); aData = null; }
+
+  function drawWho(){
+    $('aPreview').innerHTML = avatar($('aWho').value);
+    aData = null;
+  }
   $('aWho').addEventListener('change', drawWho);
   drawWho();
 
@@ -357,7 +402,9 @@ function renderAdmin(){
   $('aGen').addEventListener('click', function(){
     if(!aData){ alert('Choose an image first.'); return }
     const who = $('aWho').value;
-    $('outCode').textContent = 'Add this line inside AVATARS in data/data.js:\n\n  "' + who + '": "' + aData + '",';
+    $('outCode').textContent =
+      'Add this line inside AVATARS in data/data.js:\n\n' +
+      '  "' + who + '": "' + aData + '",';
     $('outBox').hidden = false;
     $('outBox').scrollIntoView({behavior:'smooth',block:'start'});
   });
@@ -403,10 +450,8 @@ function wireGo(){
   });
 }
 
-async function refreshNav(){
-  const data = await apiMe();
-  const u = data.loggedIn ? data.username : '';
-  if(u) sessionStorage.setItem('gd_user', u); else sessionStorage.removeItem('gd_user');
+function refreshNav(){
+  const u=currentUser();
   $('navLogin').hidden = !!u;
   $('navProfile').hidden = !u;
   if(u) $('navProfile').textContent = u;
@@ -416,129 +461,57 @@ async function refreshNav(){
 function say(id,text,kind){
   const n=$(id); n.textContent=text; n.className='note '+(kind||'');
 }
-
-async function apiRegister(username, password){
-  const res = await fetch('/register.php', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({username, password})
-  });
-  return res.json();
+function getUsers(){
+  try{ return JSON.parse(localStorage.getItem('gd_users')||'{}') }catch(e){ return {} }
 }
 
-async function apiLogin(username, password){
-  const res = await fetch('/login.php', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    credentials:'include', body: JSON.stringify({username, password})
-  });
-  return res.json();
-}
-
-async function apiMe(){
-  const res = await fetch('/me.php', { credentials:'include' });
-  return res.json();
-}
-
-async function apiLogout(){
-  await fetch('/logout.php', { method:'POST', credentials:'include' });
-}
-
-onClick('login', function(){ window.location.href = 'html/login.html' });
-onClick('register', function(){ window.location.href = 'html/register.html' });
-onClick('back', function(){ window.location.href = '../index.html' });
-
-// ==========================================
-// FIX APPLIED HERE: Added (e) and e.preventDefault()
-// ==========================================
-onClick('loginGo', function(e){
-  if (e) e.preventDefault();
-  
-  const user = $('loginUser').value.trim();
-  const pass = $('loginPass').value;
-  const msg = $('loginMsg');
-  if(!user || !pass){ msg.textContent = 'Enter your username and password.'; return }
-  
-  apiLogin(user, pass).then(function(result){
-    if(result.ok){
-      sessionStorage.setItem('gd_user', result.username);
-      msg.textContent = 'Logged in as ' + result.username;
-      setTimeout(function(){ window.location.href = '../index.html' }, 800);
-    } else if(result.error === 'no_account'){
-      msg.textContent = 'No account with that name.';
-    } else if(result.error === 'wrong_password'){
-      msg.textContent = 'Wrong password.';
-    } else {
-      msg.textContent = 'Something went wrong.';
-    }
-  });
+$('loginGo').addEventListener('click',()=>{
+  const user=$('userInput').value.trim();
+  const pass=$('passInput').value;
+  const users=getUsers();
+  if(!user) return say('loginMsg','Enter your username.','bad');
+  if(!users[user]) return say('loginMsg','No account with that name.','bad');
+  if(users[user]!==pass) return say('loginMsg','Wrong password.','bad');
+  localStorage.setItem('gd_user',user);
+  localStorage.removeItem('gd_key');
+  say('loginMsg','Logged in as '+user,'good');
+  refreshNav(); setTimeout(()=>showProfile(),600);
 });
 
-onClick('regGo', function(e){
-  if (e) e.preventDefault();
-  
-  const user = $('regUser').value.trim();
-  const pass = $('regPass').value;
-  const pass2 = $('regPass2').value;
-  const msg = $('regMsg');
-  
-  if(user.length < 3){ msg.textContent = 'Username must be at least 3 letters.'; return }
-  if(pass.length < 6){ msg.textContent = 'Password must be at least 6 characters.'; return }
-  if(pass !== pass2){ msg.textContent = 'Passwords do not match.'; return }
-  
-  apiRegister(user, pass).then(function(result){
-    if(result.ok){
-      msg.textContent = 'Registered. You can log in now.';
-      setTimeout(function(){ window.location.href = 'login.html' }, 800);
-    } else if(result.error === 'username_taken'){
-      msg.textContent = 'That username is taken.';
-    } else if(result.error === 'invalid_input'){
-      msg.textContent = 'Username must be 3+ letters, password 6+ characters.';
-    } else {
-      msg.textContent = 'Something went wrong.';
-    }
-  });
+$('codeGo').addEventListener('click',()=>{
+  const raw=$('codeInput').value.trim().toUpperCase();
+  if(!raw) return say('loginMsg','Enter your account code.','bad');
+  const hash=hashCode(raw);
+  const who=STAFF.find(s=>s.key&&s.key===hash);
+  if(!who) return say('loginMsg','That code is not valid.','bad');
+  localStorage.setItem('gd_user',who.name);
+  localStorage.setItem('gd_key',hash);
+  say('loginMsg','Welcome back, '+who.name+'.','good');
+  refreshNav(); setTimeout(()=>showProfile(),600);
 });
 
-onClick('profile', function(){
-  apiMe().then(function(data){
-    if(!data.loggedIn){ window.location.href = 'html/login.html'; return }
-    if(confirm('Logged in as ' + data.username + '. Log out?')){
-      apiLogout().then(function(){
-        sessionStorage.removeItem('gd_user');
-        location.reload();
-      });
-    }
-  });
+$('regGo').addEventListener('click',()=>{
+  const user=$('regUser').value.trim();
+  const pass=$('regPass').value;
+  const pass2=$('regPass2').value;
+  if(user.length<3) return say('regMsg','Username must be at least 3 letters.','bad');
+  if(pass.length<6) return say('regMsg','Password must be at least 6 characters.','bad');
+  if(pass!==pass2) return say('regMsg','Passwords do not match.','bad');
+  const users=getUsers();
+  if(users[user]) return say('regMsg','That username is taken.','bad');
+  if(staffEntry(user)) return say('regMsg','That name belongs to staff. Use your account code.','bad');
+  users[user]=pass;
+  localStorage.setItem('gd_users',JSON.stringify(users));
+  localStorage.setItem('gd_user',user);
+  localStorage.removeItem('gd_key');
+  say('regMsg','Registered as '+user,'good');
+  refreshNav(); setTimeout(()=>showProfile(),600);
 });
 
-function onClick(id, fn){
-  const el = $(id);
-  if(el) el.addEventListener('click', fn);
-}
-
-function setupLogo(){
-  const img = $('logoImg');
-  const text = $('logoText');
-  if(!img) return;
-  const names = ['image.png','nevlo.png'];
-  let n = 0;
-  img.onerror = function(){
-    n++;
-    if(n < names.length) img.src = names[n];
-    else { img.onerror = null; img.hidden = true; if(text) text.hidden = false }
-  };
-  img.src = names[0];
-}
+$('navLogin').addEventListener('click',()=>go('login'));
+$('navProfile').addEventListener('click',()=>showProfile());
 
 document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
-
-async function init(){
-  setupLogo();
-  await refreshNav();
-  wireGo();
-  if(!$('rows')) return;
-  applyTheme();
-  renderRows(); renderDetail(); renderBoard(); renderStaff();
-  go('home');
-}
-
-init();
+applyTheme();
+renderRows(); renderDetail(); renderBoard(); renderStaff();
+refreshNav(); wireGo(); go('home');
