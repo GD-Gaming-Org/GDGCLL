@@ -150,5 +150,7 @@ var VIPS = [
 var TITLES = {
   "Pester44": "Developer of GDGCLL",
   "yYuixxwasTaken": "Zoink of GDGCLL",
-  "gdchicken000": "New GDG Zoink"
+  "gdchicken000": "New GDG Zoink",
+  "rtyrekguy": "Owner of GGCL"
 };
+
