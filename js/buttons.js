@@ -467,7 +467,10 @@ async function apiRegister(username, password){
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({username, password})
   });
-  return res.json();
+  const text = await res.text();
+  console.log('RAW register.php RESPONSE:', text);
+  try { return JSON.parse(text); }
+  catch(e){ return { error: 'not_json', raw: text }; }
 }
 
 async function apiLogin(username, password){
@@ -475,7 +478,10 @@ async function apiLogin(username, password){
     method:'POST', headers:{'Content-Type':'application/json'},
     credentials:'include', body: JSON.stringify({username, password})
   });
-  return res.json();
+  const text = await res.text();
+  console.log('RAW login.php RESPONSE:', text);
+  try { return JSON.parse(text); }
+  catch(e){ return { error: 'not_json', raw: text }; }
 }
 
 $('loginGo').addEventListener('click', async ()=>{
@@ -483,13 +489,14 @@ $('loginGo').addEventListener('click', async ()=>{
   const pass = $('passInput').value;
   if(!user || !pass) return say('loginMsg','Enter your username and password.','bad');
   const result = await apiLogin(user, pass);
+  alert('LOGIN RESULT: ' + JSON.stringify(result));
   if(result.ok){
     localStorage.setItem('gd_user', result.username);
     say('loginMsg','Logged in as '+result.username,'good');
-    refreshNav(); setTimeout(()=>showProfile(),600);
-  } else if(result.error==='no_account'){ say('loginMsg','No account with that name.','bad'); }
-  else if(result.error==='wrong_password'){ say('loginMsg','Wrong password.','bad'); }
-  else { say('loginMsg','Something went wrong.','bad'); }
+    refreshNav();
+  } else {
+    say('loginMsg', result.error || 'Something went wrong.', 'bad');
+  }
 });
 
 $('regGo').addEventListener('click', async ()=>{
@@ -500,16 +507,12 @@ $('regGo').addEventListener('click', async ()=>{
   if(pass.length<6) return say('regMsg','Password must be at least 6 characters.','bad');
   if(pass!==pass2) return say('regMsg','Passwords do not match.','bad');
   const result = await apiRegister(user, pass);
+  alert('REGISTER RESULT: ' + JSON.stringify(result));
   if(result.ok){
-    say('regMsg','Registered. Logging you in...','good');
-    const login = await apiLogin(user, pass);
-    if(login.ok){
-      localStorage.setItem('gd_user', login.username);
-      refreshNav(); setTimeout(()=>showProfile(),600);
-    }
-  } else if(result.error==='username_taken'){ say('regMsg','That username is taken.','bad'); }
-  else if(result.error==='invalid_input'){ say('regMsg','Username 3+ letters, password 6+ characters.','bad'); }
-  else { say('regMsg','Something went wrong.','bad'); }
+    say('regMsg','Registered with id ' + result.insert_id,'good');
+  } else {
+    say('regMsg', result.error || 'Something went wrong.', 'bad');
+  }
 });
 
 $('navLogin').addEventListener('click',()=>go('login'));
