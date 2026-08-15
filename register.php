@@ -29,4 +29,4 @@ $stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
 $stmt->bind_param("ss", $username, $hash);
 $stmt->execute();
 
-echo json_encode(["ok" => true]);
+echo json_encode(["ok" => true, "insert_id" => $conn->insert_id]);
