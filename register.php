@@ -2,28 +2,28 @@
 header("Content-Type: application/json");
 require "db.php";
 
-$data = json_decode(file_get_contents("php://input"), true);
+$data = json_decode(file_get_contents("php://input"), true) ?? $_POST;
 $username = trim($data["username"] ?? "");
 $password = $data["password"] ?? "";
 
-if (strlen($username) < 3 || strlen($password) < 6) {
-    http_response_code(400);
-    echo json_encode(["error" => "invalid_input"]);
+if (empty($username) || empty($password)) {
+    echo json_encode(["ok" => false, "error" => "missing_fields"]);
     exit;
 }
 
-$check = $conn->prepare("SELECT id FROM users WHERE username = ?");
-$check->bind_param("s", $username);
-$check->execute();
-if ($check->get_result()->num_rows > 0) {
-    http_response_code(409);
-    echo json_encode(["error" => "username_taken"]);
+$stmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1");
+$stmt->execute([$username]);
+if ($stmt->fetch()) {
+    echo json_encode(["ok" => false, "error" => "username_taken"]);
     exit;
 }
 
-$hash = password_hash($password, PASSWORD_DEFAULT);
-$stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
-$stmt->bind_param("ss", $username, $hash);
-$stmt->execute();
+$hashed = password_hash($password, PASSWORD_DEFAULT);
+$stmt = $pdo->prepare("INSERT INTO users (username, password, role, title, vip, avatar) VALUES (?, ?, 'user', 'Member', 0, 'assets/gdgcll.png')");
 
-echo json_encode(["ok" => true]);
+if ($stmt->execute([$username, $hashed])) {
+    echo json_encode(["ok" => true]);
+} else {
+    echo json_encode(["ok" => false, "error" => "insert_failed"]);
+}
+?>
