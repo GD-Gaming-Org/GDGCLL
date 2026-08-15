@@ -464,7 +464,11 @@ function say(id,text,kind){
 
 async function apiRegister(username, password){
   const res = await fetch('/register.php', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', 
+    headers:{
+      'Content-Type':'application/json',
+      'Accept': 'application/json'
+    },
     body: JSON.stringify({username, password})
   });
   const text = await res.text();
@@ -475,8 +479,13 @@ async function apiRegister(username, password){
 
 async function apiLogin(username, password){
   const res = await fetch('/login.php', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    credentials:'include', body: JSON.stringify({username, password})
+    method:'POST', 
+    headers:{
+      'Content-Type':'application/json',
+      'Accept': 'application/json'
+    },
+    credentials:'include', 
+    body: JSON.stringify({username, password})
   });
   const text = await res.text();
   console.log('RAW login.php RESPONSE:', text);
@@ -484,32 +493,46 @@ async function apiLogin(username, password){
   catch(e){ return { error: 'not_json', raw: text }; }
 }
 
-$('loginGo').addEventListener('click', async ()=>{
+// FIX ADDED HERE: pass the 'e' parameter and call e.preventDefault()
+$('loginGo').addEventListener('click', async (e)=>{
+  e.preventDefault(); // Prevents the browser from reloading the page immediately!
+  
   const user = $('userInput').value.trim();
   const pass = $('passInput').value;
   if(!user || !pass) return say('loginMsg','Enter your username and password.','bad');
+  
   const result = await apiLogin(user, pass);
-  alert('LOGIN RESULT: ' + JSON.stringify(result));
+  
   if(result.ok){
     localStorage.setItem('gd_user', result.username);
     say('loginMsg','Logged in as '+result.username,'good');
     refreshNav();
+    setTimeout(() => go('home'), 1000); // Auto redirect to home after success
   } else {
     say('loginMsg', result.error || 'Something went wrong.', 'bad');
   }
 });
 
-$('regGo').addEventListener('click', async ()=>{
+// FIX ADDED HERE: pass the 'e' parameter and call e.preventDefault()
+$('regGo').addEventListener('click', async (e)=>{
+  e.preventDefault(); // Prevents the browser from reloading the page immediately!
+  
   const user = $('regUser').value.trim();
   const pass = $('regPass').value;
   const pass2 = $('regPass2').value;
   if(user.length<3) return say('regMsg','Username must be at least 3 letters.','bad');
   if(pass.length<6) return say('regMsg','Password must be at least 6 characters.','bad');
   if(pass!==pass2) return say('regMsg','Passwords do not match.','bad');
+  
   const result = await apiRegister(user, pass);
-  alert('REGISTER RESULT: ' + JSON.stringify(result));
+  
   if(result.ok){
-    say('regMsg','Registered with id ' + result.insert_id,'good');
+    say('regMsg','Registration successful! You can now log in.','good');
+    // Clear inputs
+    $('regUser').value = '';
+    $('regPass').value = '';
+    $('regPass2').value = '';
+    setTimeout(() => go('login'), 1500); // Auto redirect to login after success
   } else {
     say('regMsg', result.error || 'Something went wrong.', 'bad');
   }
