@@ -7,7 +7,7 @@ $data = json_decode(file_get_contents("php://input"), true);
 $username = trim($data["username"] ?? "");
 $password = $data["password"] ?? "";
 
-$stmt = $conn->prepare("SELECT id, password FROM users WHERE username = ?");
+$stmt = $conn->prepare("SELECT id, password, role FROM users WHERE username = ?");
 $stmt->bind_param("s", $username);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -27,4 +27,4 @@ if (!password_verify($password, $row["password"])) {
 
 $_SESSION["user_id"] = $row["id"];
 $_SESSION["username"] = $username;
-echo json_encode(["ok" => true, "username" => $username]);
+echo json_encode(["ok" => true, "username" => $username, "role" => $row["role"]]);
