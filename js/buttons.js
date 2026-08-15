@@ -137,8 +137,13 @@ let active=0;
 async function fetchComments(levelId) {
   try {
     const res = await fetch('/comments.php?level_id=' + levelId);
-    const data = await res.json();
-    return data.ok ? data.data : [];
+    const rawText = await res.text();
+    try {
+      const data = JSON.parse(rawText);
+      return data.ok ? data.data : [];
+    } catch(e) {
+      return [];
+    }
   } catch (e) {
     return [];
   }
@@ -156,9 +161,17 @@ async function submitComment(levelId, text) {
         username: currentUser()
       })
     });
-    return await res.json();
+    const rawText = await res.text();
+    console.log('RAW comments.php RESPONSE:', rawText);
+    try {
+      return JSON.parse(rawText);
+    } catch (parseErr) {
+      alert('SERVER ERROR RESPONSE:\n' + rawText);
+      return { ok: false, error: 'invalid_json_response' };
+    }
   } catch (e) {
-    return { ok: false, error: 'network_error' };
+    alert('FETCH FAILED:\n' + e.message);
+    return { ok: false, error: 'fetch_failed' };
   }
 }
 
