@@ -134,6 +134,29 @@ function ico(kind){
 
 let active=0;
 
+async function fetchComments(levelId) {
+  try {
+    const res = await fetch('/comments.php?level_id=' + levelId);
+    const data = await res.json();
+    return data.ok ? data.data : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+async function submitComment(levelId, text) {
+  try {
+    const res = await fetch('/comments.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ level_id: levelId, comment: text })
+    });
+    return await res.json();
+  } catch (e) {
+    return { ok: false, error: 'network_error' };
+  }
+}
+
 function renderRows(){
   $('rows').innerHTML = LIST.map((key,i)=>{
     const lv=LEVELS_DATA[key];
@@ -156,6 +179,7 @@ function renderDetail(){
   const lv=LEVELS_DATA[LIST[active]];
   const vid=ytid(lv.verification);
   const vics=lv.records.filter(r=>r.percent>=100&&r.link).length;
+  const currentLevelId = active;
 
   $('detail').innerHTML =
     (vid?'<a class="d-banner" href="'+esc(lv.verification)+'" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/'+vid+'/hqdefault.jpg" alt=""><span class="d-play"><i></i></span></a>':'')+
@@ -179,10 +203,59 @@ function renderDetail(){
           '<span class="rec-pct">'+r.percent+'%</span>'+
           '<a class="rec-watch" href="'+esc(r.link)+'" target="_blank" rel="noopener">Watch</a>'+
         '</div>').join('')+
+      '<div class="d-label" style="margin-top:20px;">COMMENTS</div>'+
+      '<div id="commentBox" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">'+
+        '<textarea id="cText" placeholder="Write a comment..." style="width:100%;height:80px;padding:10px;border-radius:6px;background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);resize:none;font-family:inherit;"></textarea>'+
+        '<button class="go" id="cPost" style="align-self:flex-start;">Post Comment</button>'+
+      '</div>'+
+      '<div id="cList" style="display:flex;flex-direction:column;gap:10px;">Loading comments...</div>'+
     '</div>';
 
   $('detail').querySelectorAll('.rec-name').forEach(n=>{
     n.addEventListener('click',()=>showProfile(n.dataset.player));
+  });
+
+  async function renderComments() {
+    const cList = $('cList');
+    if(!cList) return;
+    const comments = await fetchComments(currentLevelId);
+    if(comments.length === 0){
+      cList.innerHTML = '<div style="color:var(--fg-3);font-size:14px;padding:10px 0;">No comments yet. Be the first!</div>';
+    } else {
+      cList.innerHTML = comments.map(c => 
+        '<div style="background:var(--bg-2);padding:12px;border-radius:6px;border:1px solid var(--bg-3);">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
+            '<strong style="color:var(--fg-1);font-size:14px;">'+esc(c.username)+'</strong>'+
+            '<span style="color:var(--fg-3);font-size:12px;">'+esc(c.created_at)+'</span>'+
+          '</div>'+
+          '<div style="color:var(--fg-2);font-size:14px;word-break:break-word;white-space:pre-wrap;">'+esc(c.comment)+'</div>'+
+        '</div>'
+      ).join('');
+    }
+  }
+
+  renderComments();
+
+  $('cPost').addEventListener('click', async () => {
+    const btn = $('cPost');
+    const txt = $('cText');
+    if(!currentUser()){
+      alert('You must log in to post a comment.');
+      return;
+    }
+    const val = txt.value.trim();
+    if(!val) return;
+    btn.disabled = true;
+    btn.textContent = 'Posting...';
+    const res = await submitComment(currentLevelId, val);
+    if(res.ok){
+      txt.value = '';
+      await renderComments();
+    } else {
+      alert(res.error || 'Failed to post comment.');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Post Comment';
   });
 }
 
@@ -472,7 +545,6 @@ async function apiRegister(username, password){
     body: JSON.stringify({username, password})
   });
   const text = await res.text();
-  console.log('RAW register.php RESPONSE:', text);
   try { return JSON.parse(text); }
   catch(e){ return { error: 'not_json', raw: text }; }
 }
@@ -488,14 +560,12 @@ async function apiLogin(username, password){
     body: JSON.stringify({username, password})
   });
   const text = await res.text();
-  console.log('RAW login.php RESPONSE:', text);
   try { return JSON.parse(text); }
   catch(e){ return { error: 'not_json', raw: text }; }
 }
 
-// FIX ADDED HERE: pass the 'e' parameter and call e.preventDefault()
 $('loginGo').addEventListener('click', async (e)=>{
-  e.preventDefault(); // Prevents the browser from reloading the page immediately!
+  e.preventDefault(); 
   
   const user = $('userInput').value.trim();
   const pass = $('passInput').value;
@@ -507,15 +577,14 @@ $('loginGo').addEventListener('click', async (e)=>{
     localStorage.setItem('gd_user', result.username);
     say('loginMsg','Logged in as '+result.username,'good');
     refreshNav();
-    setTimeout(() => go('home'), 1000); // Auto redirect to home after success
+    setTimeout(() => go('home'), 1000); 
   } else {
     say('loginMsg', result.error || 'Something went wrong.', 'bad');
   }
 });
 
-// FIX ADDED HERE: pass the 'e' parameter and call e.preventDefault()
 $('regGo').addEventListener('click', async (e)=>{
-  e.preventDefault(); // Prevents the browser from reloading the page immediately!
+  e.preventDefault(); 
   
   const user = $('regUser').value.trim();
   const pass = $('regPass').value;
@@ -528,11 +597,10 @@ $('regGo').addEventListener('click', async (e)=>{
   
   if(result.ok){
     say('regMsg','Registration successful! You can now log in.','good');
-    // Clear inputs
     $('regUser').value = '';
     $('regPass').value = '';
     $('regPass2').value = '';
-    setTimeout(() => go('login'), 1500); // Auto redirect to login after success
+    setTimeout(() => go('login'), 1500); 
   } else {
     say('regMsg', result.error || 'Something went wrong.', 'bad');
   }
