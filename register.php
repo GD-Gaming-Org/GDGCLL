@@ -1,32 +1,45 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ob_start();
+error_reporting(0);
+ini_set('display_errors', 0);
+header("Content-Type: application/json; charset=UTF-8");
 
-header("Content-Type: application/json");
-require "db.php";
+require_once "db.php";
 
-$data = json_decode(file_get_contents("php://input"), true);
-$username = trim($data["username"] ?? "");
-$password = $data["password"] ?? "";
 
-if (strlen($username) < 3 || strlen($password) < 6) {
-    http_response_code(400);
-    echo json_encode(["error" => "invalid_input"]);
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true);
+
+
+$username = trim($data["username"] ?? $_POST["username"] ?? "");
+$password = trim($data["password"] ?? $_POST["password"] ?? "");
+
+
+if (empty($username) || empty($password)) {
+    ob_clean();
+    echo json_encode(["ok" => false, "error" => "invalid_input"]);
     exit;
 }
 
-$check = $conn->prepare("SELECT id FROM users WHERE username = ?");
-$check->bind_param("s", $username);
-$check->execute();
-if ($check->get_result()->num_rows > 0) {
-    http_response_code(409);
-    echo json_encode(["error" => "username_taken"]);
+
+$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+$role = "user";
+
+
+$stmt = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
+if (!$stmt) {
+    ob_clean();
+    echo json_encode(["ok" => false, "error" => "sql_prepare_error"]);
     exit;
 }
 
-$hash = password_hash($password, PASSWORD_DEFAULT);
-$stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
-$stmt->bind_param("ss", $username, $hash);
-$stmt->execute();
+$stmt->bind_param("sss", $username, $hashedPassword, $role);
 
-echo json_encode(["ok" => true, "insert_id" => $conn->insert_id]);
+if ($stmt->execute()) {
+    ob_clean();
+    echo json_encode(["ok" => true]);
+} else {
+    ob_clean();
+    echo json_encode(["ok" => false, "error" => "username_taken"]);
+}
+exit;
