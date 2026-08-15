@@ -16,18 +16,14 @@ function host(u){
 function isVip(name){
   try{
     if(typeof VIPS === 'undefined' || !VIPS) return false;
-    return VIPS.some(function(v){
-      return String(v).toLowerCase() === String(name).toLowerCase();
-    });
+    return VIPS.some(v => String(v).toLowerCase() === String(name).toLowerCase());
   }catch(e){ return false }
 }
 
 function titleFor(name){
   try{
     if(typeof TITLES === 'undefined' || !TITLES) return '';
-    const k = Object.keys(TITLES).find(function(x){
-      return String(x).toLowerCase() === String(name).toLowerCase();
-    });
+    const k = Object.keys(TITLES).find(x => String(x).toLowerCase() === String(name).toLowerCase());
     return k ? TITLES[k] : '';
   }catch(e){ return '' }
 }
@@ -443,46 +439,36 @@ async function renderAdmin(){
   if(!isAdmin()) return;
 
   $('p-admin').innerHTML =
-    '<div class="head"><h1>Pester Admin Panel</h1><p>Signed in as <b>'+esc(who)+'</b> &middot; Full Controls</p></div>'+
+    '<div class="head"><h1>Pester Admin Panel</h1><p>Signed in as <b>'+esc(who)+'</b> &middot; Database Controls</p></div>'+
 
     '<div class="adm">'+
-      '<h3>User Management (Database)</h3>'+
-      '<p class="hint">View and manage all registered database accounts.</p>'+
+      '<h3>User Management & Banning</h3>'+
+      '<p class="hint">Ban malicious users or manage permissions directly.</p>'+
       '<div id="adminUserList" style="margin-top:10px;">Loading registered users...</div>'+
     '</div>'+
 
     '<div class="adm">'+
-      '<h3>Add a record</h3>'+
-      '<p class="hint">Fill this in, press Generate, then paste the result into <b>data/data.js</b> and commit it.</p>'+
-      '<label class="field"><span>LEVEL</span><select id="rLevel">'+
-        LIST.map(k=>'<option value="'+esc(k)+'">'+esc(LEVELS_DATA[k].name)+'</option>').join('')+
-      '</select></label>'+
-      '<label class="field"><span>PLAYER</span><input type="text" id="rUser" placeholder="Username"></label>'+
-      '<label class="field"><span>PERCENT</span><input type="number" id="rPct" value="100" min="1" max="100"></label>'+
-      '<label class="field"><span>PROOF VIDEO</span><input type="text" id="rLink" placeholder="https://youtu.be/..."></label>'+
-      '<label class="field"><span>MOBILE?</span><select id="rMob"><option value="false">No &mdash; PC</option><option value="true">Yes &mdash; Mobile</option></select></label>'+
-      '<button class="go" id="genRec">Generate record code</button>'+
+      '<h3>Add Level (Direct to DB)</h3>'+
+      '<p class="hint">Instantly adds a level to the demonlist without editing JS code.</p>'+
+      '<label class="field"><span>LEVEL NAME</span><input type="text" id="dbLvlName" placeholder="e.g. Slaughterhouse"></label>'+
+      '<label class="field"><span>CREATORS</span><input type="text" id="dbLvlCreators" placeholder="e.g. Icedcave, Endlevel"></label>'+
+      '<label class="field"><span>VERIFIER</span><input type="text" id="dbLvlVerifier" placeholder="e.g. Doggie"></label>'+
+      '<label class="field"><span>VERIFICATION LINK</span><input type="text" id="dbLvlLink" placeholder="https://youtu.be/..."></label>'+
+      '<label class="field"><span>QUALIFY %</span><input type="number" id="dbLvlQualify" value="100" min="1" max="100"></label>'+
+      '<label class="field"><span>LEVEL ID</span><input type="text" id="dbLvlId" placeholder="12345678"></label>'+
+      '<label class="field"><span>PASSWORD</span><input type="text" id="dbLvlPass" value="Free to copy"></label>'+
+      '<button class="go" id="btnSaveLevel">Add Level to Database</button>'+
     '</div>'+
 
     '<div class="adm">'+
-      '<h3>Set a profile picture</h3>'+
-      '<p class="hint">Pick a person and set their GD icon.</p>'+
-      '<label class="field"><span>WHO</span><select id="aWho">'+
-        allPeople().map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('')+
-      '</select></label>'+
-      '<div class="pfp-row">'+
-        '<span class="pfp pfp-big" id="aPreview"></span>'+
-        '<div class="pfp-side">'+
-          '<label class="upload">Choose image<input type="file" id="aFile" accept="image/*"></label>'+
-        '</div>'+
-      '</div>'+
-      '<button class="go" id="aGen" style="margin-top:14px">Generate picture code</button>'+
-    '</div>'+
-
-    '<div class="adm" id="outBox" hidden>'+
-      '<h3>Copy this</h3>'+
-      '<div class="out" id="outCode"></div>'+
-      '<button class="go go-alt" id="copyOut">Copy</button>'+
+      '<h3>Add Record (Direct to DB)</h3>'+
+      '<p class="hint">Instantly gives points to a player without modifying data.js.</p>'+
+      '<label class="field"><span>LEVEL</span><input type="text" id="dbRecLvl" placeholder="Level Name"></label>'+
+      '<label class="field"><span>PLAYER</span><input type="text" id="dbRecUser" placeholder="Username"></label>'+
+      '<label class="field"><span>PERCENT</span><input type="number" id="dbRecPct" value="100" min="1" max="100"></label>'+
+      '<label class="field"><span>PROOF LINK</span><input type="text" id="dbRecLink" placeholder="https://youtu.be/..."></label>'+
+      '<label class="field"><span>DEVICE</span><select id="dbRecMob"><option value="0">PC</option><option value="1">Mobile</option></select></label>'+
+      '<button class="go" id="btnSaveRecord">Add Record to Database</button>'+
     '</div>';
 
   async function loadAdminUsers() {
@@ -498,19 +484,25 @@ async function renderAdmin(){
         '<th style="padding:6px;">ID</th>'+
         '<th style="padding:6px;">USER</th>'+
         '<th style="padding:6px;">ROLE</th>'+
+        '<th style="padding:6px;">BAN STATUS</th>'+
         '<th style="padding:6px;">ACTIONS</th>'+
       '</tr></thead>'+
       '<tbody>'+
         res.users.map(u => 
           '<tr style="border-bottom:1px solid var(--bg-3);">'+
             '<td style="padding:8px 6px;">#'+u.id+'</td>'+
-            '<td style="padding:8px 6px;font-weight:bold;">'+esc(u.username)+'</td>'+
+            '<td style="padding:8px 6px;font-weight:bold;color:'+(parseInt(u.is_banned)?'#ff4d4d':'var(--fg-1)')+'">'+esc(u.username)+(parseInt(u.is_banned)?' (BANNED)':'')+'</td>'+
             '<td style="padding:8px 6px;">'+
               '<select class="role-select" data-uid="'+u.id+'" style="background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);border-radius:4px;padding:2px 4px;">'+
                 '<option value="user" '+(u.role==='user'?'selected':'')+'>User</option>'+
                 '<option value="admin" '+(u.role==='admin'?'selected':'')+'>Admin</option>'+
                 '<option value="owner" '+(u.role==='owner'?'selected':'')+'>Owner</option>'+
               '</select>'+
+            '</td>'+
+            '<td style="padding:8px 6px;">'+
+              (u.username.toLowerCase() !== currentUser().toLowerCase() ? 
+                '<button class="ban-user-btn" data-uid="'+u.id+'" data-banned="'+u.is_banned+'" style="background:'+(parseInt(u.is_banned)?'#2ecc71':'#e67e22')+';color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">'+(parseInt(u.is_banned)?'Unban':'Ban')+'</button>' : 
+                '<span style="color:var(--fg-3);">-</span>')+
             '</td>'+
             '<td style="padding:8px 6px;">'+
               (u.username.toLowerCase() !== currentUser().toLowerCase() ? 
@@ -526,8 +518,19 @@ async function renderAdmin(){
         const uid = sel.dataset.uid;
         const newR = sel.value;
         const res = await adminApi('set_role', { target_id: uid, role: newR });
-        if(res.ok) alert('Role updated successfully.');
+        if(res.ok) alert('Role updated.');
         else alert('Failed to update role.');
+      });
+    });
+
+    box.querySelectorAll('.ban-user-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const uid = btn.dataset.uid;
+        const currentBanned = parseInt(btn.dataset.banned);
+        const newBan = currentBanned ? 0 : 1;
+        const res = await adminApi('toggle_ban', { target_id: uid, is_banned: newBan });
+        if(res.ok) loadAdminUsers();
+        else alert('Failed to update ban status.');
       });
     });
 
@@ -544,58 +547,47 @@ async function renderAdmin(){
 
   loadAdminUsers();
 
-  $('genRec').addEventListener('click',()=>{
-    const key=$('rLevel').value;
-    const user=$('rUser').value.trim();
-    const link=$('rLink').value.trim();
-    if(!user){ alert('Player name is required.'); return }
-    if(!link){ alert('Proof video is required, or the record scores nothing.'); return }
-
-    const all = LEVELS_DATA[key].records.concat([{
-      user:user,
-      percent:Number($('rPct').value)||100,
-      link:link,
-      mobile:$('rMob').value==='true'
-    }]);
-
-    $('outCode').textContent = '"records": '+JSON.stringify(all,null,2).replace(/\n/g,'\n    ');
-    $('outBox').hidden=false;
+  $('btnSaveLevel').addEventListener('click', async () => {
+    const payload = {
+      name: $('dbLvlName').value.trim(),
+      creators: $('dbLvlCreators').value.trim(),
+      verifier: $('dbLvlVerifier').value.trim(),
+      link: $('dbLvlLink').value.trim(),
+      qualify: $('dbLvlQualify').value,
+      level_id: $('dbLvlId').value.trim(),
+      password: $('dbLvlPass').value.trim()
+    };
+    if(!payload.name || !payload.verifier || !payload.link) return alert('Name, Verifier, and Link are required.');
+    const res = await adminApi('add_level', payload);
+    if(res.ok){
+      alert('Level added directly to database!');
+      $('dbLvlName').value = '';
+      $('dbLvlCreators').value = '';
+      $('dbLvlVerifier').value = '';
+      $('dbLvlLink').value = '';
+    } else {
+      alert(res.error || 'Failed to add level.');
+    }
   });
 
-  let aData = null;
-
-  function drawWho(){
-    $('aPreview').innerHTML = avatar($('aWho').value);
-    aData = null;
-  }
-  $('aWho').addEventListener('change', drawWho);
-  drawWho();
-
-  $('aFile').addEventListener('change', function(){
-    const f = $('aFile').files && $('aFile').files[0];
-    if(!f) return;
-    if(f.size > 6*1024*1024){ alert('That image is too big. Use one under 6MB.'); return }
-    shrinkImage(f, function(data){
-      if(!data){ alert('Could not read that image.'); return }
-      aData = data;
-      $('aPreview').innerHTML = '<img src="'+data+'" style="width:100%;height:100%;object-fit:cover">';
-    });
-  });
-
-  $('aGen').addEventListener('click', function(){
-    if(!aData){ alert('Choose an image first.'); return }
-    const who = $('aWho').value;
-    $('outCode').textContent =
-      'Add this line inside AVATARS in data/data.js:\n\n' +
-      '  "' + who + '": "' + aData + '",';
-    $('outBox').hidden = false;
-    $('outBox').scrollIntoView({behavior:'smooth',block:'start'});
-  });
-
-  $('copyOut').addEventListener('click',()=>{
-    navigator.clipboard.writeText($('outCode').textContent);
-    $('copyOut').textContent='Copied';
-    setTimeout(()=>{$('copyOut').textContent='Copy'},1200);
+  $('btnSaveRecord').addEventListener('click', async () => {
+    const payload = {
+      level_name: $('dbRecLvl').value.trim(),
+      username: $('dbRecUser').value.trim(),
+      percent: $('dbRecPct').value,
+      link: $('dbRecLink').value.trim(),
+      is_mobile: $('dbRecMob').value
+    };
+    if(!payload.level_name || !payload.username || !payload.link) return alert('Level name, Player, and Link are required.');
+    const res = await adminApi('add_record', payload);
+    if(res.ok){
+      alert('Record added directly to database!');
+      $('dbRecLvl').value = '';
+      $('dbRecUser').value = '';
+      $('dbRecLink').value = '';
+    } else {
+      alert(res.error || 'Failed to add record.');
+    }
   });
 }
 
@@ -676,7 +668,6 @@ async function apiLogin(username, password){
 
 $('loginGo').addEventListener('click', async (e)=>{
   e.preventDefault(); 
-  
   const user = $('userInput').value.trim();
   const pass = $('passInput').value;
   if(!user || !pass) return say('loginMsg','Enter your username and password.','bad');
@@ -696,7 +687,6 @@ $('loginGo').addEventListener('click', async (e)=>{
 
 $('regGo').addEventListener('click', async (e)=>{
   e.preventDefault(); 
-  
   const user = $('regUser').value.trim();
   const pass = $('regPass').value;
   const pass2 = $('regPass2').value;
