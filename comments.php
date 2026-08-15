@@ -3,7 +3,6 @@ ob_start();
 error_reporting(0);
 ini_set('display_errors', 0);
 header("Content-Type: application/json; charset=UTF-8");
-
 require_once "db.php";
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -12,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $level_id = isset($_GET['level_id']) ? intval($_GET['level_id']) : 0;
-    $stmt = $conn->prepare("SELECT username, comment, created_at FROM comments WHERE level_id = ? ORDER BY created_at DESC");
+    $stmt = $conn->prepare("SELECT id, username, comment, created_at FROM comments WHERE level_id = ? ORDER BY created_at DESC");
     if (!$stmt) {
         ob_clean();
         echo json_encode(["ok" => true, "data" => []]);
