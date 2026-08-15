@@ -461,51 +461,55 @@ function refreshNav(){
 function say(id,text,kind){
   const n=$(id); n.textContent=text; n.className='note '+(kind||'');
 }
-function getUsers(){
-  try{ return JSON.parse(localStorage.getItem('gd_users')||'{}') }catch(e){ return {} }
+
+async function apiRegister(username, password){
+  const res = await fetch('/register.php', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({username, password})
+  });
+  return res.json();
 }
 
-$('loginGo').addEventListener('click',()=>{
-  const user=$('userInput').value.trim();
-  const pass=$('passInput').value;
-  const users=getUsers();
-  if(!user) return say('loginMsg','Enter your username.','bad');
-  if(!users[user]) return say('loginMsg','No account with that name.','bad');
-  if(users[user]!==pass) return say('loginMsg','Wrong password.','bad');
-  localStorage.setItem('gd_user',user);
-  localStorage.removeItem('gd_key');
-  say('loginMsg','Logged in as '+user,'good');
-  refreshNav(); setTimeout(()=>showProfile(),600);
+async function apiLogin(username, password){
+  const res = await fetch('/login.php', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    credentials:'include', body: JSON.stringify({username, password})
+  });
+  return res.json();
+}
+
+$('loginGo').addEventListener('click', async ()=>{
+  const user = $('userInput').value.trim();
+  const pass = $('passInput').value;
+  if(!user || !pass) return say('loginMsg','Enter your username and password.','bad');
+  const result = await apiLogin(user, pass);
+  if(result.ok){
+    localStorage.setItem('gd_user', result.username);
+    say('loginMsg','Logged in as '+result.username,'good');
+    refreshNav(); setTimeout(()=>showProfile(),600);
+  } else if(result.error==='no_account'){ say('loginMsg','No account with that name.','bad'); }
+  else if(result.error==='wrong_password'){ say('loginMsg','Wrong password.','bad'); }
+  else { say('loginMsg','Something went wrong.','bad'); }
 });
 
-$('codeGo').addEventListener('click',()=>{
-  const raw=$('codeInput').value.trim().toUpperCase();
-  if(!raw) return say('loginMsg','Enter your account code.','bad');
-  const hash=hashCode(raw);
-  const who=STAFF.find(s=>s.key&&s.key===hash);
-  if(!who) return say('loginMsg','That code is not valid.','bad');
-  localStorage.setItem('gd_user',who.name);
-  localStorage.setItem('gd_key',hash);
-  say('loginMsg','Welcome back, '+who.name+'.','good');
-  refreshNav(); setTimeout(()=>showProfile(),600);
-});
-
-$('regGo').addEventListener('click',()=>{
-  const user=$('regUser').value.trim();
-  const pass=$('regPass').value;
-  const pass2=$('regPass2').value;
+$('regGo').addEventListener('click', async ()=>{
+  const user = $('regUser').value.trim();
+  const pass = $('regPass').value;
+  const pass2 = $('regPass2').value;
   if(user.length<3) return say('regMsg','Username must be at least 3 letters.','bad');
   if(pass.length<6) return say('regMsg','Password must be at least 6 characters.','bad');
   if(pass!==pass2) return say('regMsg','Passwords do not match.','bad');
-  const users=getUsers();
-  if(users[user]) return say('regMsg','That username is taken.','bad');
-  if(staffEntry(user)) return say('regMsg','That name belongs to staff. Use your account code.','bad');
-  users[user]=pass;
-  localStorage.setItem('gd_users',JSON.stringify(users));
-  localStorage.setItem('gd_user',user);
-  localStorage.removeItem('gd_key');
-  say('regMsg','Registered as '+user,'good');
-  refreshNav(); setTimeout(()=>showProfile(),600);
+  const result = await apiRegister(user, pass);
+  if(result.ok){
+    say('regMsg','Registered. Logging you in...','good');
+    const login = await apiLogin(user, pass);
+    if(login.ok){
+      localStorage.setItem('gd_user', login.username);
+      refreshNav(); setTimeout(()=>showProfile(),600);
+    }
+  } else if(result.error==='username_taken'){ say('regMsg','That username is taken.','bad'); }
+  else if(result.error==='invalid_input'){ say('regMsg','Username 3+ letters, password 6+ characters.','bad'); }
+  else { say('regMsg','Something went wrong.','bad'); }
 });
 
 $('navLogin').addEventListener('click',()=>go('login'));
