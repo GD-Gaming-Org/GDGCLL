@@ -3,6 +3,7 @@ ob_start();
 error_reporting(0);
 ini_set('display_errors', 0);
 header("Content-Type: application/json; charset=UTF-8");
+
 require_once "db.php";
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -12,6 +13,11 @@ if (session_status() === PHP_SESSION_NONE) {
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $level_id = isset($_GET['level_id']) ? intval($_GET['level_id']) : 0;
     $stmt = $conn->prepare("SELECT username, comment, created_at FROM comments WHERE level_id = ? ORDER BY created_at DESC");
+    if (!$stmt) {
+        ob_clean();
+        echo json_encode(["ok" => true, "data" => []]);
+        exit;
+    }
     $stmt->bind_param("i", $level_id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -49,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $conn->prepare("INSERT INTO comments (level_id, username, comment) VALUES (?, ?, ?)");
     if (!$stmt) {
         ob_clean();
-        echo json_encode(["ok" => false, "error" => $conn->error ?: "prepare_failed"]);
+        echo json_encode(["ok" => false, "error" => "table_not_found"]);
         exit;
     }
     
@@ -60,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(["ok" => true]);
     } else {
         ob_clean();
-        echo json_encode(["ok" => false, "error" => $stmt->error ?: "insert_failed"]);
+        echo json_encode(["ok" => false, "error" => "insert_failed"]);
     }
     exit;
 }
