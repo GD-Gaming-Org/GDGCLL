@@ -1,29 +1,40 @@
 <?php
-header("Content-Type: application/json");
-require "db.php";
+header('Content-Type: application/json');
+require_once 'db.php';
 
-$data = json_decode(file_get_contents("php://input"), true) ?? $_POST;
-$username = trim($data["username"] ?? "");
-$password = $data["password"] ?? "";
+$raw = file_get_contents('php://input');
+$json = json_decode($raw, true);
 
-if (empty($username) || empty($password)) {
-    echo json_encode(["ok" => false, "error" => "missing_fields"]);
+$user = trim($_POST['username'] ?? $json['username'] ?? '');
+$pass = trim($_POST['password'] ?? $json['password'] ?? '');
+
+if (empty($user) || empty($pass)) {
+    echo json_encode(['status' => 'error', 'message' => 'Username and password are required.']);
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1");
-$stmt->execute([$username]);
-if ($stmt->fetch()) {
-    echo json_encode(["ok" => false, "error" => "username_taken"]);
+if (strlen($user) < 3) {
+    echo json_encode(['status' => 'error', 'message' => 'Username must be at least 3 characters.']);
     exit;
 }
 
-$hashed = password_hash($password, PASSWORD_DEFAULT);
-$stmt = $pdo->prepare("INSERT INTO users (username, password, role, title, vip, avatar) VALUES (?, ?, 'user', 'Member', 0, 'assets/gdgcll.png')");
+try {
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1");
+    $stmt->execute([$user]);
+    if ($stmt->fetch()) {
+        echo json_encode(['status' => 'error', 'message' => 'Username already taken.']);
+        exit;
+    }
 
-if ($stmt->execute([$username, $hashed])) {
-    echo json_encode(["ok" => true]);
-} else {
-    echo json_encode(["ok" => false, "error" => "insert_failed"]);
+    $hashedPassword = password_hash($pass, PASSWORD_DEFAULT);
+
+    $stmt = $pdo->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, 'user')");
+    if ($stmt->execute([$user, $hashedPassword])) {
+        echo json_encode(['status' => 'success', 'message' => 'Registration successful!']);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Failed to register account.']);
+    }
+} catch (PDOException $e) {
+    echo json_encode(['status' => 'error', 'message' => 'Server query error.']);
 }
 ?>
