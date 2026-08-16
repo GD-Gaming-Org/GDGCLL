@@ -849,7 +849,7 @@ async function boot() {
   applyTheme();
 
   try {
-    const pRes = await fetch('/api_profile.php');
+    const pRes = await fetch('/api_profile.php?t=' + Date.now());
     const pDb = await pRes.json();
     if(pDb.ok) DB_PROFILES = pDb.profiles;
   } catch(e) {}
@@ -903,7 +903,9 @@ async function boot() {
   renderStaff();
   refreshNav(); 
   wireGo(); 
-  go('home');
+  
+  if (location.hash === '#profile') showProfile();
+  else go('home');
 }
 
 boot();
