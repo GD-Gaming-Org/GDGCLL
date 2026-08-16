@@ -39,21 +39,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $type = $data['type'] ?? ''; 
     $image = $data['image'] ?? '';
     
+    if (empty($image)) {
+        ob_clean();
+        echo json_encode(["ok" => false, "error" => "Image processing failed. File might be empty."]);
+        exit;
+    }
+    
     if ($type === 'avatar') {
-        $stmt = $conn->prepare("UPDATE users SET avatar = ? WHERE username = ?");
-        $stmt->bind_param("ss", $image, $username);
-        $stmt->execute();
+        $stmt = $conn->prepare("UPDATE users SET avatar = ? WHERE LOWER(username) = LOWER(?)");
     } elseif ($type === 'banner') {
-        $stmt = $conn->prepare("UPDATE users SET banner = ? WHERE username = ?");
-        $stmt->bind_param("ss", $image, $username);
-        $stmt->execute();
+        $stmt = $conn->prepare("UPDATE users SET banner = ? WHERE LOWER(username) = LOWER(?)");
     } else {
         ob_clean(); 
         echo json_encode(["ok" => false, "error" => "invalid_type"]); 
         exit;
     }
+
+    if (!$stmt) {
+        ob_clean();
+        echo json_encode(["ok" => false, "error" => "Database error: " . $conn->error]);
+        exit;
+    }
     
-    ob_clean();
-    echo json_encode(["ok" => true]);
+    $stmt->bind_param("ss", $image, $username);
+    
+    if ($stmt->execute()) {
+        ob_clean();
+        echo json_encode(["ok" => true]);
+    } else {
+        ob_clean();
+        echo json_encode(["ok" => false, "error" => "Failed to save: " . $stmt->error]);
+    }
     exit;
 }
