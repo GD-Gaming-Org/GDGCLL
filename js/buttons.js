@@ -472,8 +472,15 @@ function showProfile(name){
       const f = this.files[0]; if(!f) return;
       shrinkImage(f, async data => {
         if(!data) return alert('Failed to read image.');
-        await fetch('/api_profile.php', { method:'POST', credentials:'include', body:JSON.stringify({username:who, type:'avatar', image:data}) });
-        location.reload();
+        try {
+          const res = await fetch('/api_profile.php', { method:'POST', credentials:'include', body:JSON.stringify({username:who, type:'avatar', image:data}) });
+          const raw = await res.text();
+          try {
+            const json = JSON.parse(raw);
+            if(json.ok) location.reload();
+            else alert("SERVER ERROR:\n" + json.error);
+          } catch(e) { alert("PHP ERROR:\n" + raw); }
+        } catch(e) { alert("NETWORK ERROR:\n" + e.message); }
       });
     });
 
@@ -482,8 +489,15 @@ function showProfile(name){
       const f = this.files[0]; if(!f) return;
       shrinkBanner(f, async data => {
         if(!data) return alert('Failed to read image.');
-        await fetch('/api_profile.php', { method:'POST', credentials:'include', body:JSON.stringify({username:who, type:'banner', image:data}) });
-        location.reload();
+        try {
+          const res = await fetch('/api_profile.php', { method:'POST', credentials:'include', body:JSON.stringify({username:who, type:'banner', image:data}) });
+          const raw = await res.text();
+          try {
+            const json = JSON.parse(raw);
+            if(json.ok) location.reload();
+            else alert("SERVER ERROR:\n" + json.error);
+          } catch(e) { alert("PHP ERROR:\n" + raw); }
+        } catch(e) { alert("NETWORK ERROR:\n" + e.message); }
       });
     });
   }
@@ -838,7 +852,7 @@ async function boot() {
     const pRes = await fetch('/api_profile.php');
     const pDb = await pRes.json();
     if(pDb.ok) DB_PROFILES = pDb.profiles;
-  } catch(e) { console.log('Profiles load error', e) }
+  } catch(e) {}
 
   try {
     const res = await fetch('/api_levels.php');
@@ -881,9 +895,7 @@ async function boot() {
          LEVELS_DATA[k].records.sort((a,b) => b.percent - a.percent);
       });
     }
-  } catch (e) {
-    console.log(e);
-  }
+  } catch (e) {}
 
   renderRows(); 
   renderDetail(); 
