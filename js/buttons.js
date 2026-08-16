@@ -464,6 +464,7 @@ async function renderAdmin(){
     '<div class="adm">'+
       '<h3>Add Level (Direct to DB)</h3>'+
       '<p class="hint">Instantly adds a level to the demonlist without editing JS code.</p>'+
+      '<label class="field"><span>PLACEMENT RANK</span><input type="number" id="dbLvlRank" value="1" min="1"></label>'+
       '<label class="field"><span>LEVEL NAME</span><input type="text" id="dbLvlName" placeholder="e.g. Slaughterhouse"></label>'+
       '<label class="field"><span>CREATORS</span><input type="text" id="dbLvlCreators" placeholder="e.g. Icedcave, Endlevel"></label>'+
       '<label class="field"><span>VERIFIER</span><input type="text" id="dbLvlVerifier" placeholder="e.g. Doggie"></label>'+
@@ -611,6 +612,7 @@ async function renderAdmin(){
 
   $('btnSaveLevel').addEventListener('click', async () => {
     const payload = {
+      rank: parseInt($('dbLvlRank').value) || 999,
       name: $('dbLvlName').value.trim(),
       creators: $('dbLvlCreators').value.trim(),
       verifier: $('dbLvlVerifier').value.trim(),
@@ -773,7 +775,6 @@ $('regGo').addEventListener('click', async (e)=>{
 $('navLogin').addEventListener('click',()=>go('login'));
 $('navProfile').addEventListener('click',()=>showProfile());
 
-
 async function boot() {
   document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
   applyTheme();
@@ -783,10 +784,14 @@ async function boot() {
     const db = await res.json();
     
     if (db.ok) {
-     
+      db.levels.sort((a, b) => parseInt(a.placement_rank) - parseInt(b.placement_rank));
+
       db.levels.forEach(l => {
         const key = 'db_' + l.id;
-        LIST.push(key); 
+        const targetIndex = Math.max(0, (parseInt(l.placement_rank) || LIST.length + 1) - 1);
+        
+        LIST.splice(targetIndex, 0, key); 
+        
         LEVELS_DATA[key] = {
           id: l.level_id_string || 'N/A',
           name: l.name,
@@ -799,7 +804,6 @@ async function boot() {
         };
       });
 
-   //hi
       db.records.forEach(r => {
         const matchingKey = Object.keys(LEVELS_DATA).find(key => LEVELS_DATA[key].name.toLowerCase() === r.level_name.toLowerCase());
         if (matchingKey) {
@@ -812,16 +816,14 @@ async function boot() {
         }
       });
 
-     
       Object.keys(LEVELS_DATA).forEach(k => {
          LEVELS_DATA[k].records.sort((a,b) => b.percent - a.percent);
       });
     }
   } catch (e) {
-    console.log("Could not load database levels:", e);
+    console.log(e);
   }
 
- 
   renderRows(); 
   renderDetail(); 
   renderBoard(); 
