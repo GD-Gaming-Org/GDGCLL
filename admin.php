@@ -49,7 +49,6 @@ if (!in_array(strtolower($uRow['role'] ?? ''), $adminRoles)) {
 
 $action = $_GET['action'] ?? $data['action'] ?? '';
 
-// USER MANAGEMENT
 if ($action === 'list_users') {
     $q = $conn->query("SELECT id, username, role, is_banned, created_at FROM users ORDER BY id ASC");
     $users = [];
@@ -97,7 +96,7 @@ if ($action === 'delete_user') {
     exit;
 }
 
-// COMMENT MANAGEMENT
+
 if ($action === 'delete_comment') {
     $commentId = intval($data['comment_id'] ?? 0);
     $stmt = $conn->prepare("DELETE FROM comments WHERE id = ?");
@@ -108,7 +107,7 @@ if ($action === 'delete_comment') {
     exit;
 }
 
-// LEVEL MANAGEMENT
+
 if ($action === 'add_level') {
     $name = trim($data['name'] ?? '');
     $creators = trim($data['creators'] ?? '');
@@ -160,7 +159,7 @@ if ($action === 'delete_level') {
     exit;
 }
 
-// RECORD MANAGEMENT
+
 if ($action === 'add_record') {
     $lvlName = trim($data['level_name'] ?? '');
     $user = trim($data['username'] ?? '');
