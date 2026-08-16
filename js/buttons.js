@@ -848,6 +848,31 @@ async function boot() {
   document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
   applyTheme();
 
+  const who = currentUser();
+  if (who) {
+    try {
+      const authRes = await fetch('/api_check.php?username=' + encodeURIComponent(who));
+      const authDb = await authRes.json();
+      if (authDb.ok) {
+        if (authDb.is_banned === 1 || authDb.role !== currentRole()) {
+          localStorage.removeItem('gd_user');
+          localStorage.removeItem('gd_role');
+          localStorage.removeItem('gd_key');
+          if (authDb.is_banned === 1) alert('Your account has been banned.');
+          else alert('Your account permissions have changed. Please log in again.');
+          location.reload();
+          return;
+        }
+      } else {
+        localStorage.removeItem('gd_user');
+        localStorage.removeItem('gd_role');
+        localStorage.removeItem('gd_key');
+        location.reload();
+        return;
+      }
+    } catch(e) {}
+  }
+
   try {
     const pRes = await fetch('/api_profile.php?t=' + Date.now());
     const pDb = await pRes.json();
