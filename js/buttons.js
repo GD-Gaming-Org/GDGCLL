@@ -164,19 +164,27 @@ async function submitComment(levelId, text) {
 
 async function adminApi(action, payload = {}) {
   try {
-    const res = await fetch('/admin.php?action=' + action, {
+    const user = currentUser();
+    const res = await fetch('/admin.php?action=' + encodeURIComponent(action) + '&admin_user=' + encodeURIComponent(user), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({
         action: action,
-        admin_user: currentUser(),
+        admin_user: user,
         ...payload
       })
     });
-    return await res.json();
+    const rawText = await res.text();
+    try {
+      return JSON.parse(rawText);
+    } catch(err) {
+      alert('ADMIN PHP ERROR:\n' + rawText);
+      return { ok: false, error: 'invalid_json' };
+    }
   } catch (e) {
-    return { ok: false, error: 'network_error' };
+    alert('FETCH FAILED:\n' + e.message);
+    return { ok: false, error: 'fetch_failed' };
   }
 }
 
@@ -448,6 +456,12 @@ async function renderAdmin(){
     '</div>'+
 
     '<div class="adm">'+
+      '<h3>Manage Database Levels</h3>'+
+      '<p class="hint">View and delete levels added directly to the database.</p>'+
+      '<div id="adminLevelList" style="margin-top:10px;">Loading database levels...</div>'+
+    '</div>'+
+
+    '<div class="adm">'+
       '<h3>Add Level (Direct to DB)</h3>'+
       '<p class="hint">Instantly adds a level to the demonlist without editing JS code.</p>'+
       '<label class="field"><span>LEVEL NAME</span><input type="text" id="dbLvlName" placeholder="e.g. Slaughterhouse"></label>'+
@@ -545,7 +559,51 @@ async function renderAdmin(){
     });
   }
 
+  async function loadAdminLevels() {
+    const box = $('adminLevelList');
+    if(!box) return;
+    const res = await adminApi('list_levels');
+    if(!res.ok || !res.levels){
+      box.innerHTML = '<span style="color:#ff4d4d;">Failed to load levels or no custom levels added.</span>';
+      return;
+    }
+    if(res.levels.length === 0){
+      box.innerHTML = '<span style="color:var(--fg-3);">No database levels added yet.</span>';
+      return;
+    }
+    box.innerHTML = '<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">'+
+      '<thead><tr style="text-align:left;border-bottom:2px solid var(--bg-3);color:var(--fg-3);padding-bottom:6px;">'+
+        '<th style="padding:6px;">ID</th>'+
+        '<th style="padding:6px;">LEVEL NAME</th>'+
+        '<th style="padding:6px;">VERIFIER</th>'+
+        '<th style="padding:6px;">ACTIONS</th>'+
+      '</tr></thead>'+
+      '<tbody>'+
+        res.levels.map(l => 
+          '<tr style="border-bottom:1px solid var(--bg-3);">'+
+            '<td style="padding:8px 6px;">#'+l.id+'</td>'+
+            '<td style="padding:8px 6px;font-weight:bold;">'+esc(l.name)+'</td>'+
+            '<td style="padding:8px 6px;">'+esc(l.verifier)+'</td>'+
+            '<td style="padding:8px 6px;">'+
+              '<button class="del-lvl-btn" data-lid="'+l.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">Delete</button>'+
+            '</td>'+
+          '</tr>'
+        ).join('')+
+      '</tbody></table>';
+
+    box.querySelectorAll('.del-lvl-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if(!confirm('Permanently delete this level from the database?')) return;
+        const lid = btn.dataset.lid;
+        const res = await adminApi('delete_level', { level_id: lid });
+        if(res.ok) loadAdminLevels();
+        else alert('Failed to delete level.');
+      });
+    });
+  }
+
   loadAdminUsers();
+  loadAdminLevels();
 
   $('btnSaveLevel').addEventListener('click', async () => {
     const payload = {
@@ -565,6 +623,7 @@ async function renderAdmin(){
       $('dbLvlCreators').value = '';
       $('dbLvlVerifier').value = '';
       $('dbLvlLink').value = '';
+      loadAdminLevels(); // Refresh the list!
     } else {
       alert(res.error || 'Failed to add level.');
     }
