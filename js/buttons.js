@@ -1,4 +1,5 @@
 const ADMIN_ROLES = ['owner','admin','developer'];
+let DB_PROFILES = {};
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -48,8 +49,15 @@ function score(r,p,m){
 }
 
 function avatarSrc(name){
+  const dbKey = Object.keys(DB_PROFILES).find(k=>k.toLowerCase()===String(name).toLowerCase());
+  if(dbKey && DB_PROFILES[dbKey].avatar) return DB_PROFILES[dbKey].avatar;
   const key = Object.keys(AVATARS).find(k=>k.toLowerCase()===String(name).toLowerCase());
   return key ? AVATARS[key] : null;
+}
+
+function bannerSrc(name){
+  const dbKey = Object.keys(DB_PROFILES).find(k=>k.toLowerCase()===String(name).toLowerCase());
+  return (dbKey && DB_PROFILES[dbKey].banner) ? DB_PROFILES[dbKey].banner : null;
 }
 
 function avatar(name){
@@ -97,9 +105,28 @@ function shrinkImage(file, cb){
       c.width = S; c.height = S;
       const ctx = c.getContext('2d');
       const side = Math.min(img.width, img.height);
-      ctx.drawImage(img,
-        (img.width - side)/2, (img.height - side)/2, side, side,
-        0, 0, S, S);
+      ctx.drawImage(img, (img.width - side)/2, (img.height - side)/2, side, side, 0, 0, S, S);
+      cb(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = function(){ cb(null) };
+    img.src = e.target.result;
+  };
+  reader.onerror = function(){ cb(null) };
+  reader.readAsDataURL(file);
+}
+
+function shrinkBanner(file, cb){
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      const c = document.createElement('canvas');
+      c.width = 600; c.height = 200;
+      const ctx = c.getContext('2d');
+      const ratio = Math.max(c.width / img.width, c.height / img.height);
+      const w = img.width * ratio;
+      const h = img.height * ratio;
+      ctx.drawImage(img, (c.width - w)/2, (c.height - h)/2, w, h);
       cb(c.toDataURL('image/jpeg', 0.82));
     };
     img.onerror = function(){ cb(null) };
@@ -395,9 +422,11 @@ function showProfile(name){
   const p = playerCard(who);
   const s = staffEntry(who);
   const mine = who.toLowerCase() === currentUser().toLowerCase();
+  const bSrc = bannerSrc(who);
 
   el.innerHTML =
-    '<div class="pf-head">'+avatar(who)+
+    (bSrc ? '<div style="width:100%;height:150px;background:url(\''+esc(bSrc)+'\') center/cover;border-radius:8px 8px 0 0;margin-bottom:-60px;mask-image:linear-gradient(to bottom, black 40%, transparent 100%);-webkit-mask-image:linear-gradient(to bottom, black 40%, transparent 100%);"></div>' : '') +
+    '<div class="pf-head" style="position:relative;z-index:2;'+(bSrc?'padding-top:20px;':'')+'">'+avatar(who)+
       '<div><div class="pf-name">'+esc(who)+vipTag(who)+'</div>'+
       '<span class="pf-role">'+(s?esc(s.role.toUpperCase()):'PLAYER')+
         (p.firsts?' &middot; '+p.firsts+' FIRST':'')+'</span>'+
@@ -420,6 +449,10 @@ function showProfile(name){
     (!p.beaten.length&&!p.progress.length&&!p.verified.length?'<div class="pf-sec"><h3>RECORDS</h3><p class="lead" style="margin:0">No proven records yet.</p></div>':'')+
 
     (mine?
+      '<div class="pf-sec"><h3>CUSTOMIZE PROFILE</h3>'+
+        '<label class="field"><span>AVATAR (Square)</span><input type="file" id="upAvatar" accept="image/*"></label>'+
+        '<label class="field"><span>BANNER (Widescreen)</span><input type="file" id="upBanner" accept="image/*"></label>'+
+      '</div>'+
       '<div class="pf-sec"><h3>THEME</h3><div class="themes">'+
         THEMES.map(t=>'<button class="sw sw-'+t[0]+'" data-theme="'+t[0]+'" title="'+t[1]+'"></button>').join('')+
       '</div></div>'+
@@ -432,6 +465,28 @@ function showProfile(name){
     b.addEventListener('click',()=>applyTheme(b.dataset.theme));
   });
   applyTheme();
+
+  if(mine){
+    const upAv = $('upAvatar');
+    if(upAv) upAv.addEventListener('change', function(){
+      const f = this.files[0]; if(!f) return;
+      shrinkImage(f, async data => {
+        if(!data) return alert('Failed to read image.');
+        await fetch('/api_profile.php', { method:'POST', credentials:'include', body:JSON.stringify({username:who, type:'avatar', image:data}) });
+        location.reload();
+      });
+    });
+
+    const upBan = $('upBanner');
+    if(upBan) upBan.addEventListener('change', function(){
+      const f = this.files[0]; if(!f) return;
+      shrinkBanner(f, async data => {
+        if(!data) return alert('Failed to read image.');
+        await fetch('/api_profile.php', { method:'POST', credentials:'include', body:JSON.stringify({username:who, type:'banner', image:data}) });
+        location.reload();
+      });
+    });
+  }
 
   const lo = $('doLogout');
   if(lo) lo.addEventListener('click',()=>{
@@ -778,6 +833,12 @@ $('navProfile').addEventListener('click',()=>showProfile());
 async function boot() {
   document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
   applyTheme();
+
+  try {
+    const pRes = await fetch('/api_profile.php');
+    const pDb = await pRes.json();
+    if(pDb.ok) DB_PROFILES = pDb.profiles;
+  } catch(e) { console.log('Profiles load error', e) }
 
   try {
     const res = await fetch('/api_levels.php');
