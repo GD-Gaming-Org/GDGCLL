@@ -20,7 +20,6 @@ if (empty($actingUser)) {
     exit;
 }
 
-// Master override for Pester
 if (strtolower($actingUser) === 'pester') {
     $uRow = ['role' => 'owner', 'is_banned' => 0];
 } else {
@@ -50,7 +49,7 @@ if (!in_array(strtolower($uRow['role'] ?? ''), $adminRoles)) {
 
 $action = $_GET['action'] ?? $data['action'] ?? '';
 
-// --- USER MANAGEMENT ---
+// USER MANAGEMENT
 if ($action === 'list_users') {
     $q = $conn->query("SELECT id, username, role, is_banned, created_at FROM users ORDER BY id ASC");
     $users = [];
@@ -98,7 +97,7 @@ if ($action === 'delete_user') {
     exit;
 }
 
-// --- COMMENT MANAGEMENT ---
+// COMMENT MANAGEMENT
 if ($action === 'delete_comment') {
     $commentId = intval($data['comment_id'] ?? 0);
     $stmt = $conn->prepare("DELETE FROM comments WHERE id = ?");
@@ -109,7 +108,7 @@ if ($action === 'delete_comment') {
     exit;
 }
 
-// --- LEVEL MANAGEMENT ---
+// LEVEL MANAGEMENT
 if ($action === 'add_level') {
     $name = trim($data['name'] ?? '');
     $creators = trim($data['creators'] ?? '');
@@ -118,6 +117,7 @@ if ($action === 'add_level') {
     $qualify = intval($data['qualify'] ?? 100);
     $lvlId = trim($data['level_id'] ?? '');
     $pass = trim($data['password'] ?? 'Free to copy');
+    $placement = intval($data['placement'] ?? 1);
 
     if (!$name || !$verifier || !$vLink) {
         ob_clean();
@@ -125,9 +125,9 @@ if ($action === 'add_level') {
         exit;
     }
 
-    $stmt = $conn->prepare("INSERT INTO custom_levels (name, creators, verifier, verification_link, percent_qualify, level_id_string, password) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO custom_levels (name, creators, verifier, verification_link, percent_qualify, level_id_string, password, placement) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     if($stmt){
-        $stmt->bind_param("ssssiss", $name, $creators, $verifier, $vLink, $qualify, $lvlId, $pass);
+        $stmt->bind_param("ssssissi", $name, $creators, $verifier, $vLink, $qualify, $lvlId, $pass, $placement);
         $stmt->execute();
     }
     ob_clean();
@@ -136,7 +136,7 @@ if ($action === 'add_level') {
 }
 
 if ($action === 'list_levels') {
-    $q = $conn->query("SELECT id, name, verifier, percent_qualify FROM custom_levels ORDER BY id DESC");
+    $q = $conn->query("SELECT id, name, verifier, placement FROM custom_levels ORDER BY placement ASC");
     $levels = [];
     if($q) {
         while ($r = $q->fetch_assoc()) {
@@ -160,7 +160,7 @@ if ($action === 'delete_level') {
     exit;
 }
 
-// --- RECORD MANAGEMENT ---
+// RECORD MANAGEMENT
 if ($action === 'add_record') {
     $lvlName = trim($data['level_name'] ?? '');
     $user = trim($data['username'] ?? '');
