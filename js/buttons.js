@@ -596,8 +596,12 @@ async function renderAdmin(){
         if(!confirm('Permanently delete this level from the database?')) return;
         const lid = btn.dataset.lid;
         const res = await adminApi('delete_level', { level_id: lid });
-        if(res.ok) loadAdminLevels();
-        else alert('Failed to delete level.');
+        if(res.ok) {
+          alert('Level deleted! Refresh the page to update the ranking list.');
+          loadAdminLevels();
+        } else {
+          alert('Failed to delete level.');
+        }
       });
     });
   }
@@ -618,12 +622,12 @@ async function renderAdmin(){
     if(!payload.name || !payload.verifier || !payload.link) return alert('Name, Verifier, and Link are required.');
     const res = await adminApi('add_level', payload);
     if(res.ok){
-      alert('Level added directly to database!');
+      alert('Level added directly to database! Refresh the page to see it on the Rankings.');
       $('dbLvlName').value = '';
       $('dbLvlCreators').value = '';
       $('dbLvlVerifier').value = '';
       $('dbLvlLink').value = '';
-      loadAdminLevels(); // Refresh the list!
+      loadAdminLevels();
     } else {
       alert(res.error || 'Failed to add level.');
     }
@@ -640,7 +644,7 @@ async function renderAdmin(){
     if(!payload.level_name || !payload.username || !payload.link) return alert('Level name, Player, and Link are required.');
     const res = await adminApi('add_record', payload);
     if(res.ok){
-      alert('Record added directly to database!');
+      alert('Record added directly to database! Refresh the page to update player points.');
       $('dbRecLvl').value = '';
       $('dbRecUser').value = '';
       $('dbRecLink').value = '';
@@ -738,7 +742,7 @@ $('loginGo').addEventListener('click', async (e)=>{
     localStorage.setItem('gd_role', result.role || 'user');
     say('loginMsg','Logged in as '+result.username,'good');
     refreshNav();
-    setTimeout(() => go('home'), 1000); 
+    setTimeout(() => { location.reload(); }, 1000); 
   } else {
     say('loginMsg', result.error || 'Something went wrong.', 'bad');
   }
@@ -769,7 +773,62 @@ $('regGo').addEventListener('click', async (e)=>{
 $('navLogin').addEventListener('click',()=>go('login'));
 $('navProfile').addEventListener('click',()=>showProfile());
 
-document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
-applyTheme();
-renderRows(); renderDetail(); renderBoard(); renderStaff();
-refreshNav(); wireGo(); go('home');
+
+async function boot() {
+  document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
+  applyTheme();
+
+  try {
+    const res = await fetch('/api_levels.php');
+    const db = await res.json();
+    
+    if (db.ok) {
+     
+      db.levels.forEach(l => {
+        const key = 'db_' + l.id;
+        LIST.push(key); 
+        LEVELS_DATA[key] = {
+          id: l.level_id_string || 'N/A',
+          name: l.name,
+          creators: (l.creators || '').split(',').map(s=>s.trim()),
+          verifier: l.verifier,
+          verification: l.verification_link,
+          percentToQualify: parseInt(l.percent_qualify) || 100,
+          password: l.password || 'Free to copy',
+          records: []
+        };
+      });
+
+   //hi
+      db.records.forEach(r => {
+        const matchingKey = Object.keys(LEVELS_DATA).find(key => LEVELS_DATA[key].name.toLowerCase() === r.level_name.toLowerCase());
+        if (matchingKey) {
+          LEVELS_DATA[matchingKey].records.push({
+            user: r.username,
+            percent: parseInt(r.percent),
+            link: r.link,
+            mobile: parseInt(r.is_mobile) === 1
+          });
+        }
+      });
+
+     
+      Object.keys(LEVELS_DATA).forEach(k => {
+         LEVELS_DATA[k].records.sort((a,b) => b.percent - a.percent);
+      });
+    }
+  } catch (e) {
+    console.log("Could not load database levels:", e);
+  }
+
+ 
+  renderRows(); 
+  renderDetail(); 
+  renderBoard(); 
+  renderStaff();
+  refreshNav(); 
+  wireGo(); 
+  go('home');
+}
+
+boot();
