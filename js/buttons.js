@@ -440,6 +440,60 @@ function recLine(r){
   '</div>';
 }
 
+function renderSubmit() {
+  const who = currentUser();
+  const el = $('p-submit');
+  if(!el) return;
+  if(!who){
+    el.innerHTML='<div class="box"><h2>Not logged in</h2><p class="lead">Log in to submit a record.</p><button class="go" data-go="login">Log in</button></div>';
+    wireGo(); return;
+  }
+  
+  el.innerHTML =
+    '<div class="box"><h2>Submit a Record</h2><p class="lead">Submit your completion or progress video for Admin approval.</p>' +
+    '<label class="field"><span>LEVEL NAME</span><input type="text" id="subLvl" placeholder="e.g. Bloodbath"></label>'+
+    '<label class="field"><span>PERCENT</span><input type="number" id="subPct" value="100" min="1" max="100"></label>'+
+    '<label class="field"><span>PROOF LINK</span><input type="text" id="subLink" placeholder="https://youtu.be/..."></label>'+
+    '<label class="field"><span>DEVICE</span><select id="subMob"><option value="0">PC</option><option value="1">Mobile</option></select></label>'+
+    '<button class="go" id="btnSubmitRec">Submit for Review</button>' +
+    '</div>';
+
+  $('btnSubmitRec').addEventListener('click', async () => {
+    const payload = {
+      level_name: $('subLvl').value.trim(),
+      percent: parseInt($('subPct').value),
+      link: $('subLink').value.trim(),
+      is_mobile: parseInt($('subMob').value)
+    };
+    if(!payload.level_name || !payload.link) return alert("Level Name and Proof Link are required.");
+    
+    const btn = $('btnSubmitRec');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+    
+    try {
+      const res = await fetch('/api_submit.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (json.ok) {
+        alert('Record submitted successfully! An Admin will review it soon.');
+        $('subLvl').value = '';
+        $('subLink').value = '';
+        $('subPct').value = '100';
+      } else {
+        alert('Error: ' + json.error);
+      }
+    } catch(e) { alert("Network error."); }
+    
+    btn.disabled = false;
+    btn.textContent = 'Submit for Review';
+  });
+}
+
 function showProfile(name){
   const who = name || currentUser();
   const el = $('p-profile');
@@ -549,6 +603,12 @@ async function renderAdmin(){
     '<div class="head"><h1>Pester Admin Panel</h1><p>Signed in as <b>'+esc(who)+'</b> &middot; Database Controls</p></div>'+
 
     '<div class="adm">'+
+      '<h3>Pending Records Queue</h3>'+
+      '<p class="hint">Review user-submitted records. Approve to instantly add them to the database.</p>'+
+      '<div id="adminPendingList" style="margin-top:10px;">Loading pending records...</div>'+
+    '</div>'+
+
+    '<div class="adm">'+
       '<h3>User Management & Titles</h3>'+
       '<p class="hint">Ban users, set permissions, and grant custom titles.</p>'+
       '<div id="adminUserList" style="margin-top:10px;">Loading registered users...</div>'+
@@ -584,6 +644,59 @@ async function renderAdmin(){
       '<label class="field"><span>DEVICE</span><select id="dbRecMob"><option value="0">PC</option><option value="1">Mobile</option></select></label>'+
       '<button class="go" id="btnSaveRecord">Add Record to Database</button>'+
     '</div>';
+
+  async function loadPendingRecords() {
+    const box = $('adminPendingList');
+    if(!box) return;
+    const res = await adminApi('list_pending');
+    if(!res.ok || !res.pending) {
+      box.innerHTML = '<span style="color:#ff4d4d;">Failed to load queue.</span>';
+      return;
+    }
+    if(res.pending.length === 0) {
+       box.innerHTML = '<span style="color:var(--fg-3);">No pending records to review right now!</span>';
+       return;
+    }
+    box.innerHTML = '<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">'+
+    '<thead><tr style="text-align:left;border-bottom:2px solid var(--bg-3);color:var(--fg-3);padding-bottom:6px;">'+
+      '<th style="padding:6px;">LEVEL</th>'+
+      '<th style="padding:6px;">PLAYER</th>'+
+      '<th style="padding:6px;">RECORD</th>'+
+      '<th style="padding:6px;">ACTIONS</th>'+
+    '</tr></thead><tbody>'+
+    res.pending.map(p => 
+      '<tr style="border-bottom:1px solid var(--bg-3);">'+
+        '<td style="padding:8px 6px;font-weight:bold;">'+esc(p.level_name)+'</td>'+
+        '<td style="padding:8px 6px;">'+esc(p.username)+'</td>'+
+        '<td style="padding:8px 6px;">'+p.percent+'% <a href="'+esc(p.link)+'" target="_blank" style="color:#3498db;text-decoration:none;">(Video)</a> '+(parseInt(p.is_mobile)?'📱':'💻')+'</td>'+
+        '<td style="padding:8px 6px;">'+
+           '<button class="approve-rec-btn" data-rid="'+p.id+'" style="background:#2ecc71;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;margin-right:4px;">Approve</button>'+
+           '<button class="deny-rec-btn" data-rid="'+p.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">Deny</button>'+
+        '</td>'+
+      '</tr>'
+    ).join('') + '</tbody></table>';
+
+    box.querySelectorAll('.approve-rec-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const rid = btn.dataset.rid;
+        btn.disabled = true;
+        const r = await adminApi('approve_record', { record_id: rid });
+        if(r.ok) { alert('Record Approved!'); loadPendingRecords(); }
+        else { alert('Failed to approve.'); btn.disabled = false; }
+      });
+    });
+
+    box.querySelectorAll('.deny-rec-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if(!confirm('Deny and delete this submission?')) return;
+        const rid = btn.dataset.rid;
+        btn.disabled = true;
+        const r = await adminApi('deny_record', { record_id: rid });
+        if(r.ok) { loadPendingRecords(); }
+        else { alert('Failed to deny.'); btn.disabled = false; }
+      });
+    });
+  }
 
   async function loadAdminUsers() {
     const box = $('adminUserList');
@@ -716,6 +829,7 @@ async function renderAdmin(){
     });
   }
 
+  loadPendingRecords();
   loadAdminUsers();
   loadAdminLevels();
 
@@ -776,7 +890,7 @@ function allPeople(){
   return Object.keys(set).sort((a,b)=>a.toLowerCase()<b.toLowerCase()?-1:1);
 }
 
-const PAGES=['home','list','board','staff','login','register','profile','admin'];
+const PAGES=['home','list','board','staff','login','register','profile','admin','submit'];
 
 function go(name){
   PAGES.forEach(p=>{ const el=$('p-'+p); if(el) el.hidden = (p!==name) });
@@ -794,6 +908,7 @@ function wireGo(){
       const t=el.dataset.go;
       if(t==='profile') showProfile();
       else if(t==='admin'){ renderAdmin(); go('admin') }
+      else if(t==='submit'){ renderSubmit(); go('submit') }
       else go(t);
     });
   });
