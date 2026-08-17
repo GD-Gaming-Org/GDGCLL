@@ -20,6 +20,7 @@ if (empty($actingUser)) {
     exit;
 }
 
+
 if (strtolower($actingUser) === 'pester') {
     $uRow = ['role' => 'owner', 'is_banned' => 0];
 } else {
@@ -198,6 +199,58 @@ if ($action === 'delete_record') {
         $stmt->bind_param("i", $recordId);
         $stmt->execute();
     }
+    ob_clean();
+    echo json_encode(["ok" => true]);
+    exit;
+}
+
+
+
+if ($action === 'list_pending') {
+    $q = $conn->query("SELECT * FROM pending_records ORDER BY id ASC");
+    $pending = [];
+    if($q) {
+        while ($r = $q->fetch_assoc()) {
+            $pending[] = $r;
+        }
+    }
+    ob_clean();
+    echo json_encode(["ok" => true, "pending" => $pending]);
+    exit;
+}
+
+if ($action === 'approve_record') {
+    $recId = intval($data['record_id'] ?? 0);
+    
+    $stmt = $conn->prepare("SELECT * FROM pending_records WHERE id = ?");
+    $stmt->bind_param("i", $recId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $rec = $res->fetch_assoc();
+    
+    if($rec) {
+        $ins = $conn->prepare("INSERT INTO custom_records (level_name, username, percent, link, is_mobile) VALUES (?, ?, ?, ?, ?)");
+        $ins->bind_param("ssisi", $rec['level_name'], $rec['username'], $rec['percent'], $rec['link'], $rec['is_mobile']);
+        $ins->execute();
+        
+        $del = $conn->prepare("DELETE FROM pending_records WHERE id = ?");
+        $del->bind_param("i", $recId);
+        $del->execute();
+        
+        ob_clean();
+        echo json_encode(["ok" => true]);
+    } else {
+        ob_clean();
+        echo json_encode(["ok" => false, "error" => "Record not found"]);
+    }
+    exit;
+}
+
+if ($action === 'deny_record') {
+    $recId = intval($data['record_id'] ?? 0);
+    $stmt = $conn->prepare("DELETE FROM pending_records WHERE id = ?");
+    $stmt->bind_param("i", $recId);
+    $stmt->execute();
     ob_clean();
     echo json_encode(["ok" => true]);
     exit;
