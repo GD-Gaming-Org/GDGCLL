@@ -10,13 +10,14 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $q = $conn->query("SELECT username, avatar, banner FROM users WHERE avatar IS NOT NULL OR banner IS NOT NULL");
+    $q = $conn->query("SELECT username, avatar, banner, title FROM users WHERE avatar IS NOT NULL OR banner IS NOT NULL OR (title IS NOT NULL AND title != '')");
     $data = [];
     if ($q) {
         while ($r = $q->fetch_assoc()) {
             $data[$r['username']] = [
                 "avatar" => $r['avatar'],
-                "banner" => $r['banner']
+                "banner" => $r['banner'],
+                "title" => $r['title']
             ];
         }
     }
