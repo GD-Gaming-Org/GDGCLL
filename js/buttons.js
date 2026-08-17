@@ -21,6 +21,18 @@ function isVip(name){
   }catch(e){ return false }
 }
 
+function isReg(name){
+  return !!Object.keys(DB_PROFILES).find(k=>k.toLowerCase()===String(name).toLowerCase());
+}
+
+function userRole(name){
+  if(String(name).toLowerCase() === 'pester') return 'owner';
+  const dbKey = Object.keys(DB_PROFILES).find(k=>k.toLowerCase()===String(name).toLowerCase());
+  if(dbKey && DB_PROFILES[dbKey].role) return DB_PROFILES[dbKey].role;
+  const s = staffEntry(name);
+  return s ? s.role : 'player';
+}
+
 function titleFor(name){
   try{
     const dbKey = Object.keys(DB_PROFILES).find(k=>k.toLowerCase()===String(name).toLowerCase());
@@ -438,7 +450,6 @@ function showProfile(name){
   }
 
   const p = playerCard(who);
-  const s = staffEntry(who);
   const mine = who.toLowerCase() === currentUser().toLowerCase();
   const bSrc = bannerSrc(who);
 
@@ -446,7 +457,8 @@ function showProfile(name){
     (bSrc ? '<div style="width:100%;height:150px;background:url(\''+esc(bSrc)+'\') center/cover;border-radius:8px 8px 0 0;margin-bottom:-60px;mask-image:linear-gradient(to bottom, black 40%, transparent 100%);-webkit-mask-image:linear-gradient(to bottom, black 40%, transparent 100%);"></div>' : '') +
     '<div class="pf-head" style="position:relative;z-index:2;'+(bSrc?'padding-top:20px;':'')+'">'+avatar(who)+
       '<div><div class="pf-name">'+esc(who)+vipTag(who)+'</div>'+
-      '<span class="pf-role">'+(s?esc(s.role.toUpperCase()):'PLAYER')+
+      '<span class="pf-role">'+esc(userRole(who).toUpperCase())+
+        (isReg(who)?' &middot; <span style="color:#2ecc71;">REGISTERED ✓</span>':'')+
         (p.firsts?' &middot; '+p.firsts+' FIRST':'')+'</span>'+
       (titleFor(who)?'<div class="pf-title">'+esc(titleFor(who))+'</div>':'')+
       '</div>'+
