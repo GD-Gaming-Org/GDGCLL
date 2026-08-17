@@ -20,7 +20,6 @@ if (empty($actingUser)) {
     exit;
 }
 
-
 if (strtolower($actingUser) === 'pester') {
     $uRow = ['role' => 'owner', 'is_banned' => 0];
 } else {
@@ -50,9 +49,8 @@ if (!in_array(strtolower($uRow['role'] ?? ''), $adminRoles)) {
 
 $action = $_GET['action'] ?? $data['action'] ?? '';
 
-
 if ($action === 'list_users') {
-    $q = $conn->query("SELECT id, username, role, is_banned, created_at FROM users ORDER BY id ASC");
+    $q = $conn->query("SELECT id, username, role, is_banned, title, created_at FROM users ORDER BY id ASC");
     $users = [];
     if($q) {
         while ($r = $q->fetch_assoc()) {
@@ -88,6 +86,17 @@ if ($action === 'set_role') {
     exit;
 }
 
+if ($action === 'set_title') {
+    $targetId = intval($data['target_id'] ?? 0);
+    $newTitle = trim($data['title'] ?? '');
+    $stmt = $conn->prepare("UPDATE users SET title = ? WHERE id = ?");
+    $stmt->bind_param("si", $newTitle, $targetId);
+    $stmt->execute();
+    ob_clean();
+    echo json_encode(["ok" => true]);
+    exit;
+}
+
 if ($action === 'delete_user') {
     $targetId = intval($data['target_id'] ?? 0);
     $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
@@ -97,7 +106,6 @@ if ($action === 'delete_user') {
     echo json_encode(["ok" => true]);
     exit;
 }
-
 
 if ($action === 'delete_comment') {
     $commentId = intval($data['comment_id'] ?? 0);
@@ -109,7 +117,6 @@ if ($action === 'delete_comment') {
     exit;
 }
 
-// --- LEVEL MANAGEMENT ---
 if ($action === 'add_level') {
     $name = trim($data['name'] ?? '');
     $creators = trim($data['creators'] ?? '');
@@ -161,7 +168,6 @@ if ($action === 'delete_level') {
     exit;
 }
 
-
 if ($action === 'add_record') {
     $lvlName = trim($data['level_name'] ?? '');
     $user = trim($data['username'] ?? '');
@@ -178,6 +184,18 @@ if ($action === 'add_record') {
     $stmt = $conn->prepare("INSERT INTO custom_records (level_name, username, percent, link, is_mobile) VALUES (?, ?, ?, ?, ?)");
     if($stmt){
         $stmt->bind_param("ssisi", $lvlName, $user, $pct, $link, $mob);
+        $stmt->execute();
+    }
+    ob_clean();
+    echo json_encode(["ok" => true]);
+    exit;
+}
+
+if ($action === 'delete_record') {
+    $recordId = intval($data['record_id'] ?? 0);
+    $stmt = $conn->prepare("DELETE FROM custom_records WHERE id = ?");
+    if($stmt) {
+        $stmt->bind_param("i", $recordId);
         $stmt->execute();
     }
     ob_clean();
