@@ -10,7 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // We now fetch everyone, including their role, so we know who is registered
+    
     $q = $conn->query("SELECT username, role, avatar, banner, title FROM users");
     $data = [];
     if ($q) {
