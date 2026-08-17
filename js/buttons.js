@@ -23,6 +23,8 @@ function isVip(name){
 
 function titleFor(name){
   try{
+    const dbKey = Object.keys(DB_PROFILES).find(k=>k.toLowerCase()===String(name).toLowerCase());
+    if(dbKey && DB_PROFILES[dbKey].title) return DB_PROFILES[dbKey].title;
     if(typeof TITLES === 'undefined' || !TITLES) return '';
     const k = Object.keys(TITLES).find(x => String(x).toLowerCase() === String(name).toLowerCase());
     return k ? TITLES[k] : '';
@@ -260,6 +262,7 @@ function renderDetail(){
           hostTag(r.link)+
           '<span class="rec-pct">'+r.percent+'%</span>'+
           '<a class="rec-watch" href="'+esc(r.link)+'" target="_blank" rel="noopener">Watch</a>'+
+          (isAdmin() && r.db_id ? '<button class="del-rec-btn" data-rid="'+r.db_id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:2px 8px;font-size:11px;margin-left:8px;cursor:pointer;">Delete</button>' : '')+
         '</div>').join('')+
       '<div class="d-label" style="margin-top:20px;">COMMENTS</div>'+
       '<div id="commentBox" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">'+
@@ -271,6 +274,21 @@ function renderDetail(){
 
   $('detail').querySelectorAll('.rec-name').forEach(n=>{
     n.addEventListener('click',()=>showProfile(n.dataset.player));
+  });
+
+  $('detail').querySelectorAll('.del-rec-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if(!confirm('Permanently delete this record?')) return;
+      const rid = btn.dataset.rid;
+      const res = await adminApi('delete_record', { record_id: rid });
+      if(res.ok) {
+        alert('Record deleted! Refresh to update.');
+        location.reload();
+      } else {
+        alert(res.error || 'Failed to delete record.');
+      }
+    });
   });
 
   async function renderComments() {
@@ -519,8 +537,8 @@ async function renderAdmin(){
     '<div class="head"><h1>Pester Admin Panel</h1><p>Signed in as <b>'+esc(who)+'</b> &middot; Database Controls</p></div>'+
 
     '<div class="adm">'+
-      '<h3>User Management & Banning</h3>'+
-      '<p class="hint">Ban malicious users or manage permissions directly.</p>'+
+      '<h3>User Management & Titles</h3>'+
+      '<p class="hint">Ban users, set permissions, and grant custom titles.</p>'+
       '<div id="adminUserList" style="margin-top:10px;">Loading registered users...</div>'+
     '</div>'+
 
@@ -563,19 +581,23 @@ async function renderAdmin(){
       box.innerHTML = '<span style="color:#ff4d4d;">Failed to load users.</span>';
       return;
     }
-    box.innerHTML = '<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">'+
+    box.innerHTML = '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">'+
       '<thead><tr style="text-align:left;border-bottom:2px solid var(--bg-3);color:var(--fg-3);padding-bottom:6px;">'+
-        '<th style="padding:6px;">ID</th>'+
         '<th style="padding:6px;">USER</th>'+
+        '<th style="padding:6px;">TITLE</th>'+
         '<th style="padding:6px;">ROLE</th>'+
-        '<th style="padding:6px;">BAN STATUS</th>'+
         '<th style="padding:6px;">ACTIONS</th>'+
       '</tr></thead>'+
       '<tbody>'+
         res.users.map(u => 
           '<tr style="border-bottom:1px solid var(--bg-3);">'+
-            '<td style="padding:8px 6px;">#'+u.id+'</td>'+
             '<td style="padding:8px 6px;font-weight:bold;color:'+(parseInt(u.is_banned)?'#ff4d4d':'var(--fg-1)')+'">'+esc(u.username)+(parseInt(u.is_banned)?' (BANNED)':'')+'</td>'+
+            '<td style="padding:8px 6px;">'+
+              '<div style="display:flex;gap:4px;">'+
+                '<input type="text" class="title-input" data-uid="'+u.id+'" value="'+esc(u.title||'')+'" placeholder="None" style="width:80px;background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);border-radius:4px;padding:2px 4px;">'+
+                '<button class="save-title-btn" data-uid="'+u.id+'" style="background:#3498db;color:#fff;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;">Save</button>'+
+              '</div>'+
+            '</td>'+
             '<td style="padding:8px 6px;">'+
               '<select class="role-select" data-uid="'+u.id+'" style="background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);border-radius:4px;padding:2px 4px;">'+
                 '<option value="user" '+(u.role==='user'?'selected':'')+'>User</option>'+
@@ -583,19 +605,25 @@ async function renderAdmin(){
                 '<option value="owner" '+(u.role==='owner'?'selected':'')+'>Owner</option>'+
               '</select>'+
             '</td>'+
-            '<td style="padding:8px 6px;">'+
+            '<td style="padding:8px 6px;display:flex;gap:4px;">'+
               (u.username.toLowerCase() !== currentUser().toLowerCase() ? 
-                '<button class="ban-user-btn" data-uid="'+u.id+'" data-banned="'+u.is_banned+'" style="background:'+(parseInt(u.is_banned)?'#2ecc71':'#e67e22')+';color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">'+(parseInt(u.is_banned)?'Unban':'Ban')+'</button>' : 
-                '<span style="color:var(--fg-3);">-</span>')+
-            '</td>'+
-            '<td style="padding:8px 6px;">'+
-              (u.username.toLowerCase() !== currentUser().toLowerCase() ? 
+                '<button class="ban-user-btn" data-uid="'+u.id+'" data-banned="'+u.is_banned+'" style="background:'+(parseInt(u.is_banned)?'#2ecc71':'#e67e22')+';color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">'+(parseInt(u.is_banned)?'Unban':'Ban')+'</button>' +
                 '<button class="del-user-btn" data-uid="'+u.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">Delete</button>' : 
                 '<span style="color:var(--fg-3);">(You)</span>')+
             '</td>'+
           '</tr>'
         ).join('')+
-      '</tbody></table>';
+      '</tbody></table></div>';
+
+    box.querySelectorAll('.save-title-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const uid = btn.dataset.uid;
+        const inp = box.querySelector('.title-input[data-uid="'+uid+'"]');
+        const res = await adminApi('set_title', { target_id: uid, title: inp.value });
+        if(res.ok) alert('Title saved!');
+        else alert('Failed to save title.');
+      });
+    });
 
     box.querySelectorAll('.role-select').forEach(sel => {
       sel.addEventListener('change', async () => {
@@ -908,6 +936,7 @@ async function boot() {
         const matchingKey = Object.keys(LEVELS_DATA).find(key => LEVELS_DATA[key].name.toLowerCase() === r.level_name.toLowerCase());
         if (matchingKey) {
           LEVELS_DATA[matchingKey].records.push({
+            db_id: r.id,
             user: r.username,
             percent: parseInt(r.percent),
             link: r.link,
