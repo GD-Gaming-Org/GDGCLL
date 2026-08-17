@@ -10,11 +10,13 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $q = $conn->query("SELECT username, avatar, banner, title FROM users WHERE avatar IS NOT NULL OR banner IS NOT NULL OR (title IS NOT NULL AND title != '')");
+    // We now fetch everyone, including their role, so we know who is registered
+    $q = $conn->query("SELECT username, role, avatar, banner, title FROM users");
     $data = [];
     if ($q) {
         while ($r = $q->fetch_assoc()) {
             $data[$r['username']] = [
+                "role" => $r['role'],
                 "avatar" => $r['avatar'],
                 "banner" => $r['banner'],
                 "title" => $r['title']
