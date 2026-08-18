@@ -152,6 +152,7 @@ var TITLES = {
   "yYuixxwasTaken": "Zoink of GDGCLL",
   "gdchicken000": "New GDG Zoink",
   "rtyrekguy": "Owner of GGCL",
-  "SimonXD": "F##k"
+  "SimonXD": "Exterior num 20 hater",
+  "Yspikeers": "blue glass paperweight"
 };
 
