@@ -3,7 +3,7 @@ var LIST = [
   "loveletter4",
   "hideyourheart",
   "sinewavsrebirth",
-  "bdaybrotita1628",
+  "windfall",
   "northfunkxd",
   "blackblizzard1",
   "oxford"
@@ -59,18 +59,15 @@ var LEVELS_DATA = {
     records: []
   },
 
-  "bdaybrotita1628": {
-    id: 146712505,
-    name: "Bday brotita1628",
-    creators: ["yolkstar"],
-    verifier: "yolkstar",
-    verification: "https://youtu.be/udQNUD3GsLc",
-    percentToQualify: 49,
+  "windfall": {
+    id: 147776633,
+    name: "Windfall",
+    creators: ["MacroFyber"],
+    verifier: "MacroFyber",
+    verification: "https://youtu.be/Ke9J4V6oCVM",
+    percentToQualify: 50,
     password: "Free To Copy",
-    records: [
-      { user: "redlulz",        percent: 100, link: "https://youtu.be/jy148BZHvE8", mobile: false },
-      { user: "yYuixxwasTaken", percent: 100, link: "https://youtu.be/W3kjF3HQZE4", mobile: false }
-    ]
+    records: []
   },
 
   "northfunkxd": {
@@ -155,4 +152,3 @@ var TITLES = {
   "SimonXD": "Exterior num 20 hater",
   "Yspikeers": "blue glass paperweight"
 };
-
