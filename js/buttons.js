@@ -612,7 +612,7 @@ async function renderAdmin(){
 
     '<div class="adm">'+
       '<h3>Manage Database Levels</h3>'+
-      '<p class="hint">View and delete levels added directly to the database.</p>'+
+      '<p class="hint">View and edit levels added directly to the database.</p>'+
       '<div id="adminLevelList" style="margin-top:10px;">Loading database levels...</div>'+
     '</div>'+
 
@@ -747,12 +747,49 @@ async function renderAdmin(){
     if(res.levels.length === 0){ box.innerHTML = '<span style="color:var(--fg-3);">No database levels added yet.</span>'; return; }
     box.innerHTML = '<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">'+
       '<thead><tr style="text-align:left;border-bottom:2px solid var(--bg-3);color:var(--fg-3);padding-bottom:6px;">'+
-        '<th style="padding:6px;">ID</th><th style="padding:6px;">LEVEL NAME</th><th style="padding:6px;">VERIFIER</th><th style="padding:6px;">ACTIONS</th>'+
+        '<th style="padding:6px;">ID</th><th style="padding:6px;">LEVEL NAME</th><th style="padding:6px;">STARS</th><th style="padding:6px;">VERIFIER</th><th style="padding:6px;">ACTIONS</th>'+
       '</tr></thead><tbody>'+
         res.levels.map(l => 
-          '<tr style="border-bottom:1px solid var(--bg-3);"><td style="padding:8px 6px;">#'+l.id+'</td><td style="padding:8px 6px;font-weight:bold;">'+esc(l.name)+'</td>'+
-            '<td style="padding:8px 6px;">'+esc(l.verifier)+'</td><td style="padding:8px 6px;"><button class="del-lvl-btn" data-lid="'+l.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">Delete</button></td></tr>'
+          '<tr style="border-bottom:1px solid var(--bg-3);" id="lvl-row-'+l.id+'">'+
+            '<td style="padding:8px 6px;">#'+l.id+'</td>'+
+            '<td style="padding:8px 6px;font-weight:bold;">'+esc(l.name)+'</td>'+
+            '<td style="padding:8px 6px;">'+makeStars(l.stars)+'</td>'+
+            '<td style="padding:8px 6px;">'+esc(l.verifier)+'</td>'+
+            '<td style="padding:8px 6px;">'+
+              '<button class="edit-lvl-btn" data-lid="'+l.id+'" data-name="'+esc(l.name)+'" data-stars="'+(l.stars||1)+'" data-veri="'+esc(l.verifier)+'" style="background:#f39c12;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;margin-right:4px;">Edit</button>'+
+              '<button class="del-lvl-btn" data-lid="'+l.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">Delete</button>'+
+            '</td></tr>'
         ).join('')+'</tbody></table>';
+
+    box.querySelectorAll('.edit-lvl-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lid = btn.dataset.lid;
+        const tr = $('lvl-row-'+lid);
+        tr.innerHTML = `
+          <td style="padding:8px 6px;">#${lid}</td>
+          <td style="padding:8px 6px;"><input type="text" id="el-name-${lid}" value="${btn.dataset.name}" style="width:120px;background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);border-radius:4px;padding:2px 4px;"></td>
+          <td style="padding:8px 6px;"><input type="number" id="el-stars-${lid}" value="${btn.dataset.stars}" min="1" style="width:50px;background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);border-radius:4px;padding:2px 4px;"></td>
+          <td style="padding:8px 6px;"><input type="text" id="el-veri-${lid}" value="${btn.dataset.veri}" style="width:90px;background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);border-radius:4px;padding:2px 4px;"></td>
+          <td style="padding:8px 6px;">
+            <button class="save-edit-btn" data-lid="${lid}" style="background:#2ecc71;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;margin-right:4px;">Save</button>
+            <button class="cancel-edit-btn" style="background:#7f8c8d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">X</button>
+          </td>
+        `;
+        
+        tr.querySelector('.cancel-edit-btn').addEventListener('click', loadAdminLevels);
+        tr.querySelector('.save-edit-btn').addEventListener('click', async (e) => {
+            const sid = e.target.dataset.lid;
+            e.target.disabled = true;
+            const res = await adminApi('edit_level', {
+                level_id: sid,
+                name: $('el-name-'+sid).value.trim(),
+                stars: $('el-stars-'+sid).value,
+                verifier: $('el-veri-'+sid).value.trim()
+            });
+            if(res.ok) { location.reload(); } else { alert('Failed to save edit.'); e.target.disabled = false; }
+        });
+      });
+    });
 
     box.querySelectorAll('.del-lvl-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
