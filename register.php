@@ -12,36 +12,39 @@ $user = trim($data['username'] ?? '');
 $pass = trim($data['password'] ?? '');
 
 if (strlen($user) < 3 || strlen($pass) < 6) {
-    ob_clean();
-    echo json_encode(["ok" => false, "error" => "Invalid inputs"]);
-    exit;
+    ob_clean(); echo json_encode(["ok" => false, "error" => "Invalid inputs"]); exit;
 }
 
 $stmt = $conn->prepare("SELECT id FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1");
-$stmt->bind_param("s", $user);
-$stmt->execute();
-if ($stmt->get_result()->fetch_assoc()) {
-    ob_clean();
-    echo json_encode(["ok" => false, "error" => "Username already taken"]);
-    exit;
+if($stmt){
+    $stmt->bind_param("s", $user);
+    $stmt->execute();
+    if ($stmt->get_result()->fetch_assoc()) {
+        ob_clean(); echo json_encode(["ok" => false, "error" => "Username already taken"]); exit;
+    }
 }
 
 $hash = password_hash($pass, PASSWORD_DEFAULT);
 $role = (strtolower($user) === 'pester') ? 'owner' : 'user';
 
 $ins = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
-$ins->bind_param("sss", $user, $hash, $role);
+if($ins){
+    $ins->bind_param("sss", $user, $hash, $role);
+    if ($ins->execute()) {
+        
+      
+        $botMsg = "**GDGCLL Bot**: welcome to GDGCLL this is only for the gamings if you are not a gaming you should leave";
+        $bStmt = $conn->prepare("INSERT INTO user_notifications (username, message) VALUES (?, ?)");
+        if($bStmt){
+            $bStmt->bind_param("ss", $user, $botMsg);
+            $bStmt->execute();
+        }
 
-if ($ins->execute()) {
-    $botMsg = "🤖 **GDGCLL Bot**: welcome to GDGCLL this is only for the gamings if you are not a gaming you should leave";
-    $bStmt = $conn->prepare("INSERT INTO user_notifications (username, message) VALUES (?, ?)");
-    $bStmt->bind_param("ss", $user, $botMsg);
-    $bStmt->execute();
-
-    ob_clean();
-    echo json_encode(["ok" => true]);
+        ob_clean(); echo json_encode(["ok" => true]);
+    } else {
+        ob_clean(); echo json_encode(["ok" => false, "error" => "Database insertion error"]);
+    }
 } else {
-    ob_clean();
-    echo json_encode(["ok" => false, "error" => "Database error"]);
+    ob_clean(); echo json_encode(["ok" => false, "error" => "Database preparation error"]);
 }
 exit;
