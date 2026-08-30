@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=9">
-<script src="data/data.js?v=9" defer></script>
-<script src="js/buttons.js?v=9" defer></script>
+<link rel="stylesheet" href="css/style.css?v=11">
+<script src="data/data.js?v=11" defer></script>
+<script src="js/buttons.js?v=11" defer></script>
 </head>
 <body>
 
@@ -28,7 +28,13 @@
   </nav>
   <div class="top-right">
     <button class="btn" id="navLogin">Log in</button>
-    <button class="btn btn-primary" id="navProfile" hidden>Profile</button>
+    <div id="userWrap" style="display:inline-flex;gap:6px;" hidden>
+      <button class="btn" id="navBell" style="position:relative;">
+        🔔
+        <span id="bellBadge" style="display:none;position:absolute;top:-5px;right:-5px;background:#ff4d4d;color:#fff;border-radius:50%;padding:2px 5px;font-size:10px;font-weight:bold;">0</span>
+      </button>
+      <button class="btn btn-primary" id="navProfile">Profile</button>
+    </div>
   </div>
 </header>
 
@@ -134,11 +140,9 @@
   </section>
 
   <section class="page" id="p-profile" hidden></section>
-
+  <section class="page" id="p-inbox" hidden></section>
   <section class="page" id="p-admin" hidden></section>
-  
   <section class="page" id="p-submit" hidden></section>
-  
   <section class="page" id="p-updates" hidden></section>
 
 </main>
