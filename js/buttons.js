@@ -927,12 +927,22 @@ $('loginGo').addEventListener('click', async (e)=>{
   e.preventDefault(); 
   const user = $('userInput').value.trim(); const pass = $('passInput').value;
   if(!user || !pass) return say('loginMsg','Enter your username and password.','bad');
-  const res = await fetch('/login.php', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({username:user, password:pass}) });
-  const result = await res.json();
-  if(result.ok){
-    localStorage.setItem('gd_user', result.username); localStorage.setItem('gd_role', result.role || 'user');
-    say('loginMsg','Logged in as '+result.username,'good'); refreshNav(); setTimeout(() => location.reload(), 1000); 
-  } else say('loginMsg', result.error || 'Something went wrong.', 'bad');
+  
+  const btn = $('loginGo');
+  btn.disabled = true; btn.textContent = 'Logging in...';
+  
+  try {
+    const res = await fetch('/login.php', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({username:user, password:pass}) });
+    const result = await res.json();
+    if(result.ok){
+      localStorage.setItem('gd_user', result.username); localStorage.setItem('gd_role', result.role || 'user');
+      say('loginMsg','Logged in as '+result.username,'good'); refreshNav(); setTimeout(() => location.reload(), 1000); 
+    } else { say('loginMsg', result.error || 'Something went wrong.', 'bad'); }
+  } catch(err) {
+    say('loginMsg', 'Network error. Please try again.', 'bad');
+  }
+  
+  btn.disabled = false; btn.textContent = 'Log in';
 });
 
 $('regGo').addEventListener('click', async (e)=>{
@@ -941,10 +951,23 @@ $('regGo').addEventListener('click', async (e)=>{
   if(user.length<3) return say('regMsg','Username must be at least 3 letters.','bad');
   if(pass.length<6) return say('regMsg','Password must be at least 6 characters.','bad');
   if(pass!==pass2) return say('regMsg','Passwords do not match.','bad');
-  const res = await fetch('/register.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:user, password:pass}) });
-  const result = await res.json();
-  if(result.ok){ say('regMsg','Registration successful! You can now log in.','good'); $('regUser').value = ''; $('regPass').value = ''; $('regPass2').value = ''; setTimeout(() => go('login'), 1500); } 
-  else say('regMsg', result.error || 'Something went wrong.', 'bad');
+  
+  const btn = $('regGo');
+  btn.disabled = true; btn.textContent = 'Registering...';
+  
+  try {
+    const res = await fetch('/register.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:user, password:pass}) });
+    const result = await res.json();
+    if(result.ok){ 
+      say('regMsg','Registration successful! You can now log in.','good'); 
+      $('regUser').value = ''; $('regPass').value = ''; $('regPass2').value = ''; 
+      setTimeout(() => go('login'), 1500); 
+    } else { say('regMsg', result.error || 'Something went wrong.', 'bad'); }
+  } catch(err) {
+    say('regMsg', 'Server error. Make sure database tables exist.', 'bad');
+  }
+  
+  btn.disabled = false; btn.textContent = 'Register';
 });
 
 $('navLogin').addEventListener('click',()=>go('login'));
