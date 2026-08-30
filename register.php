@@ -31,15 +31,12 @@ $ins = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, ?
 if($ins){
     $ins->bind_param("sss", $user, $hash, $role);
     if ($ins->execute()) {
-        
-      
         $botMsg = "**GDGCLL Bot**: welcome to GDGCLL this is only for the gamings if you are not a gaming you should leave";
         $bStmt = $conn->prepare("INSERT INTO user_notifications (username, message) VALUES (?, ?)");
         if($bStmt){
             $bStmt->bind_param("ss", $user, $botMsg);
             $bStmt->execute();
         }
-
         ob_clean(); echo json_encode(["ok" => true]);
     } else {
         ob_clean(); echo json_encode(["ok" => false, "error" => "Database insertion error"]);
