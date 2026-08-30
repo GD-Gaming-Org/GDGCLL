@@ -20,7 +20,6 @@ if (empty($actingUser)) {
     exit;
 }
 
-
 if (strtolower($actingUser) === 'pester') {
     $uRow = ['role' => 'owner', 'is_banned' => 0];
 } else {
@@ -127,6 +126,7 @@ if ($action === 'add_level') {
     $lvlId = trim($data['level_id'] ?? '');
     $pass = trim($data['password'] ?? 'Free to copy');
     $rank = intval($data['rank'] ?? 999);
+    $stars = intval($data['stars'] ?? 1);
 
     if (!$name || !$verifier || !$vLink) {
         ob_clean();
@@ -134,9 +134,9 @@ if ($action === 'add_level') {
         exit;
     }
 
-    $stmt = $conn->prepare("INSERT INTO custom_levels (name, creators, verifier, verification_link, percent_qualify, level_id_string, password, placement_rank) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO custom_levels (name, creators, verifier, verification_link, percent_qualify, level_id_string, password, placement_rank, stars) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
     if($stmt){
-        $stmt->bind_param("ssssissi", $name, $creators, $verifier, $vLink, $qualify, $lvlId, $pass, $rank);
+        $stmt->bind_param("ssssissii", $name, $creators, $verifier, $vLink, $qualify, $lvlId, $pass, $rank, $stars);
         $stmt->execute();
     }
     ob_clean();
@@ -203,8 +203,6 @@ if ($action === 'delete_record') {
     echo json_encode(["ok" => true]);
     exit;
 }
-
-
 
 if ($action === 'list_pending') {
     $q = $conn->query("SELECT * FROM pending_records ORDER BY id ASC");
