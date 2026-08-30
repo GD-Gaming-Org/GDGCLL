@@ -7,7 +7,7 @@ const fix = n => (Math.round(n*100)/100).toFixed(2);
 const ytid = u => (String(u).match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/)||[])[1]||null;
 
 function makeStars(n) {
-  return '⭐'.repeat(Math.max(1, parseInt(n) || 1));
+  return '★'.repeat(Math.max(1, parseInt(n) || 1));
 }
 
 function host(u){
@@ -168,26 +168,6 @@ function ico(kind){
 
 let active=0;
 
-async function fetchComments(levelId) {
-  try {
-    const res = await fetch('/comments.php?level_id=' + levelId);
-    const data = await res.json();
-    return data.ok ? data.data : [];
-  } catch (e) { return []; }
-}
-
-async function submitComment(levelId, text) {
-  try {
-    const res = await fetch('/comments.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ level_id: levelId, comment: text, username: currentUser() })
-    });
-    return await res.json();
-  } catch (e) { return { ok: false, error: 'network_error' }; }
-}
-
 async function adminApi(action, payload = {}) {
   try {
     const user = currentUser();
@@ -208,7 +188,7 @@ function renderRows(){
     const min=score(i+1,lv.percentToQualify,lv.percentToQualify);
     return '<button class="card" data-i="'+i+'" aria-current="'+(i===active)+'">'+
       (vid?'<img class="card-banner" src="https://img.youtube.com/vi/'+vid+'/hqdefault.jpg" alt="">':'')+
-      '<div class="card-title"><em>#'+(i+1)+'</em> &ndash; '+esc(lv.name)+' <span style="font-size:12px;margin-left:5px;">'+makeStars(lv.stars)+'</span></div>'+
+      '<div class="card-title"><em>#'+(i+1)+'</em> &ndash; '+esc(lv.name)+' <span style="font-size:12px;margin-left:5px;color:#f1c40f;">'+makeStars(lv.stars)+'</span></div>'+
       '<div class="card-by"><span>published by</span> <b>'+esc(lv.creators.join(', '))+'</b></div>'+
       '<div class="card-pts">'+fix(min)+' ('+lv.percentToQualify+'%) &mdash; <b>'+fix(levelValue(i+1))+'</b> (100%) points</div>'+
     '</button>';
@@ -228,7 +208,7 @@ function renderDetail(){
   $('detail').innerHTML =
     (vid?'<a class="d-banner" href="'+esc(lv.verification)+'" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/'+vid+'/hqdefault.jpg" alt=""><span class="d-play"><i></i></span></a>':'')+
     '<div class="d-body">'+
-      '<div class="d-title">'+esc(lv.name)+' <span style="font-size:16px;">'+makeStars(lv.stars)+'</span></div>'+
+      '<div class="d-title">'+esc(lv.name)+' <span style="font-size:16px;color:#f1c40f;">'+makeStars(lv.stars)+'</span></div>'+
       '<div class="d-sub">Verified by <b>'+esc(lv.verifier)+'</b></div>'+
       '<div class="d-stats">'+
         '<div class="d-stat"><b>#'+(active+1)+'</b><span>RANK</span></div>'+
@@ -248,12 +228,6 @@ function renderDetail(){
           '<a class="rec-watch" href="'+esc(r.link)+'" target="_blank" rel="noopener">Watch</a>'+
           (isAdmin() && r.db_id ? '<button class="del-rec-btn" data-rid="'+r.db_id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:2px 8px;font-size:11px;margin-left:8px;cursor:pointer;">Delete</button>' : '')+
         '</div>').join('')+
-      '<div class="d-label" style="margin-top:20px;">COMMENTS</div>'+
-      '<div id="commentBox" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">'+
-        '<textarea id="cText" placeholder="Write a comment..." style="width:100%;height:80px;padding:10px;border-radius:6px;background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);resize:none;font-family:inherit;"></textarea>'+
-        '<button class="go" id="cPost" style="align-self:flex-start;">Post Comment</button>'+
-      '</div>'+
-      '<div id="cList" style="display:flex;flex-direction:column;gap:10px;">Loading comments...</div>'+
     '</div>';
 
   $('detail').querySelectorAll('.rec-name').forEach(n=>{
@@ -268,54 +242,6 @@ function renderDetail(){
       const res = await adminApi('delete_record', { record_id: rid });
       if(res.ok) location.reload();
     });
-  });
-
-  async function renderComments() {
-    const cList = $('cList');
-    if(!cList) return;
-    const comments = await fetchComments(currentLevelId);
-    if(comments.length === 0){
-      cList.innerHTML = '<div style="color:var(--fg-3);font-size:14px;padding:10px 0;">No comments yet. Be the first!</div>';
-    } else {
-      cList.innerHTML = comments.map(c => 
-        '<div style="background:var(--bg-2);padding:12px;border-radius:6px;border:1px solid var(--bg-3);position:relative;">'+
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
-            '<strong style="color:var(--fg-1);font-size:14px;">'+esc(c.username)+'</strong>'+
-            '<div style="display:flex;align-items:center;gap:10px;">'+
-              '<span style="color:var(--fg-3);font-size:12px;">'+esc(c.created_at)+'</span>'+
-              (isAdmin() ? '<button class="del-comment-btn" data-cid="'+c.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;">Delete</button>' : '')+
-            '</div>'+
-          '</div>'+
-          '<div style="color:var(--fg-2);font-size:14px;word-break:break-word;white-space:pre-wrap;">'+esc(c.comment)+'</div>'+
-        '</div>'
-      ).join('');
-
-      cList.querySelectorAll('.del-comment-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          if(!confirm('Delete this comment permanently?')) return;
-          await adminApi('delete_comment', { comment_id: btn.dataset.cid });
-          renderComments();
-        });
-      });
-    }
-  }
-
-  renderComments();
-
-  $('cPost').addEventListener('click', async () => {
-    const btn = $('cPost');
-    const txt = $('cText');
-    if(!currentUser()) return alert('You must log in to post a comment.');
-    const val = txt.value.trim();
-    if(!val) return;
-    btn.disabled = true;
-    btn.textContent = 'Posting...';
-    const res = await submitComment(currentLevelId, val);
-    if(res.ok) { txt.value = ''; await renderComments(); }
-    else { alert(res.error || 'Failed to post comment.'); }
-    btn.disabled = false;
-    btn.textContent = 'Post Comment';
   });
 }
 
@@ -555,7 +481,7 @@ function showProfile(name){
     '<div class="pf-head" style="position:relative;z-index:2;'+(bSrc?'padding-top:20px;':'')+'">'+avatar(who)+
       '<div><div class="pf-name">'+esc(who)+vipTag(who)+'</div>'+
       '<span class="pf-role">'+esc(userRole(who).toUpperCase())+
-        (isReg(who)?' &middot; <span style="color:#2ecc71;">REGISTERED ✓</span>':'')+
+        (isReg(who)?' &middot; <span style="color:#2ecc71;">REGISTERED </span>':'')+
         (p.firsts?' &middot; '+p.firsts+' FIRST':'')+'</span>'+
       (titleFor(who)?'<div class="pf-title">'+esc(titleFor(who))+'</div>':'')+
       '</div>'+
@@ -688,7 +614,7 @@ async function renderAdmin(){
     res.pending.map(p => 
       '<tr style="border-bottom:1px solid var(--bg-3);">'+
         '<td style="padding:8px 6px;font-weight:bold;">'+esc(p.level_name)+'</td><td style="padding:8px 6px;">'+esc(p.username)+'</td>'+
-        '<td style="padding:8px 6px;">'+p.percent+'% <a href="'+esc(p.link)+'" target="_blank" style="color:#3498db;text-decoration:none;">(Video)</a> '+(parseInt(p.is_mobile)?'📱':'💻')+'</td>'+
+        '<td style="padding:8px 6px;">'+p.percent+'% <a href="'+esc(p.link)+'" target="_blank" style="color:#3498db;text-decoration:none;">(Video)</a> '+(parseInt(p.is_mobile)?'Mobile':'PC')+'</td>'+
         '<td style="padding:8px 6px;">'+
            '<button class="approve-rec-btn" data-rid="'+p.id+'" style="background:#2ecc71;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;margin-right:4px;">Approve</button>'+
            '<button class="deny-rec-btn" data-rid="'+p.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">Deny</button>'+
@@ -947,7 +873,6 @@ $('regGo').addEventListener('click', async (e)=>{
 $('navLogin').addEventListener('click',()=>go('login'));
 $('navProfile').addEventListener('click',()=>showProfile());
 $('navBell').addEventListener('click',()=>go('inbox'));
-
 
 const refBtn = $('navRefresh');
 if(refBtn){
