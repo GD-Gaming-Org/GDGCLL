@@ -6,6 +6,14 @@ const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const fix = n => (Math.round(n*100)/100).toFixed(2);
 const ytid = u => (String(u).match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/)||[])[1]||null;
 
+function rankStars(rank) {
+  if (rank <= 10) return '⭐⭐⭐⭐⭐';
+  if (rank <= 25) return '⭐⭐⭐⭐';
+  if (rank <= 50) return '⭐⭐⭐';
+  if (rank <= 75) return '⭐⭐';
+  return '⭐';
+}
+
 function host(u){
   const t = String(u).toLowerCase();
   if(t.indexOf('medal.tv') !== -1)  return 'medal';
@@ -98,17 +106,6 @@ function isAdmin(){
   return localStorage.getItem('gd_key')===s.key;
 }
 
-function h32(str,salt){
-  let h=2166136261>>>0;
-  const t=salt+str+salt;
-  for(let r=0;r<3000;r++){
-    for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)>>>0}
-    h=(h^(h>>>13))>>>0;
-  }
-  return h.toString(16).padStart(8,'0');
-}
-function hashCode(s){ return h32(s,'gdgcll-a')+h32(s,'gdgcll-b') }
-
 function shrinkImage(file, cb){
   const reader = new FileReader();
   reader.onload = function(e){
@@ -180,27 +177,19 @@ async function fetchComments(levelId) {
     const res = await fetch('/comments.php?level_id=' + levelId);
     const data = await res.json();
     return data.ok ? data.data : [];
-  } catch (e) {
-    return [];
-  }
+  } catch (e) { return []; }
 }
 
 async function submitComment(levelId, text) {
   try {
     const res = await fetch('/comments.php', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ 
-        level_id: levelId, 
-        comment: text,
-        username: currentUser()
-      })
+      body: JSON.stringify({ level_id: levelId, comment: text, username: currentUser() })
     });
     return await res.json();
-  } catch (e) {
-    return { ok: false, error: 'network_error' };
-  }
+  } catch (e) { return { ok: false, error: 'network_error' }; }
 }
 
 async function adminApi(action, payload = {}) {
@@ -208,25 +197,12 @@ async function adminApi(action, payload = {}) {
     const user = currentUser();
     const res = await fetch('/admin.php?action=' + encodeURIComponent(action) + '&admin_user=' + encodeURIComponent(user), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({
-        action: action,
-        admin_user: user,
-        ...payload
-      })
+      body: JSON.stringify({ action: action, admin_user: user, ...payload })
     });
-    const rawText = await res.text();
-    try {
-      return JSON.parse(rawText);
-    } catch(err) {
-      alert('ADMIN PHP ERROR:\n' + rawText);
-      return { ok: false, error: 'invalid_json' };
-    }
-  } catch (e) {
-    alert('FETCH FAILED:\n' + e.message);
-    return { ok: false, error: 'fetch_failed' };
-  }
+    return await res.json();
+  } catch (e) { return { ok: false }; }
 }
 
 function renderRows(){
@@ -236,7 +212,7 @@ function renderRows(){
     const min=score(i+1,lv.percentToQualify,lv.percentToQualify);
     return '<button class="card" data-i="'+i+'" aria-current="'+(i===active)+'">'+
       (vid?'<img class="card-banner" src="https://img.youtube.com/vi/'+vid+'/hqdefault.jpg" alt="">':'')+
-      '<div class="card-title"><em>#'+(i+1)+'</em> &ndash; '+esc(lv.name)+'</div>'+
+      '<div class="card-title"><em>#'+(i+1)+'</em> &ndash; '+esc(lv.name)+' <span style="font-size:12px;margin-left:5px;">'+rankStars(i+1)+'</span></div>'+
       '<div class="card-by"><span>published by</span> <b>'+esc(lv.creators.join(', '))+'</b></div>'+
       '<div class="card-pts">'+fix(min)+' ('+lv.percentToQualify+'%) &mdash; <b>'+fix(levelValue(i+1))+'</b> (100%) points</div>'+
     '</button>';
@@ -256,7 +232,7 @@ function renderDetail(){
   $('detail').innerHTML =
     (vid?'<a class="d-banner" href="'+esc(lv.verification)+'" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/'+vid+'/hqdefault.jpg" alt=""><span class="d-play"><i></i></span></a>':'')+
     '<div class="d-body">'+
-      '<div class="d-title">'+esc(lv.name)+'</div>'+
+      '<div class="d-title">'+esc(lv.name)+' <span style="font-size:16px;">'+rankStars(active+1)+'</span></div>'+
       '<div class="d-sub">Verified by <b>'+esc(lv.verifier)+'</b></div>'+
       '<div class="d-stats">'+
         '<div class="d-stat"><b>#'+(active+1)+'</b><span>RANK</span></div>'+
@@ -294,12 +270,7 @@ function renderDetail(){
       if(!confirm('Permanently delete this record?')) return;
       const rid = btn.dataset.rid;
       const res = await adminApi('delete_record', { record_id: rid });
-      if(res.ok) {
-        alert('Record deleted! Refresh to update.');
-        location.reload();
-      } else {
-        alert(res.error || 'Failed to delete record.');
-      }
+      if(res.ok) location.reload();
     });
   });
 
@@ -327,13 +298,8 @@ function renderDetail(){
         btn.addEventListener('click', async (e) => {
           e.stopPropagation();
           if(!confirm('Delete this comment permanently?')) return;
-          const cid = btn.dataset.cid;
-          const res = await adminApi('delete_comment', { comment_id: cid });
-          if(res.ok){
-            renderComments();
-          } else {
-            alert(res.error || 'Failed to delete comment.');
-          }
+          await adminApi('delete_comment', { comment_id: btn.dataset.cid });
+          renderComments();
         });
       });
     }
@@ -344,21 +310,14 @@ function renderDetail(){
   $('cPost').addEventListener('click', async () => {
     const btn = $('cPost');
     const txt = $('cText');
-    if(!currentUser()){
-      alert('You must log in to post a comment.');
-      return;
-    }
+    if(!currentUser()) return alert('You must log in to post a comment.');
     const val = txt.value.trim();
     if(!val) return;
     btn.disabled = true;
     btn.textContent = 'Posting...';
     const res = await submitComment(currentLevelId, val);
-    if(res.ok){
-      txt.value = '';
-      await renderComments();
-    } else {
-      alert(res.error || 'Failed to post comment.');
-    }
+    if(res.ok) { txt.value = ''; await renderComments(); }
+    else { alert(res.error || 'Failed to post comment.'); }
     btn.disabled = false;
     btn.textContent = 'Post Comment';
   });
@@ -481,17 +440,72 @@ function renderSubmit() {
       const json = await res.json();
       if (json.ok) {
         alert('Record submitted successfully! An Admin will review it soon.');
-        $('subLvl').value = '';
-        $('subLink').value = '';
-        $('subPct').value = '100';
-      } else {
-        alert('Error: ' + json.error);
-      }
+        $('subLvl').value = ''; $('subLink').value = ''; $('subPct').value = '100';
+      } else { alert('Error: ' + json.error); }
     } catch(e) { alert("Network error."); }
     
     btn.disabled = false;
     btn.textContent = 'Submit for Review';
   });
+}
+
+async function renderUpdates() {
+  const el = $('p-updates');
+  if(!el) return;
+  el.innerHTML = '<div class="head"><h1>Updates & Announcements</h1><p>Latest news from the list team.</p></div>' +
+     (isAdmin() ? '<div class="box" style="margin-bottom:20px;"><h3>Post Announcement</h3><textarea id="updText" style="width:100%;height:80px;padding:10px;margin-bottom:10px;border-radius:6px;background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);resize:none;" placeholder="Write an update..."></textarea><button class="go" id="btnPostUpdate">Post Update</button></div>' : '') +
+     '<div id="updatesList">Loading...</div>';
+
+  async function loadList() {
+      const listEl = $('updatesList');
+      if(!listEl) return;
+      const res = await fetch('/api_announcements.php');
+      const data = await res.json();
+      if(!data.ok || !data.announcements) {
+          listEl.innerHTML = '<p style="color:var(--fg-3);text-align:center;">Failed to load updates.</p>';
+          return;
+      }
+      if(data.announcements.length === 0) {
+          listEl.innerHTML = '<p class="lead" style="text-align:center;">No announcements yet.</p>';
+          return;
+      }
+      listEl.innerHTML = data.announcements.map(a =>
+          '<div class="box" style="margin-bottom:15px;text-align:left;position:relative;">' +
+            '<div style="font-size:12px;color:var(--fg-3);margin-bottom:8px;"><b>' + esc(a.author) + '</b> &middot; ' + esc(a.created_at) + '</div>' +
+            '<div style="white-space:pre-wrap;font-size:15px;color:var(--fg-1);">' + esc(a.message) + '</div>' +
+            (isAdmin() ? '<button class="del-upd-btn" data-uid="'+a.id+'" style="position:absolute;top:15px;right:15px;background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">Delete</button>' : '') +
+          '</div>'
+      ).join('');
+
+      listEl.querySelectorAll('.del-upd-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+              if(!confirm('Delete this announcement?')) return;
+              await fetch('/api_announcements.php', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({admin_user: currentUser(), action: 'delete', id: btn.dataset.uid})
+              });
+              loadList();
+          });
+      });
+  }
+  loadList();
+
+  if(isAdmin()) {
+      $('btnPostUpdate').addEventListener('click', async () => {
+          const txt = $('updText').value.trim();
+          if(!txt) return;
+          $('btnPostUpdate').disabled = true;
+          await fetch('/api_announcements.php', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({admin_user: currentUser(), action: 'add', message: txt})
+          });
+          $('updText').value = '';
+          $('btnPostUpdate').disabled = false;
+          loadList();
+      });
+  }
 }
 
 function showProfile(name){
@@ -556,15 +570,9 @@ function showProfile(name){
       const f = this.files[0]; if(!f) return;
       shrinkImage(f, async data => {
         if(!data) return alert('Failed to read image.');
-        try {
-          const res = await fetch('/api_profile.php', { method:'POST', credentials:'include', body:JSON.stringify({username:who, type:'avatar', image:data}) });
-          const raw = await res.text();
-          try {
-            const json = JSON.parse(raw);
-            if(json.ok) location.reload();
-            else alert("SERVER ERROR:\n" + json.error);
-          } catch(e) { alert("PHP ERROR:\n" + raw); }
-        } catch(e) { alert("NETWORK ERROR:\n" + e.message); }
+        const res = await fetch('/api_profile.php', { method:'POST', credentials:'include', body:JSON.stringify({username:who, type:'avatar', image:data}) });
+        const json = await res.json();
+        if(json.ok) location.reload(); else alert("Error: " + json.error);
       });
     });
 
@@ -573,24 +581,16 @@ function showProfile(name){
       const f = this.files[0]; if(!f) return;
       shrinkBanner(f, async data => {
         if(!data) return alert('Failed to read image.');
-        try {
-          const res = await fetch('/api_profile.php', { method:'POST', credentials:'include', body:JSON.stringify({username:who, type:'banner', image:data}) });
-          const raw = await res.text();
-          try {
-            const json = JSON.parse(raw);
-            if(json.ok) location.reload();
-            else alert("SERVER ERROR:\n" + json.error);
-          } catch(e) { alert("PHP ERROR:\n" + raw); }
-        } catch(e) { alert("NETWORK ERROR:\n" + e.message); }
+        const res = await fetch('/api_profile.php', { method:'POST', credentials:'include', body:JSON.stringify({username:who, type:'banner', image:data}) });
+        const json = await res.json();
+        if(json.ok) location.reload(); else alert("Error: " + json.error);
       });
     });
   }
 
   const lo = $('doLogout');
   if(lo) lo.addEventListener('click',()=>{
-    localStorage.removeItem('gd_user');
-    localStorage.removeItem('gd_role');
-    localStorage.removeItem('gd_key');
+    localStorage.removeItem('gd_user'); localStorage.removeItem('gd_role'); localStorage.removeItem('gd_key');
     refreshNav(); go('home');
   });
 }
@@ -649,51 +649,36 @@ async function renderAdmin(){
     const box = $('adminPendingList');
     if(!box) return;
     const res = await adminApi('list_pending');
-    if(!res.ok || !res.pending) {
-      box.innerHTML = '<span style="color:#ff4d4d;">Failed to load queue.</span>';
-      return;
-    }
-    if(res.pending.length === 0) {
-       box.innerHTML = '<span style="color:var(--fg-3);">No pending records to review right now!</span>';
-       return;
-    }
+    if(!res.ok || !res.pending) { box.innerHTML = '<span style="color:#ff4d4d;">Failed to load queue.</span>'; return; }
+    if(res.pending.length === 0) { box.innerHTML = '<span style="color:var(--fg-3);">No pending records to review right now!</span>'; return; }
     box.innerHTML = '<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">'+
     '<thead><tr style="text-align:left;border-bottom:2px solid var(--bg-3);color:var(--fg-3);padding-bottom:6px;">'+
-      '<th style="padding:6px;">LEVEL</th>'+
-      '<th style="padding:6px;">PLAYER</th>'+
-      '<th style="padding:6px;">RECORD</th>'+
-      '<th style="padding:6px;">ACTIONS</th>'+
+      '<th style="padding:6px;">LEVEL</th><th style="padding:6px;">PLAYER</th><th style="padding:6px;">RECORD</th><th style="padding:6px;">ACTIONS</th>'+
     '</tr></thead><tbody>'+
     res.pending.map(p => 
       '<tr style="border-bottom:1px solid var(--bg-3);">'+
-        '<td style="padding:8px 6px;font-weight:bold;">'+esc(p.level_name)+'</td>'+
-        '<td style="padding:8px 6px;">'+esc(p.username)+'</td>'+
+        '<td style="padding:8px 6px;font-weight:bold;">'+esc(p.level_name)+'</td><td style="padding:8px 6px;">'+esc(p.username)+'</td>'+
         '<td style="padding:8px 6px;">'+p.percent+'% <a href="'+esc(p.link)+'" target="_blank" style="color:#3498db;text-decoration:none;">(Video)</a> '+(parseInt(p.is_mobile)?'📱':'💻')+'</td>'+
         '<td style="padding:8px 6px;">'+
            '<button class="approve-rec-btn" data-rid="'+p.id+'" style="background:#2ecc71;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;margin-right:4px;">Approve</button>'+
            '<button class="deny-rec-btn" data-rid="'+p.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">Deny</button>'+
-        '</td>'+
-      '</tr>'
+        '</td></tr>'
     ).join('') + '</tbody></table>';
 
     box.querySelectorAll('.approve-rec-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const rid = btn.dataset.rid;
         btn.disabled = true;
-        const r = await adminApi('approve_record', { record_id: rid });
-        if(r.ok) { alert('Record Approved!'); loadPendingRecords(); }
-        else { alert('Failed to approve.'); btn.disabled = false; }
+        const r = await adminApi('approve_record', { record_id: btn.dataset.rid });
+        if(r.ok) { alert('Record Approved!'); loadPendingRecords(); } else { alert('Failed to approve.'); btn.disabled = false; }
       });
     });
 
     box.querySelectorAll('.deny-rec-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         if(!confirm('Deny and delete this submission?')) return;
-        const rid = btn.dataset.rid;
         btn.disabled = true;
-        const r = await adminApi('deny_record', { record_id: rid });
-        if(r.ok) { loadPendingRecords(); }
-        else { alert('Failed to deny.'); btn.disabled = false; }
+        const r = await adminApi('deny_record', { record_id: btn.dataset.rid });
+        if(r.ok) loadPendingRecords(); else { alert('Failed to deny.'); btn.disabled = false; }
       });
     });
   }
@@ -702,82 +687,57 @@ async function renderAdmin(){
     const box = $('adminUserList');
     if(!box) return;
     const res = await adminApi('list_users');
-    if(!res.ok || !res.users){
-      box.innerHTML = '<span style="color:#ff4d4d;">Failed to load users.</span>';
-      return;
-    }
+    if(!res.ok || !res.users){ box.innerHTML = '<span style="color:#ff4d4d;">Failed to load users.</span>'; return; }
     box.innerHTML = '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">'+
       '<thead><tr style="text-align:left;border-bottom:2px solid var(--bg-3);color:var(--fg-3);padding-bottom:6px;">'+
-        '<th style="padding:6px;">USER</th>'+
-        '<th style="padding:6px;">TITLE</th>'+
-        '<th style="padding:6px;">ROLE</th>'+
-        '<th style="padding:6px;">ACTIONS</th>'+
-      '</tr></thead>'+
-      '<tbody>'+
+        '<th style="padding:6px;">USER</th><th style="padding:6px;">TITLE</th><th style="padding:6px;">ROLE</th><th style="padding:6px;">ACTIONS</th>'+
+      '</tr></thead><tbody>'+
         res.users.map(u => 
           '<tr style="border-bottom:1px solid var(--bg-3);">'+
             '<td style="padding:8px 6px;font-weight:bold;color:'+(parseInt(u.is_banned)?'#ff4d4d':'var(--fg-1)')+'">'+esc(u.username)+(parseInt(u.is_banned)?' (BANNED)':'')+'</td>'+
             '<td style="padding:8px 6px;">'+
-              '<div style="display:flex;gap:4px;">'+
-                '<input type="text" class="title-input" data-uid="'+u.id+'" value="'+esc(u.title||'')+'" placeholder="None" style="width:80px;background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);border-radius:4px;padding:2px 4px;">'+
-                '<button class="save-title-btn" data-uid="'+u.id+'" style="background:#3498db;color:#fff;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;">Save</button>'+
-              '</div>'+
+              '<div style="display:flex;gap:4px;"><input type="text" class="title-input" data-uid="'+u.id+'" value="'+esc(u.title||'')+'" placeholder="None" style="width:80px;background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);border-radius:4px;padding:2px 4px;">'+
+                '<button class="save-title-btn" data-uid="'+u.id+'" style="background:#3498db;color:#fff;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;">Save</button></div>'+
             '</td>'+
             '<td style="padding:8px 6px;">'+
               '<select class="role-select" data-uid="'+u.id+'" style="background:var(--bg-2);color:var(--fg-1);border:1px solid var(--bg-3);border-radius:4px;padding:2px 4px;">'+
-                '<option value="user" '+(u.role==='user'?'selected':'')+'>User</option>'+
-                '<option value="admin" '+(u.role==='admin'?'selected':'')+'>Admin</option>'+
-                '<option value="owner" '+(u.role==='owner'?'selected':'')+'>Owner</option>'+
-              '</select>'+
+                '<option value="user" '+(u.role==='user'?'selected':'')+'>User</option><option value="admin" '+(u.role==='admin'?'selected':'')+'>Admin</option><option value="owner" '+(u.role==='owner'?'selected':'')+'>Owner</option></select>'+
             '</td>'+
             '<td style="padding:8px 6px;display:flex;gap:4px;">'+
               (u.username.toLowerCase() !== currentUser().toLowerCase() ? 
                 '<button class="ban-user-btn" data-uid="'+u.id+'" data-banned="'+u.is_banned+'" style="background:'+(parseInt(u.is_banned)?'#2ecc71':'#e67e22')+';color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">'+(parseInt(u.is_banned)?'Unban':'Ban')+'</button>' +
                 '<button class="del-user-btn" data-uid="'+u.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">Delete</button>' : 
-                '<span style="color:var(--fg-3);">(You)</span>')+
-            '</td>'+
-          '</tr>'
-        ).join('')+
-      '</tbody></table></div>';
+                '<span style="color:var(--fg-3);">(You)</span>')+'</td></tr>'
+        ).join('')+'</tbody></table></div>';
 
     box.querySelectorAll('.save-title-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const uid = btn.dataset.uid;
-        const inp = box.querySelector('.title-input[data-uid="'+uid+'"]');
-        const res = await adminApi('set_title', { target_id: uid, title: inp.value });
-        if(res.ok) alert('Title saved!');
-        else alert('Failed to save title.');
+        const inp = box.querySelector('.title-input[data-uid="'+btn.dataset.uid+'"]');
+        const res = await adminApi('set_title', { target_id: btn.dataset.uid, title: inp.value });
+        if(res.ok) alert('Title saved!'); else alert('Failed to save title.');
       });
     });
 
     box.querySelectorAll('.role-select').forEach(sel => {
       sel.addEventListener('change', async () => {
-        const uid = sel.dataset.uid;
-        const newR = sel.value;
-        const res = await adminApi('set_role', { target_id: uid, role: newR });
-        if(res.ok) alert('Role updated.');
-        else alert('Failed to update role.');
+        const res = await adminApi('set_role', { target_id: sel.dataset.uid, role: sel.value });
+        if(res.ok) alert('Role updated.'); else alert('Failed to update role.');
       });
     });
 
     box.querySelectorAll('.ban-user-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const uid = btn.dataset.uid;
-        const currentBanned = parseInt(btn.dataset.banned);
-        const newBan = currentBanned ? 0 : 1;
-        const res = await adminApi('toggle_ban', { target_id: uid, is_banned: newBan });
+        const newBan = parseInt(btn.dataset.banned) ? 0 : 1;
+        const res = await adminApi('toggle_ban', { target_id: btn.dataset.uid, is_banned: newBan });
         if(res.ok) loadAdminUsers();
-        else alert('Failed to update ban status.');
       });
     });
 
     box.querySelectorAll('.del-user-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         if(!confirm('Permanently delete this user?')) return;
-        const uid = btn.dataset.uid;
-        const res = await adminApi('delete_user', { target_id: uid });
+        const res = await adminApi('delete_user', { target_id: btn.dataset.uid });
         if(res.ok) loadAdminUsers();
-        else alert('Failed to delete user.');
       });
     });
   }
@@ -786,45 +746,22 @@ async function renderAdmin(){
     const box = $('adminLevelList');
     if(!box) return;
     const res = await adminApi('list_levels');
-    if(!res.ok || !res.levels){
-      box.innerHTML = '<span style="color:#ff4d4d;">Failed to load levels or no custom levels added.</span>';
-      return;
-    }
-    if(res.levels.length === 0){
-      box.innerHTML = '<span style="color:var(--fg-3);">No database levels added yet.</span>';
-      return;
-    }
+    if(!res.ok || !res.levels){ box.innerHTML = '<span style="color:#ff4d4d;">Failed to load levels.</span>'; return; }
+    if(res.levels.length === 0){ box.innerHTML = '<span style="color:var(--fg-3);">No database levels added yet.</span>'; return; }
     box.innerHTML = '<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">'+
       '<thead><tr style="text-align:left;border-bottom:2px solid var(--bg-3);color:var(--fg-3);padding-bottom:6px;">'+
-        '<th style="padding:6px;">ID</th>'+
-        '<th style="padding:6px;">LEVEL NAME</th>'+
-        '<th style="padding:6px;">VERIFIER</th>'+
-        '<th style="padding:6px;">ACTIONS</th>'+
-      '</tr></thead>'+
-      '<tbody>'+
+        '<th style="padding:6px;">ID</th><th style="padding:6px;">LEVEL NAME</th><th style="padding:6px;">VERIFIER</th><th style="padding:6px;">ACTIONS</th>'+
+      '</tr></thead><tbody>'+
         res.levels.map(l => 
-          '<tr style="border-bottom:1px solid var(--bg-3);">'+
-            '<td style="padding:8px 6px;">#'+l.id+'</td>'+
-            '<td style="padding:8px 6px;font-weight:bold;">'+esc(l.name)+'</td>'+
-            '<td style="padding:8px 6px;">'+esc(l.verifier)+'</td>'+
-            '<td style="padding:8px 6px;">'+
-              '<button class="del-lvl-btn" data-lid="'+l.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">Delete</button>'+
-            '</td>'+
-          '</tr>'
-        ).join('')+
-      '</tbody></table>';
+          '<tr style="border-bottom:1px solid var(--bg-3);"><td style="padding:8px 6px;">#'+l.id+'</td><td style="padding:8px 6px;font-weight:bold;">'+esc(l.name)+'</td>'+
+            '<td style="padding:8px 6px;">'+esc(l.verifier)+'</td><td style="padding:8px 6px;"><button class="del-lvl-btn" data-lid="'+l.id+'" style="background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">Delete</button></td></tr>'
+        ).join('')+'</tbody></table>';
 
     box.querySelectorAll('.del-lvl-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        if(!confirm('Permanently delete this level from the database?')) return;
-        const lid = btn.dataset.lid;
-        const res = await adminApi('delete_level', { level_id: lid });
-        if(res.ok) {
-          alert('Level deleted! Refresh the page to update the ranking list.');
-          loadAdminLevels();
-        } else {
-          alert('Failed to delete level.');
-        }
+        if(!confirm('Permanently delete this level?')) return;
+        const res = await adminApi('delete_level', { level_id: btn.dataset.lid });
+        if(res.ok) { alert('Level deleted!'); loadAdminLevels(); }
       });
     });
   }
@@ -835,47 +772,28 @@ async function renderAdmin(){
 
   $('btnSaveLevel').addEventListener('click', async () => {
     const payload = {
-      rank: parseInt($('dbLvlRank').value) || 999,
-      name: $('dbLvlName').value.trim(),
-      creators: $('dbLvlCreators').value.trim(),
-      verifier: $('dbLvlVerifier').value.trim(),
-      link: $('dbLvlLink').value.trim(),
-      qualify: $('dbLvlQualify').value,
-      level_id: $('dbLvlId').value.trim(),
-      password: $('dbLvlPass').value.trim()
+      rank: parseInt($('dbLvlRank').value) || 999, name: $('dbLvlName').value.trim(), creators: $('dbLvlCreators').value.trim(),
+      verifier: $('dbLvlVerifier').value.trim(), link: $('dbLvlLink').value.trim(), qualify: $('dbLvlQualify').value,
+      level_id: $('dbLvlId').value.trim(), password: $('dbLvlPass').value.trim()
     };
     if(!payload.name || !payload.verifier || !payload.link) return alert('Name, Verifier, and Link are required.');
     const res = await adminApi('add_level', payload);
     if(res.ok){
-      alert('Level added directly to database! Refresh the page to see it on the Rankings.');
-      $('dbLvlName').value = '';
-      $('dbLvlCreators').value = '';
-      $('dbLvlVerifier').value = '';
-      $('dbLvlLink').value = '';
+      alert('Level added directly to database!');
+      $('dbLvlName').value = ''; $('dbLvlCreators').value = ''; $('dbLvlVerifier').value = ''; $('dbLvlLink').value = '';
       loadAdminLevels();
-    } else {
-      alert(res.error || 'Failed to add level.');
-    }
+    } else alert(res.error || 'Failed to add level.');
   });
 
   $('btnSaveRecord').addEventListener('click', async () => {
     const payload = {
-      level_name: $('dbRecLvl').value.trim(),
-      username: $('dbRecUser').value.trim(),
-      percent: $('dbRecPct').value,
-      link: $('dbRecLink').value.trim(),
-      is_mobile: $('dbRecMob').value
+      level_name: $('dbRecLvl').value.trim(), username: $('dbRecUser').value.trim(), percent: $('dbRecPct').value,
+      link: $('dbRecLink').value.trim(), is_mobile: $('dbRecMob').value
     };
-    if(!payload.level_name || !payload.username || !payload.link) return alert('Level name, Player, and Link are required.');
+    if(!payload.level_name || !payload.username || !payload.link) return alert('Required fields missing.');
     const res = await adminApi('add_record', payload);
-    if(res.ok){
-      alert('Record added directly to database! Refresh the page to update player points.');
-      $('dbRecLvl').value = '';
-      $('dbRecUser').value = '';
-      $('dbRecLink').value = '';
-    } else {
-      alert(res.error || 'Failed to add record.');
-    }
+    if(res.ok){ alert('Record added directly to database!'); $('dbRecLvl').value = ''; $('dbRecUser').value = ''; $('dbRecLink').value = ''; }
+    else alert(res.error || 'Failed to add record.');
   });
 }
 
@@ -890,13 +808,20 @@ function allPeople(){
   return Object.keys(set).sort((a,b)=>a.toLowerCase()<b.toLowerCase()?-1:1);
 }
 
-const PAGES=['home','list','board','staff','login','register','profile','admin','submit'];
+const PAGES=['home','list','board','staff','login','register','profile','admin','submit','updates'];
 
 function go(name){
   PAGES.forEach(p=>{ const el=$('p-'+p); if(el) el.hidden = (p!==name) });
   document.querySelectorAll('.nav button').forEach(b=>{
     b.setAttribute('aria-selected', b.dataset.go===name);
   });
+  
+  if (name === 'updates') {
+    const b = $('updateBadge');
+    if(b) b.style.display = 'none';
+    localStorage.setItem('gd_last_update', localStorage.getItem('gd_latest_db_update') || '0');
+  }
+  
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -909,6 +834,7 @@ function wireGo(){
       if(t==='profile') showProfile();
       else if(t==='admin'){ renderAdmin(); go('admin') }
       else if(t==='submit'){ renderSubmit(); go('submit') }
+      else if(t==='updates'){ renderUpdates(); go('updates') }
       else go(t);
     });
   });
@@ -926,74 +852,28 @@ function say(id,text,kind){
   const n=$(id); n.textContent=text; n.className='note '+(kind||'');
 }
 
-async function apiRegister(username, password){
-  const res = await fetch('/register.php', {
-    method:'POST', 
-    headers:{
-      'Content-Type':'application/json',
-      'Accept': 'application/json'
-    },
-    body: JSON.stringify({username, password})
-  });
-  const text = await res.text();
-  try { return JSON.parse(text); }
-  catch(e){ return { error: 'not_json', raw: text }; }
-}
-
-async function apiLogin(username, password){
-  const res = await fetch('/login.php', {
-    method:'POST', 
-    headers:{
-      'Content-Type':'application/json',
-      'Accept': 'application/json'
-    },
-    credentials:'include', 
-    body: JSON.stringify({username, password})
-  });
-  const text = await res.text();
-  try { return JSON.parse(text); }
-  catch(e){ return { error: 'not_json', raw: text }; }
-}
-
 $('loginGo').addEventListener('click', async (e)=>{
   e.preventDefault(); 
-  const user = $('userInput').value.trim();
-  const pass = $('passInput').value;
+  const user = $('userInput').value.trim(); const pass = $('passInput').value;
   if(!user || !pass) return say('loginMsg','Enter your username and password.','bad');
-  
-  const result = await apiLogin(user, pass);
-  
+  const res = await fetch('/login.php', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({username:user, password:pass}) });
+  const result = await res.json();
   if(result.ok){
-    localStorage.setItem('gd_user', result.username);
-    localStorage.setItem('gd_role', result.role || 'user');
-    say('loginMsg','Logged in as '+result.username,'good');
-    refreshNav();
-    setTimeout(() => { location.reload(); }, 1000); 
-  } else {
-    say('loginMsg', result.error || 'Something went wrong.', 'bad');
-  }
+    localStorage.setItem('gd_user', result.username); localStorage.setItem('gd_role', result.role || 'user');
+    say('loginMsg','Logged in as '+result.username,'good'); refreshNav(); setTimeout(() => location.reload(), 1000); 
+  } else say('loginMsg', result.error || 'Something went wrong.', 'bad');
 });
 
 $('regGo').addEventListener('click', async (e)=>{
   e.preventDefault(); 
-  const user = $('regUser').value.trim();
-  const pass = $('regPass').value;
-  const pass2 = $('regPass2').value;
+  const user = $('regUser').value.trim(); const pass = $('regPass').value; const pass2 = $('regPass2').value;
   if(user.length<3) return say('regMsg','Username must be at least 3 letters.','bad');
   if(pass.length<6) return say('regMsg','Password must be at least 6 characters.','bad');
   if(pass!==pass2) return say('regMsg','Passwords do not match.','bad');
-  
-  const result = await apiRegister(user, pass);
-  
-  if(result.ok){
-    say('regMsg','Registration successful! You can now log in.','good');
-    $('regUser').value = '';
-    $('regPass').value = '';
-    $('regPass2').value = '';
-    setTimeout(() => go('login'), 1500); 
-  } else {
-    say('regMsg', result.error || 'Something went wrong.', 'bad');
-  }
+  const res = await fetch('/register.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:user, password:pass}) });
+  const result = await res.json();
+  if(result.ok){ say('regMsg','Registration successful! You can now log in.','good'); $('regUser').value = ''; $('regPass').value = ''; $('regPass2').value = ''; setTimeout(() => go('login'), 1500); } 
+  else say('regMsg', result.error || 'Something went wrong.', 'bad');
 });
 
 $('navLogin').addEventListener('click',()=>go('login'));
@@ -1010,23 +890,29 @@ async function boot() {
       const authDb = await authRes.json();
       if (authDb.ok) {
         if (authDb.is_banned === 1 || authDb.role !== currentRole()) {
-          localStorage.removeItem('gd_user');
-          localStorage.removeItem('gd_role');
-          localStorage.removeItem('gd_key');
+          localStorage.removeItem('gd_user'); localStorage.removeItem('gd_role'); localStorage.removeItem('gd_key');
           if (authDb.is_banned === 1) alert('Your account has been banned.');
           else alert('Your account permissions have changed. Please log in again.');
-          location.reload();
-          return;
+          location.reload(); return;
         }
       } else {
-        localStorage.removeItem('gd_user');
-        localStorage.removeItem('gd_role');
-        localStorage.removeItem('gd_key');
-        location.reload();
-        return;
+        localStorage.removeItem('gd_user'); localStorage.removeItem('gd_role'); localStorage.removeItem('gd_key'); location.reload(); return;
       }
     } catch(e) {}
   }
+
+  try {
+    const aRes = await fetch('/api_announcements.php');
+    const aDb = await aRes.json();
+    if(aDb.ok && aDb.announcements.length > 0) {
+      const latestId = aDb.announcements[0].id;
+      localStorage.setItem('gd_latest_db_update', latestId);
+      const savedId = localStorage.getItem('gd_last_update') || '0';
+      if(parseInt(latestId) > parseInt(savedId)) {
+        const b = $('updateBadge'); if(b) b.style.display = 'inline-block';
+      }
+    }
+  } catch(e) {}
 
   try {
     const pRes = await fetch('/api_profile.php?t=' + Date.now());
@@ -1040,50 +926,22 @@ async function boot() {
     
     if (db.ok) {
       db.levels.sort((a, b) => parseInt(a.placement_rank) - parseInt(b.placement_rank));
-
       db.levels.forEach(l => {
         const key = 'db_' + l.id;
         const targetIndex = Math.max(0, (parseInt(l.placement_rank) || LIST.length + 1) - 1);
-        
         LIST.splice(targetIndex, 0, key); 
-        
-        LEVELS_DATA[key] = {
-          id: l.level_id_string || 'N/A',
-          name: l.name,
-          creators: (l.creators || '').split(',').map(s=>s.trim()),
-          verifier: l.verifier,
-          verification: l.verification_link,
-          percentToQualify: parseInt(l.percent_qualify) || 100,
-          password: l.password || 'Free to copy',
-          records: []
-        };
+        LEVELS_DATA[key] = { id: l.level_id_string || 'N/A', name: l.name, creators: (l.creators || '').split(',').map(s=>s.trim()), verifier: l.verifier, verification: l.verification_link, percentToQualify: parseInt(l.percent_qualify) || 100, password: l.password || 'Free to copy', records: [] };
       });
-
       db.records.forEach(r => {
         const matchingKey = Object.keys(LEVELS_DATA).find(key => LEVELS_DATA[key].name.toLowerCase() === r.level_name.toLowerCase());
-        if (matchingKey) {
-          LEVELS_DATA[matchingKey].records.push({
-            db_id: r.id,
-            user: r.username,
-            percent: parseInt(r.percent),
-            link: r.link,
-            mobile: parseInt(r.is_mobile) === 1
-          });
-        }
+        if (matchingKey) { LEVELS_DATA[matchingKey].records.push({ db_id: r.id, user: r.username, percent: parseInt(r.percent), link: r.link, mobile: parseInt(r.is_mobile) === 1 }); }
       });
-
-      Object.keys(LEVELS_DATA).forEach(k => {
-         LEVELS_DATA[k].records.sort((a,b) => b.percent - a.percent);
-      });
+      Object.keys(LEVELS_DATA).forEach(k => { LEVELS_DATA[k].records.sort((a,b) => b.percent - a.percent); });
     }
   } catch (e) {}
 
-  renderRows(); 
-  renderDetail(); 
-  renderBoard(); 
-  renderStaff();
-  refreshNav(); 
-  wireGo(); 
+  renderRows(); renderDetail(); renderBoard(); renderStaff();
+  refreshNav(); wireGo(); 
   
   if (location.hash === '#profile') showProfile();
   else go('home');
