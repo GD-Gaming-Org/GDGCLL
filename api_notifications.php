@@ -1,4 +1,3 @@
-
 <?php
 ob_start();
 error_reporting(0);
@@ -22,17 +21,22 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
     $stmt = $conn->prepare("SELECT * FROM user_notifications WHERE LOWER(username) = LOWER(?) ORDER BY id DESC LIMIT 20");
-    $stmt->bind_param("s", $user);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    $notes = [];
-    $unread = 0;
-    while ($r = $res->fetch_assoc()) {
-        $notes[] = $r;
-        if (intval($r['is_read']) === 0) $unread++;
+    if ($stmt) {
+        $stmt->bind_param("s", $user);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $notes = [];
+        $unread = 0;
+        while ($r = $res->fetch_assoc()) {
+            $notes[] = $r;
+            if (intval($r['is_read']) === 0) $unread++;
+        }
+        ob_clean();
+        echo json_encode(["ok" => true, "notifications" => $notes, "unread" => $unread]);
+    } else {
+        ob_clean();
+        echo json_encode(["ok" => false, "error" => "db_error"]);
     }
-    ob_clean();
-    echo json_encode(["ok" => true, "notifications" => $notes, "unread" => $unread]);
     exit;
 }
 
@@ -43,8 +47,10 @@ if ($method === 'POST') {
 
     if ($action === 'mark_read') {
         $stmt = $conn->prepare("UPDATE user_notifications SET is_read = 1 WHERE LOWER(username) = LOWER(?)");
-        $stmt->bind_param("s", $user);
-        $stmt->execute();
+        if ($stmt) {
+            $stmt->bind_param("s", $user);
+            $stmt->execute();
+        }
         ob_clean();
         echo json_encode(["ok" => true]);
         exit;
