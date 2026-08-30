@@ -635,6 +635,20 @@ async function renderAdmin(){
     '<div class="head"><h1>Pester Admin Panel</h1><p>Signed in as <b>'+esc(who)+'</b> &middot; Database Controls</p></div>'+
 
     '<div class="adm">'+
+      '<h3>Points Calculator</h3>'+
+      '<p class="hint">Instantly calculate exact point yields for any rank and percentage.</p>'+
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">'+
+        '<label class="field" style="flex:1;min-width:120px;"><span>RANK #</span><input type="number" id="calcRank" value="1" min="1"></label>'+
+        '<label class="field" style="flex:1;min-width:120px;"><span>PERCENT %</span><input type="number" id="calcPct" value="100" min="1" max="100"></label>'+
+        '<label class="field" style="flex:1;min-width:120px;"><span>QUALIFY %</span><input type="number" id="calcQual" value="100" min="1" max="100"></label>'+
+      '</div>'+
+      '<div style="margin-top:12px;background:var(--bg-2);padding:14px;border-radius:6px;border:1px solid var(--bg-3);display:flex;justify-content:space-around;text-align:center;">'+
+        '<div><div style="font-size:11px;color:var(--fg-3);font-weight:bold;">100% COMPLETION</div><div id="calc100Result" style="font-size:20px;font-weight:900;color:#2ecc71;margin-top:4px;">200.00 pts</div></div>'+
+        '<div><div style="font-size:11px;color:var(--fg-3);font-weight:bold;">CALCULATED SCORE</div><div id="calcResult" style="font-size:20px;font-weight:900;color:var(--accent);margin-top:4px;">200.00 pts</div></div>'+
+      '</div>'+
+    '</div>'+
+
+    '<div class="adm">'+
       '<h3>Pending Records Queue</h3>'+
       '<p class="hint">Review user-submitted records. Approve to instantly add them to the database.</p>'+
       '<div id="adminPendingList" style="margin-top:10px;">Loading pending records...</div>'+
@@ -677,6 +691,21 @@ async function renderAdmin(){
       '<label class="field"><span>DEVICE</span><select id="dbRecMob"><option value="0">PC</option><option value="1">Mobile</option></select></label>'+
       '<button class="go" id="btnSaveRecord">Add Record to Database</button>'+
     '</div>';
+
+  function updateAdminCalc() {
+    const r = parseInt($('calcRank').value) || 1;
+    const p = parseInt($('calcPct').value) || 0;
+    const q = parseInt($('calcQual').value) || 100;
+    const maxPts = levelValue(r);
+    const calculatedPts = score(r, p, q);
+    $('calc100Result').textContent = fix(maxPts) + ' pts';
+    $('calcResult').textContent = fix(calculatedPts) + ' pts';
+  }
+
+  $('calcRank').addEventListener('input', updateAdminCalc);
+  $('calcPct').addEventListener('input', updateAdminCalc);
+  $('calcQual').addEventListener('input', updateAdminCalc);
+  updateAdminCalc();
 
   async function loadPendingRecords() {
     const box = $('adminPendingList');
