@@ -948,7 +948,7 @@ $('navLogin').addEventListener('click',()=>go('login'));
 $('navProfile').addEventListener('click',()=>showProfile());
 $('navBell').addEventListener('click',()=>go('inbox'));
 
-// HARD REFRESH BUTTON LOGIC
+
 const refBtn = $('navRefresh');
 if(refBtn){
   refBtn.addEventListener('click', () => {
