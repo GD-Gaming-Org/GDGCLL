@@ -144,8 +144,30 @@ if ($action === 'add_level') {
     exit;
 }
 
+if ($action === 'edit_level') {
+    $levelId = intval($data['level_id'] ?? 0);
+    $name = trim($data['name'] ?? '');
+    $verifier = trim($data['verifier'] ?? '');
+    $stars = intval($data['stars'] ?? 1);
+
+    if (!$levelId || !$name || !$verifier) {
+        ob_clean();
+        echo json_encode(["ok" => false, "error" => "missing_fields"]);
+        exit;
+    }
+
+    $stmt = $conn->prepare("UPDATE custom_levels SET name = ?, verifier = ?, stars = ? WHERE id = ?");
+    if($stmt){
+        $stmt->bind_param("ssii", $name, $verifier, $stars, $levelId);
+        $stmt->execute();
+    }
+    ob_clean();
+    echo json_encode(["ok" => true]);
+    exit;
+}
+
 if ($action === 'list_levels') {
-    $q = $conn->query("SELECT id, name, verifier, percent_qualify FROM custom_levels ORDER BY id DESC");
+    $q = $conn->query("SELECT id, name, verifier, percent_qualify, verification_link, stars FROM custom_levels ORDER BY id DESC");
     $levels = [];
     if($q) {
         while ($r = $q->fetch_assoc()) {
