@@ -504,6 +504,39 @@ async function renderUpdates() {
   }
 }
 
+async function renderInbox() {
+  const el = $('p-inbox');
+  if(!el) return;
+  const who = currentUser();
+  if(!who) { el.innerHTML = '<div class="box"><h2>Not Logged In</h2></div>'; return; }
+
+  el.innerHTML = '<div class="head"><h1>Notifications</h1><p>Alerts & status updates on your records.</p></div><div id="inboxList">Loading notifications...</div>';
+
+  try {
+    const res = await fetch('/api_notifications.php?username=' + encodeURIComponent(who));
+    const data = await res.json();
+    const box = $('inboxList');
+    if(!data.ok || !data.notifications || data.notifications.length === 0) {
+      box.innerHTML = '<div class="box"><p class="lead" style="margin:0;">No notifications yet.</p></div>';
+      return;
+    }
+    box.innerHTML = data.notifications.map(n => 
+      '<div class="box" style="margin-bottom:12px;text-align:left;border-left:4px solid '+(parseInt(n.is_read)?'var(--bg-3)':'#2ecc71')+';">' +
+        '<div style="font-size:11px;color:var(--fg-3);margin-bottom:6px;">' + esc(n.created_at) + '</div>' +
+        '<div style="font-size:14px;color:var(--fg-1);line-height:1.4;">' + esc(n.message).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') + '</div>' +
+      '</div>'
+    ).join('');
+
+    await fetch('/api_notifications.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ username: who, action: 'mark_read' })
+    });
+    const badge = $('bellBadge');
+    if(badge) badge.style.display = 'none';
+  } catch(e) {}
+}
+
 function showProfile(name){
   const who = name || currentUser();
   const el = $('p-profile');
@@ -842,7 +875,7 @@ function allPeople(){
   return Object.keys(set).sort((a,b)=>a.toLowerCase()<b.toLowerCase()?-1:1);
 }
 
-const PAGES=['home','list','board','staff','login','register','profile','admin','submit','updates'];
+const PAGES=['home','list','board','staff','login','register','profile','admin','submit','updates','inbox'];
 
 function go(name){
   PAGES.forEach(p=>{ const el=$('p-'+p); if(el) el.hidden = (p!==name) });
@@ -869,6 +902,7 @@ function wireGo(){
       else if(t==='admin'){ renderAdmin(); go('admin') }
       else if(t==='submit'){ renderSubmit(); go('submit') }
       else if(t==='updates'){ renderUpdates(); go('updates') }
+      else if(t==='inbox'){ renderInbox(); go('inbox') }
       else go(t);
     });
   });
@@ -877,7 +911,7 @@ function wireGo(){
 function refreshNav(){
   const u=currentUser();
   $('navLogin').hidden = !!u;
-  $('navProfile').hidden = !u;
+  $('userWrap').hidden = !u;
   if(u) $('navProfile').textContent = u;
   $('navAdmin').hidden = !isAdmin();
 }
@@ -912,6 +946,7 @@ $('regGo').addEventListener('click', async (e)=>{
 
 $('navLogin').addEventListener('click',()=>go('login'));
 $('navProfile').addEventListener('click',()=>showProfile());
+$('navBell').addEventListener('click',()=>go('inbox'));
 
 async function boot() {
   document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
@@ -931,6 +966,18 @@ async function boot() {
         }
       } else {
         localStorage.removeItem('gd_user'); localStorage.removeItem('gd_role'); localStorage.removeItem('gd_key'); location.reload(); return;
+      }
+    } catch(e) {}
+
+    try {
+      const nRes = await fetch('/api_notifications.php?username=' + encodeURIComponent(who));
+      const nDb = await nRes.json();
+      if(nDb.ok && nDb.unread > 0) {
+        const badge = $('bellBadge');
+        if(badge) {
+          badge.textContent = nDb.unread;
+          badge.style.display = 'inline-block';
+        }
       }
     } catch(e) {}
   }
