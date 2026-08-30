@@ -712,7 +712,7 @@ async function renderAdmin(){
           '<tr style="border-bottom:1px solid var(--bg-3);" id="lvl-row-'+l.id+'">'+
             '<td style="padding:8px 6px;">#'+l.id+'</td>'+
             '<td style="padding:8px 6px;font-weight:bold;">'+esc(l.name)+'</td>'+
-            '<td style="padding:8px 6px;">'+makeStars(l.stars)+'</td>'+
+            '<td style="padding:8px 6px;color:#f1c40f;">'+makeStars(l.stars)+'</td>'+
             '<td style="padding:8px 6px;">'+esc(l.verifier)+'</td>'+
             '<td style="padding:8px 6px;">'+
               '<button class="edit-lvl-btn" data-lid="'+l.id+'" data-name="'+esc(l.name)+'" data-stars="'+(l.stars||1)+'" data-veri="'+esc(l.verifier)+'" style="background:#f39c12;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;margin-right:4px;">Edit</button>'+
@@ -872,8 +872,11 @@ $('regGo').addEventListener('click', async (e)=>{
 
 $('navLogin').addEventListener('click',()=>go('login'));
 $('navProfile').addEventListener('click',()=>showProfile());
-$('navBell').addEventListener('click',()=>go('inbox'));
 
+// RENDERING FIX ADDED HERE
+$('navBell').addEventListener('click', () => { renderInbox(); go('inbox'); });
+
+// HARD REFRESH BUTTON LOGIC
 const refBtn = $('navRefresh');
 if(refBtn){
   refBtn.addEventListener('click', () => {
