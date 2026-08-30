@@ -948,6 +948,14 @@ $('navLogin').addEventListener('click',()=>go('login'));
 $('navProfile').addEventListener('click',()=>showProfile());
 $('navBell').addEventListener('click',()=>go('inbox'));
 
+// HARD REFRESH BUTTON LOGIC
+const refBtn = $('navRefresh');
+if(refBtn){
+  refBtn.addEventListener('click', () => {
+    window.location.href = window.location.pathname + '?refresh=' + Date.now();
+  });
+}
+
 async function boot() {
   document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
   applyTheme();
