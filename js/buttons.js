@@ -6,12 +6,8 @@ const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const fix = n => (Math.round(n*100)/100).toFixed(2);
 const ytid = u => (String(u).match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/)||[])[1]||null;
 
-function rankStars(rank) {
-  if (rank <= 10) return '⭐⭐⭐⭐⭐';
-  if (rank <= 25) return '⭐⭐⭐⭐';
-  if (rank <= 50) return '⭐⭐⭐';
-  if (rank <= 75) return '⭐⭐';
-  return '⭐';
+function makeStars(n) {
+  return '⭐'.repeat(Math.max(1, parseInt(n) || 1));
 }
 
 function host(u){
@@ -212,7 +208,7 @@ function renderRows(){
     const min=score(i+1,lv.percentToQualify,lv.percentToQualify);
     return '<button class="card" data-i="'+i+'" aria-current="'+(i===active)+'">'+
       (vid?'<img class="card-banner" src="https://img.youtube.com/vi/'+vid+'/hqdefault.jpg" alt="">':'')+
-      '<div class="card-title"><em>#'+(i+1)+'</em> &ndash; '+esc(lv.name)+' <span style="font-size:12px;margin-left:5px;">'+rankStars(i+1)+'</span></div>'+
+      '<div class="card-title"><em>#'+(i+1)+'</em> &ndash; '+esc(lv.name)+' <span style="font-size:12px;margin-left:5px;">'+makeStars(lv.stars)+'</span></div>'+
       '<div class="card-by"><span>published by</span> <b>'+esc(lv.creators.join(', '))+'</b></div>'+
       '<div class="card-pts">'+fix(min)+' ('+lv.percentToQualify+'%) &mdash; <b>'+fix(levelValue(i+1))+'</b> (100%) points</div>'+
     '</button>';
@@ -232,7 +228,7 @@ function renderDetail(){
   $('detail').innerHTML =
     (vid?'<a class="d-banner" href="'+esc(lv.verification)+'" target="_blank" rel="noopener"><img src="https://img.youtube.com/vi/'+vid+'/hqdefault.jpg" alt=""><span class="d-play"><i></i></span></a>':'')+
     '<div class="d-body">'+
-      '<div class="d-title">'+esc(lv.name)+' <span style="font-size:16px;">'+rankStars(active+1)+'</span></div>'+
+      '<div class="d-title">'+esc(lv.name)+' <span style="font-size:16px;">'+makeStars(lv.stars)+'</span></div>'+
       '<div class="d-sub">Verified by <b>'+esc(lv.verifier)+'</b></div>'+
       '<div class="d-stats">'+
         '<div class="d-stat"><b>#'+(active+1)+'</b><span>RANK</span></div>'+
@@ -625,6 +621,7 @@ async function renderAdmin(){
       '<p class="hint">Instantly adds a level to the demonlist without editing JS code.</p>'+
       '<label class="field"><span>PLACEMENT RANK</span><input type="number" id="dbLvlRank" value="1" min="1"></label>'+
       '<label class="field"><span>LEVEL NAME</span><input type="text" id="dbLvlName" placeholder="e.g. Slaughterhouse"></label>'+
+      '<label class="field"><span>STARS</span><input type="number" id="dbLvlStars" value="1" min="1"></label>'+
       '<label class="field"><span>CREATORS</span><input type="text" id="dbLvlCreators" placeholder="e.g. Icedcave, Endlevel"></label>'+
       '<label class="field"><span>VERIFIER</span><input type="text" id="dbLvlVerifier" placeholder="e.g. Doggie"></label>'+
       '<label class="field"><span>VERIFICATION LINK</span><input type="text" id="dbLvlLink" placeholder="https://youtu.be/..."></label>'+
@@ -774,13 +771,13 @@ async function renderAdmin(){
     const payload = {
       rank: parseInt($('dbLvlRank').value) || 999, name: $('dbLvlName').value.trim(), creators: $('dbLvlCreators').value.trim(),
       verifier: $('dbLvlVerifier').value.trim(), link: $('dbLvlLink').value.trim(), qualify: $('dbLvlQualify').value,
-      level_id: $('dbLvlId').value.trim(), password: $('dbLvlPass').value.trim()
+      level_id: $('dbLvlId').value.trim(), password: $('dbLvlPass').value.trim(), stars: parseInt($('dbLvlStars').value) || 1
     };
     if(!payload.name || !payload.verifier || !payload.link) return alert('Name, Verifier, and Link are required.');
     const res = await adminApi('add_level', payload);
     if(res.ok){
       alert('Level added directly to database!');
-      $('dbLvlName').value = ''; $('dbLvlCreators').value = ''; $('dbLvlVerifier').value = ''; $('dbLvlLink').value = '';
+      $('dbLvlName').value = ''; $('dbLvlCreators').value = ''; $('dbLvlVerifier').value = ''; $('dbLvlLink').value = ''; $('dbLvlStars').value = '1';
       loadAdminLevels();
     } else alert(res.error || 'Failed to add level.');
   });
@@ -930,7 +927,7 @@ async function boot() {
         const key = 'db_' + l.id;
         const targetIndex = Math.max(0, (parseInt(l.placement_rank) || LIST.length + 1) - 1);
         LIST.splice(targetIndex, 0, key); 
-        LEVELS_DATA[key] = { id: l.level_id_string || 'N/A', name: l.name, creators: (l.creators || '').split(',').map(s=>s.trim()), verifier: l.verifier, verification: l.verification_link, percentToQualify: parseInt(l.percent_qualify) || 100, password: l.password || 'Free to copy', records: [] };
+        LEVELS_DATA[key] = { id: l.level_id_string || 'N/A', name: l.name, creators: (l.creators || '').split(',').map(s=>s.trim()), verifier: l.verifier, verification: l.verification_link, percentToQualify: parseInt(l.percent_qualify) || 100, password: l.password || 'Free to copy', stars: parseInt(l.stars) || 1, records: [] };
       });
       db.records.forEach(r => {
         const matchingKey = Object.keys(LEVELS_DATA).find(key => LEVELS_DATA[key].name.toLowerCase() === r.level_name.toLowerCase());
