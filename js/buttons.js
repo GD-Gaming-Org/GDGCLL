@@ -1,5 +1,6 @@
 const ADMIN_ROLES = ['owner','admin','developer'];
 let DB_PROFILES = {};
+let ALL_REGISTERED_USERS = [];
 let lastUnreadCount = 0;
 
 const $ = id => document.getElementById(id);
@@ -81,7 +82,7 @@ function bannerSrc(name){
 
 function avatar(name){
   const src = avatarSrc(name);
-  if(src) return '<span class="pfp icon"><img src="'+esc(src)+'" style="width:100%;height:100%;object-fit:contain"></span>';
+  if(src) return '<span class="pfp icon"><img src="'+esc(src)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></span>';
   let n=0;
   for(let i=0;i<name.length;i++) n=(n+name.charCodeAt(i)*(i+3))%360;
   return '<span class="pfp" style="background:linear-gradient(150deg,hsl('+n+',58%,54%),hsl('+n+',52%,30%))">'+esc(name[0].toUpperCase())+'</span>';
@@ -101,47 +102,6 @@ function isAdmin(){
   if(!s||!s.key) return false;
   if(ADMIN_ROLES.indexOf(s.role.toLowerCase())===-1) return false;
   return localStorage.getItem('gd_key')===s.key;
-}
-
-function shrinkImage(file, cb){
-  const reader = new FileReader();
-  reader.onload = function(e){
-    const img = new Image();
-    img.onload = function(){
-      const S = 128;
-      const c = document.createElement('canvas');
-      c.width = S; c.height = S;
-      const ctx = c.getContext('2d');
-      const side = Math.min(img.width, img.height);
-      ctx.drawImage(img, (img.width - side)/2, (img.height - side)/2, side, side, 0, 0, S, S);
-      cb(c.toDataURL('image/jpeg', 0.82));
-    };
-    img.onerror = function(){ cb(null) };
-    img.src = e.target.result;
-  };
-  reader.onerror = function(){ cb(null) };
-  reader.readAsDataURL(file);
-}
-
-function shrinkBanner(file, cb){
-  const reader = new FileReader();
-  reader.onload = function(e){
-    const img = new Image();
-    img.onload = function(){
-      const c = document.createElement('canvas');
-      c.width = 600; c.height = 200;
-      const ctx = c.getContext('2d');
-      const ratio = Math.max(c.width / img.width, c.height / img.height);
-      const w = img.width * ratio;
-      const h = img.height * ratio;
-      ctx.drawImage(img, (c.width - w)/2, (c.height - h)/2, w, h);
-      cb(c.toDataURL('image/jpeg', 0.82));
-    };
-    img.onerror = function(){ cb(null) };
-    img.src = e.target.result;
-  };
-  reader.onerror = function(){ cb(null) };
-  reader.readAsDataURL(file);
 }
 
 const THEMES=[
@@ -397,6 +357,28 @@ function renderBoard(){
   });
 }
 
+function renderUsersDirectory() {
+  const box = $('usersDirectory');
+  if(!box) return;
+  if(ALL_REGISTERED_USERS.length === 0) {
+    box.innerHTML = '<p class="lead" style="grid-column:1/-1;text-align:center;">No registered players found.</p>';
+    return;
+  }
+  box.innerHTML = ALL_REGISTERED_USERS.map(u => 
+    '<div class="staff-card" style="cursor:pointer;" data-player="'+esc(u.username)+'">'+
+      avatar(u.username)+
+      '<div><div class="staff-name">'+esc(u.username)+vipTag(u.username)+'</div>'+
+      '<span class="staff-role" style="color:var(--accent);">'+esc((u.role || 'Player').toUpperCase())+'</span>'+
+      (u.title ? '<div style="font-size:11px;color:var(--fg-3);margin-top:2px;">'+esc(u.title)+'</div>' : '')+
+      '</div>'+
+    '</div>'
+  ).join('');
+
+  box.querySelectorAll('.staff-card').forEach(c => {
+    c.addEventListener('click', () => showProfile(c.dataset.player));
+  });
+}
+
 function renderStaff(){
   $('staff').innerHTML = STAFF.map(s=>
     '<div class="staff-card">'+avatar(s.name)+
@@ -508,7 +490,7 @@ async function renderUpdates() {
           '<div class="box" style="margin-bottom:15px;text-align:left;position:relative;">' +
             '<div style="font-size:12px;color:var(--fg-3);margin-bottom:8px;"><b>' + esc(a.author) + '</b> &middot; ' + esc(a.created_at) + '</div>' +
             '<div style="white-space:pre-wrap;font-size:15px;color:var(--fg-1);">' + esc(a.message) + '</div>' +
-            (isAdmin() ? '<button class="del-upd-btn" data-uid="'+a.id+'" style="position:absolute;top:15px;right:15px;background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">Delete</button>' : '') +
+            (isAdmin() ? '<button class="del-upd-btn" data-uid="'+a.id+'" style="position:absolute;top:15px;right:15px;background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:font-size:11px;">Delete</button>' : '') +
           '</div>'
       ).join('');
 
@@ -620,8 +602,10 @@ function showProfile(name){
         '<button class="go" id="btnAllowPush" style="background:#3498db;margin-bottom:10px;">Enable Desktop Push Notifications</button>'+
       '</div>'+
       '<div class="pf-sec"><h3>CUSTOMIZE PROFILE</h3>'+
-        '<label class="field"><span>AVATAR (Square)</span><input type="file" id="upAvatar" accept="image/*"></label>'+
-        '<label class="field"><span>BANNER (Widescreen)</span><input type="file" id="upBanner" accept="image/*"></label>'+
+        '<label class="field"><span>AVATAR IMAGE URL</span><input type="text" id="upAvatarUrl" placeholder="https://i.imgur.com/example.png"></label>'+
+        '<button class="go" id="btnSaveAvatar" style="margin-bottom:12px;">Save Avatar</button>'+
+        '<label class="field"><span>BANNER IMAGE URL</span><input type="text" id="upBannerUrl" placeholder="https://i.imgur.com/example.png"></label>'+
+        '<button class="go" id="btnSaveBanner">Save Banner</button>'+
       '</div>'+
       '<div class="pf-sec"><h3>THEME</h3><div class="themes">'+
         THEMES.map(t=>'<button class="sw sw-'+t[0]+'" data-theme="'+t[0]+'" title="'+t[1]+'"></button>').join('')+
@@ -640,26 +624,36 @@ function showProfile(name){
     const btnPush = $('btnAllowPush');
     if(btnPush) btnPush.addEventListener('click', requestNotificationPermission);
 
-    const upAv = $('upAvatar');
-    if(upAv) upAv.addEventListener('change', function(){
-      const f = this.files[0]; if(!f) return;
-      shrinkImage(f, async data => {
-        if(!data) return alert('Failed to read image.');
-        const res = await fetch('/api_profile.php', { method:'POST', credentials:'include', body:JSON.stringify({username:who, type:'avatar', image:data}) });
-        const json = await res.json();
-        if(json.ok) location.reload(); else alert("Error: " + json.error);
+    const btnSaveAv = $('btnSaveAvatar');
+    if(btnSaveAv) btnSaveAv.addEventListener('click', async () => {
+      const url = $('upAvatarUrl').value.trim();
+      if(!url) return alert('Please enter an image URL.');
+      btnSaveAv.disabled = true;
+      const res = await fetch('/api_profile.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'include',
+        body: JSON.stringify({ username: who, type: 'avatar', url: url })
       });
+      const json = await res.json();
+      if(json.ok) location.reload(); else alert('Failed to save avatar.');
+      btnSaveAv.disabled = false;
     });
 
-    const upBan = $('upBanner');
-    if(upBan) upBan.addEventListener('change', function(){
-      const f = this.files[0]; if(!f) return;
-      shrinkBanner(f, async data => {
-        if(!data) return alert('Failed to read image.');
-        const res = await fetch('/api_profile.php', { method:'POST', credentials:'include', body:JSON.stringify({username:who, type:'banner', image:data}) });
-        const json = await res.json();
-        if(json.ok) location.reload(); else alert("Error: " + json.error);
+    const btnSaveBan = $('btnSaveBanner');
+    if(btnSaveBan) btnSaveBan.addEventListener('click', async () => {
+      const url = $('upBannerUrl').value.trim();
+      if(!url) return alert('Please enter an image URL.');
+      btnSaveBan.disabled = true;
+      const res = await fetch('/api_profile.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'include',
+        body: JSON.stringify({ username: who, type: 'banner', url: url })
       });
+      const json = await res.json();
+      if(json.ok) location.reload(); else alert('Failed to save banner.');
+      btnSaveBan.disabled = false;
     });
   }
 
@@ -921,7 +915,7 @@ function allPeople(){
   return Object.keys(set).sort((a,b)=>a.toLowerCase()<b.toLowerCase()?-1:1);
 }
 
-const PAGES=['home','list','board','staff','info','login','register','profile','admin','submit','updates','inbox'];
+const PAGES=['home','list','board','users','staff','info','login','register','profile','admin','submit','updates','inbox'];
 
 function go(name){
   PAGES.forEach(p=>{ const el=$('p-'+p); if(el) el.hidden = (p!==name) });
@@ -929,6 +923,10 @@ function go(name){
     b.setAttribute('aria-selected', b.dataset.go===name);
   });
   
+  if (name === 'users') {
+    renderUsersDirectory();
+  }
+
   if (name === 'updates') {
     const b = $('updateBadge');
     if(b) b.style.display = 'none';
@@ -949,6 +947,7 @@ function wireGo(){
       else if(t==='submit'){ renderSubmit(); go('submit') }
       else if(t==='updates'){ renderUpdates(); go('updates') }
       else if(t==='inbox'){ renderInbox(); go('inbox') }
+      else if(t==='users'){ go('users') }
       else go(t);
     });
   });
@@ -1096,7 +1095,10 @@ async function boot() {
   try {
     const pRes = await fetch('/api_profile.php?t=' + Date.now());
     const pDb = await pRes.json();
-    if(pDb.ok) DB_PROFILES = pDb.profiles;
+    if(pDb.ok) {
+      DB_PROFILES = pDb.profiles || {};
+      ALL_REGISTERED_USERS = pDb.users || [];
+    }
   } catch(e) {}
 
   try {
