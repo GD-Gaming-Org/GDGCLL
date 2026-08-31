@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=18">
-<script src="data/data.js?v=18" defer></script>
-<script src="js/buttons.js?v=18" defer></script>
+<link rel="stylesheet" href="css/style.css?v=19">
+<script src="data/data.js?v=19" defer></script>
+<script src="js/buttons.js?v=19" defer></script>
 </head>
 <body>
 
@@ -24,6 +24,7 @@
     <button data-go="list">Ranking</button>
     <button data-go="board">Records</button>
     <button data-go="staff">Staff</button>
+    <button data-go="info">Info</button>
     <button data-go="submit" id="navSubmit">Submit</button>
     <button data-go="updates" id="navUpdates" style="position:relative;">
       Updates
@@ -65,10 +66,9 @@
         <div class="tile-name">Staff</div>
         <div class="tile-art" data-ico="staff"></div>
       </button>
-      <button class="tile locked" disabled>
+      <button class="tile" data-go="info">
         <div class="tile-name">Informative</div>
         <div class="tile-art" data-ico="info"></div>
-        <span class="tile-soon">COMING SOON</span>
       </button>
     </div>
 
@@ -99,6 +99,29 @@
       <h1>Staff</h1>
     </div>
     <div class="grid" id="staff"></div>
+  </section>
+
+  <section class="page" id="p-info" hidden>
+    <div class="head">
+      <h1>Information & Guidelines</h1>
+      <p>Official list rules, submission standards, and guidelines.</p>
+    </div>
+    <div class="box" style="text-align:left;margin-bottom:16px;">
+      <h3 style="margin-top:0;color:var(--accent);">Record Submission Rules</h3>
+      <ul style="line-height:1.8;padding-left:20px;color:var(--fg-2);font-size:14px;">
+        <li>All video proof must be public or unlisted and show the full completion run from 0% (or qualifying percentage).</li>
+        <li>Audible clicks or taps are strictly required for Top 50 demons.</li>
+        <li>Raw, unedited footage must be provided upon list moderator request.</li>
+        <li>Cheat indicators, end screens, or FPS counters should be clearly visible where applicable.</li>
+      </ul>
+    </div>
+    <div class="box" style="text-align:left;margin-bottom:16px;">
+      <h3 style="margin-top:0;color:var(--accent);">Point Distribution Formula</h3>
+      <p style="line-height:1.6;color:var(--fg-2);font-size:14px;margin:0 0 10px 0;">
+        Main list demons grant maximum points calculated using exponential decay based on rank:
+      </p>
+      <code style="background:var(--bg-3);padding:6px 12px;border-radius:4px;display:inline-block;font-size:13px;color:var(--fg-1);">Points = 200 * (0.97 ^ (Rank - 1))</code>
+    </div>
   </section>
 
   <section class="page" id="p-login" hidden>
