@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GDGCLL - Informative</title>
+<title>GDGCLL</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=21">
-<script src="data/data.js?v=21" defer></script>
-<script src="js/buttons.js?v=21" defer></script>
+<link rel="stylesheet" href="css/style.css?v=22">
+<script src="data/data.js?v=22" defer></script>
+<script src="js/buttons.js?v=22" defer></script>
 </head>
 <body>
 
@@ -23,6 +23,7 @@
   <nav class="nav">
     <button data-go="list">Ranking</button>
     <button data-go="board">Records</button>
+    <button data-go="users">Users</button>
     <button data-go="staff">Staff</button>
     <button data-go="info">Informative</button>
     <button data-go="submit" id="navSubmit">Submit</button>
@@ -62,6 +63,10 @@
         <div class="tile-name">Records</div>
         <div class="tile-art" data-ico="trophy"></div>
       </button>
+      <button class="tile" data-go="users">
+        <div class="tile-name">Users</div>
+        <div class="tile-art" data-ico="staff"></div>
+      </button>
       <button class="tile" data-go="staff">
         <div class="tile-name">Staff</div>
         <div class="tile-art" data-ico="staff"></div>
@@ -96,6 +101,14 @@
         <b>By Pester:</b> Records are simple you can submit it via website or discord .
       </p>
     </div>
+  </section>
+
+  <section class="page" id="p-users" hidden>
+    <div class="head">
+      <h1>Registered Community</h1>
+      <p>All registered players on the GDGCLL platform.</p>
+    </div>
+    <div id="usersDirectory" class="grid">Loading community...</div>
   </section>
 
   <section class="page" id="p-list" hidden>
