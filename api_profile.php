@@ -12,29 +12,33 @@ require_once "db.php";
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-    $sql = "SELECT username, role, title, avatar, banner, is_banned, created_at FROM users";
+    $sql = "SELECT * FROM users";
     $result = $conn->query($sql);
     $profiles = [];
     $allUsers = [];
+    
     if ($result) {
         while ($row = $result->fetch_assoc()) {
-            $profiles[$row['username']] = [
-                'role' => $row['role'],
-                'title' => $row['title'],
-                'avatar' => $row['avatar'],
-                'banner' => $row['banner'],
-                'is_banned' => (int)$row['is_banned'],
-                'created_at' => $row['created_at']
+            $uName = $row['username'] ?? '';
+            if (!$uName) continue;
+
+            $profiles[$uName] = [
+                'role' => $row['role'] ?? 'user',
+                'title' => $row['title'] ?? '',
+                'avatar' => $row['avatar'] ?? '',
+                'banner' => $row['banner'] ?? '',
+                'is_banned' => (int)($row['is_banned'] ?? 0)
             ];
+            
             $allUsers[] = [
-                'username' => $row['username'],
-                'role' => $row['role'],
-                'title' => $row['title'],
-                'avatar' => $row['avatar'],
-                'created_at' => $row['created_at']
+                'username' => $uName,
+                'role' => $row['role'] ?? 'user',
+                'title' => $row['title'] ?? '',
+                'avatar' => $row['avatar'] ?? ''
             ];
         }
     }
+    
     ob_clean();
     echo json_encode(["ok" => true, "profiles" => $profiles, "users" => $allUsers]);
     exit;
