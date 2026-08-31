@@ -921,7 +921,7 @@ function allPeople(){
   return Object.keys(set).sort((a,b)=>a.toLowerCase()<b.toLowerCase()?-1:1);
 }
 
-const PAGES=['home','list','board','staff','login','register','profile','admin','submit','updates','inbox'];
+const PAGES=['home','list','board','staff','info','login','register','profile','admin','submit','updates','inbox'];
 
 function go(name){
   PAGES.forEach(p=>{ const el=$('p-'+p); if(el) el.hidden = (p!==name) });
