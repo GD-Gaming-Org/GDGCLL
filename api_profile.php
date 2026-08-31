@@ -3,75 +3,67 @@ ob_start();
 error_reporting(0);
 ini_set('display_errors', 0);
 header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST");
+header("Access-Control-Allow-Headers: Content-Type");
+
 require_once "db.php";
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+$method = $_SERVER['REQUEST_METHOD'];
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    
-    $q = $conn->query("SELECT username, role, avatar, banner, title FROM users");
-    $data = [];
-    if ($q) {
-        while ($r = $q->fetch_assoc()) {
-            $data[$r['username']] = [
-                "role" => $r['role'],
-                "avatar" => $r['avatar'],
-                "banner" => $r['banner'],
-                "title" => $r['title']
+if ($method === 'GET') {
+    $sql = "SELECT username, role, title, avatar, banner, is_banned, created_at FROM users";
+    $result = $conn->query($sql);
+    $profiles = [];
+    $allUsers = [];
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $profiles[$row['username']] = [
+                'role' => $row['role'],
+                'title' => $row['title'],
+                'avatar' => $row['avatar'],
+                'banner' => $row['banner'],
+                'is_banned' => (int)$row['is_banned'],
+                'created_at' => $row['created_at']
+            ];
+            $allUsers[] = [
+                'username' => $row['username'],
+                'role' => $row['role'],
+                'title' => $row['title'],
+                'avatar' => $row['avatar'],
+                'created_at' => $row['created_at']
             ];
         }
     }
     ob_clean();
-    echo json_encode(["ok" => true, "profiles" => $data]);
+    echo json_encode(["ok" => true, "profiles" => $profiles, "users" => $allUsers]);
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($method === 'POST') {
     $raw = file_get_contents("php://input");
-    $data = json_decode($raw, true);
-    
-    $username = trim($_SESSION['username'] ?? $data['username'] ?? "");
-    if (empty($username)) {
-        ob_clean(); 
-        echo json_encode(["ok" => false, "error" => "not_logged_in"]); 
-        exit;
-    }
-    
-    $type = $data['type'] ?? ''; 
-    $image = $data['image'] ?? '';
-    
-    if (empty($image)) {
+    $data = json_decode($raw, true) ?: [];
+
+    $user = trim($data['username'] ?? '');
+    $type = trim($data['type'] ?? '');
+    $url = trim($data['url'] ?? '');
+
+    if (!$user || !in_array($type, ['avatar', 'banner'])) {
         ob_clean();
-        echo json_encode(["ok" => false, "error" => "Image processing failed. File might be empty."]);
-        exit;
-    }
-    
-    if ($type === 'avatar') {
-        $stmt = $conn->prepare("UPDATE users SET avatar = ? WHERE LOWER(username) = LOWER(?)");
-    } elseif ($type === 'banner') {
-        $stmt = $conn->prepare("UPDATE users SET banner = ? WHERE LOWER(username) = LOWER(?)");
-    } else {
-        ob_clean(); 
-        echo json_encode(["ok" => false, "error" => "invalid_type"]); 
+        echo json_encode(["ok" => false, "error" => "invalid_data"]);
         exit;
     }
 
-    if (!$stmt) {
-        ob_clean();
-        echo json_encode(["ok" => false, "error" => "Database error: " . $conn->error]);
-        exit;
-    }
-    
-    $stmt->bind_param("ss", $image, $username);
-    
-    if ($stmt->execute()) {
+    $col = ($type === 'avatar') ? 'avatar' : 'banner';
+    $stmt = $conn->prepare("UPDATE users SET $col = ? WHERE username = ?");
+    if ($stmt) {
+        $stmt->bind_param("ss", $url, $user);
+        $stmt->execute();
         ob_clean();
         echo json_encode(["ok" => true]);
     } else {
         ob_clean();
-        echo json_encode(["ok" => false, "error" => "Failed to save: " . $stmt->error]);
+        echo json_encode(["ok" => false, "error" => "db_error"]);
     }
     exit;
 }
