@@ -111,8 +111,10 @@ const THEMES=[
   ['purple','Purple'], ['blue','Blue'], ['cyan','Cyan'],
   ['green','Green'], ['classic','GD Classic'], ['gold','Gold'],
   ['orange','Orange'], ['red','Red'], ['pink','Pink'],
-  ['mono','Mono'], ['light','Light'], ['bluewhite','Blue & White']
+  ['mono','Mono'], ['light','Light'], ['bluewhite','Blue & White'],
+  ['mctify','MCTIFY Dark']
 ];
+
 function applyTheme(k){
   const t=k||localStorage.getItem('gd_theme')||'purple';
   document.body.setAttribute('data-theme',t);
