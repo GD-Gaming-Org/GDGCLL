@@ -1049,12 +1049,13 @@ if(refBtn){
 
 async function boot() {
   if (window.location.hash.includes('access_token=')) {
+    document.body.innerHTML = '<h2 style="text-align:center;margin-top:20vh;color:#fff;font-family:sans-serif;">Authenticating with Discord... Please wait.</h2>';
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
     const token = params.get('access_token');
     const action = localStorage.getItem('gd_discord_action') || '';
     localStorage.removeItem('gd_discord_action');
-    window.history.replaceState(null, null, ' ');
+    window.history.replaceState(null, null, window.location.pathname);
 
     if (token) {
       try {
@@ -1079,8 +1080,6 @@ async function boot() {
             } else {
               alert('Failed to link Discord account.');
             }
-            location.reload();
-            return;
           } else if (action === 'login') {
             const logRes = await fetch('/api_discord.php', {
               method: 'POST',
@@ -1092,8 +1091,6 @@ async function boot() {
               localStorage.setItem('gd_user', logData.username);
               localStorage.setItem('gd_role', logData.role);
               alert('Successfully logged in as ' + logData.username);
-              location.reload();
-              return;
             } else if (logData.error === 'banned') {
               alert('This account is banned.');
             } else {
@@ -1105,6 +1102,8 @@ async function boot() {
         alert('Failed to authenticate with Discord.');
       }
     }
+    window.location.reload();
+    return;
   }
 
   document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
