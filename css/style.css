@@ -96,7 +96,7 @@ body[data-theme="orange"]{
   --gold:#E8B93A;
 }
 
-/* MCTIFY THEME DEFINITION */
+
 body[data-theme="mctify"]{
   --bg:#0a0a0c; --card:#141419; --card-hi:#1c1c24;
   --dash:rgba(255,255,255,0.08); --line:#22222a;
@@ -105,7 +105,7 @@ body[data-theme="mctify"]{
   --gold:#E8B93A;
 }
 
-/* MCTIFY LAYOUT OVERRIDES */
+
 body[data-theme="mctify"] .card,
 body[data-theme="mctify"] .detail,
 body[data-theme="mctify"] .box,
@@ -154,7 +154,7 @@ body[data-theme="mctify"] .card-pts {
 }
 
 
-/* CLASSIC THEME EXTRAS */
+
 body[data-theme="classic"]{
   background:radial-gradient(120% 80% at 50% 10%, #3E90F0, #0A3A9C) fixed;
   font-family:'Pusab','Montserrat',system-ui,sans-serif;
