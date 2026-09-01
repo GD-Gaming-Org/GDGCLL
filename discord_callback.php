@@ -3,7 +3,7 @@ ob_start();
 session_start();
 require_once "db.php";
 
-$client_id     = 'YOUR_DISCORD_CLIENT_ID';
+$client_id     = '1544277500555825185';
 $client_secret = 'YOUR_DISCORD_CLIENT_SECRET';
 $redirect_uri  = 'https://gdgcll.rf.gd/discord_callback.php';
 
