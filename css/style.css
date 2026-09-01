@@ -47,6 +47,7 @@ body[data-theme="light"]{
   --accent:#6D28D9; --accent-2:#8B4EE8; --on-accent:#FFFFFF;
   --gold:#B8860B;
 }
+
 body[data-theme="bluewhite"]{
   --bg:#F2F6FB; --card:#FFFFFF; --card-hi:#F7FAFD;
   --dash:#BBCEE2; --line:#DCE7F2;
@@ -54,6 +55,7 @@ body[data-theme="bluewhite"]{
   --accent:#1C7ED6; --accent-2:#4DA3F0; --on-accent:#FFFFFF;
   --gold:#C08A0E;
 }
+
 body[data-theme="mono"]{
   --bg:#000000; --card:#0D0D0D; --card-hi:#151515;
   --dash:#3D3D3D; --line:#1C1C1C;
@@ -61,6 +63,15 @@ body[data-theme="mono"]{
   --accent:#FFFFFF; --accent-2:#D4D4D4; --on-accent:#000000;
   --gold:#D4D4D4;
 }
+
+body[data-theme="classic"]{
+  --bg:#0A3A9C; --card:#8AD338; --card-hi:#9BDE4C;
+  --dash:#FFFFFF; --line:rgba(255,255,255,.35);
+  --text:#FFFFFF; --dim:#EAF6D8;
+  --accent:#B7EE5E; --accent-2:#D3F894; --on-accent:#1E3D05;
+  --gold:#FFC733;
+}
+
 body[data-theme="cyan"]{
   --bg:#05100F; --card:#0C1B1A; --card-hi:#112422;
   --dash:#26494A; --line:#152C2B;
@@ -68,6 +79,7 @@ body[data-theme="cyan"]{
   --accent:#22D3D3; --accent-2:#67E8E8; --on-accent:#03100F;
   --gold:#E8B93A;
 }
+
 body[data-theme="pink"]{
   --bg:#12080E; --card:#1D1018; --card-hi:#26161F;
   --dash:#4C2A3C; --line:#2A1621;
@@ -75,6 +87,7 @@ body[data-theme="pink"]{
   --accent:#F062A8; --accent-2:#FF8FC4; --on-accent:#15050D;
   --gold:#E8B93A;
 }
+
 body[data-theme="orange"]{
   --bg:#120C06; --card:#1D150C; --card-hi:#261C11;
   --dash:#4C3620; --line:#2A1D10;
@@ -83,7 +96,7 @@ body[data-theme="orange"]{
   --gold:#E8B93A;
 }
 
-
+/* MCTIFY THEME DEFINITION */
 body[data-theme="mctify"]{
   --bg:#0a0a0c; --card:#141419; --card-hi:#1c1c24;
   --dash:rgba(255,255,255,0.08); --line:#22222a;
@@ -92,7 +105,56 @@ body[data-theme="mctify"]{
   --gold:#E8B93A;
 }
 
+/* MCTIFY LAYOUT OVERRIDES */
+body[data-theme="mctify"] .card,
+body[data-theme="mctify"] .detail,
+body[data-theme="mctify"] .box,
+body[data-theme="mctify"] .pf-head,
+body[data-theme="mctify"] .pf-sec,
+body[data-theme="mctify"] .pf-stat,
+body[data-theme="mctify"] .adm,
+body[data-theme="mctify"] .btn,
+body[data-theme="mctify"] .go,
+body[data-theme="mctify"] .field input,
+body[data-theme="mctify"] .field select,
+body[data-theme="mctify"] .nav button,
+body[data-theme="mctify"] .lb-row,
+body[data-theme="mctify"] .staff-card,
+body[data-theme="mctify"] #toastNotification {
+  border-radius: 14px;
+  border-style: solid;
+}
 
+body[data-theme="mctify"] .card {
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 110px;
+}
+
+body[data-theme="mctify"] .card-banner {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  margin: 0;
+  z-index: 0;
+  opacity: 0.35;
+  mask-image: linear-gradient(to right, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 85%);
+  -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 85%);
+}
+
+body[data-theme="mctify"] .card-title,
+body[data-theme="mctify"] .card-by,
+body[data-theme="mctify"] .card-pts {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+
+/* CLASSIC THEME EXTRAS */
 body[data-theme="classic"]{
   background:radial-gradient(120% 80% at 50% 10%, #3E90F0, #0A3A9C) fixed;
   font-family:'Pusab','Montserrat',system-ui,sans-serif;
@@ -191,6 +253,7 @@ body[data-theme="classic"] footer{background:rgba(0,0,0,.26); border-top:5px sol
 body[data-theme="classic"] footer a{color:#FFC733}
 
 
+/* GLOBAL CSS */
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   background:var(--bg);color:var(--text);
@@ -288,56 +351,6 @@ a{color:inherit;text-decoration:none}
 .card-pts{font-size:12.5px;color:var(--dim);font-weight:600}
 .card-pts b{color:var(--text);font-weight:800}
 
-
-
-body[data-theme="mctify"] .card,
-body[data-theme="mctify"] .detail,
-body[data-theme="mctify"] .box,
-body[data-theme="mctify"] .pf-head,
-body[data-theme="mctify"] .pf-sec,
-body[data-theme="mctify"] .pf-stat,
-body[data-theme="mctify"] .adm,
-body[data-theme="mctify"] .btn,
-body[data-theme="mctify"] .go,
-body[data-theme="mctify"] .field input,
-body[data-theme="mctify"] .field select,
-body[data-theme="mctify"] .nav button,
-body[data-theme="mctify"] .lb-row,
-body[data-theme="mctify"] .staff-card,
-body[data-theme="mctify"] #toastNotification {
-  border-radius: 14px;
-  border-style: solid;
-}
-
-body[data-theme="mctify"] .card {
-  position: relative;
-  overflow: hidden;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 110px;
-}
-
-body[data-theme="mctify"] .card-banner {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  margin: 0;
-  z-index: 0;
-  opacity: 0.35;
-  mask-image: linear-gradient(to right, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 85%);
-  -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 85%);
-}
-
-body[data-theme="mctify"] .card-title,
-body[data-theme="mctify"] .card-by,
-body[data-theme="mctify"] .card-pts {
-  position: relative;
-  z-index: 1;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-}
-
-
 .detail{border:1px dashed var(--dash);background:var(--card);position:sticky;top:80px}
 .d-banner{display:block;position:relative;aspect-ratio:16/9;background:#000}
 .d-banner img{width:100%;height:100%;object-fit:cover;display:block}
@@ -375,7 +388,10 @@ body[data-theme="mctify"] .card-pts {
   font-size:11.5px;font-weight:900;color:#fff;
 }
 .pfp img{image-rendering:pixelated}
-.pfp.icon{border-radius:0;background:none !important;overflow:visible;}
+.pfp.icon{
+  border-radius:0;background:none !important;
+  overflow:visible;
+}
 
 .lb{display:flex;flex-direction:column;gap:11px}
 .lb-row{
