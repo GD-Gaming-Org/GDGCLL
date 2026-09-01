@@ -1,3 +1,6 @@
+const DISCORD_CLIENT_ID = 'YOUR_DISCORD_CLIENT_ID';
+const DISCORD_REDIRECT_URI = encodeURIComponent('https://gdgcll.rf.gd/discord_callback.php');
+
 const ADMIN_ROLES = ['owner','admin','developer'];
 let DB_PROFILES = {};
 let ALL_REGISTERED_USERS = [];
@@ -490,7 +493,7 @@ async function renderUpdates() {
           '<div class="box" style="margin-bottom:15px;text-align:left;position:relative;">' +
             '<div style="font-size:12px;color:var(--fg-3);margin-bottom:8px;"><b>' + esc(a.author) + '</b> &middot; ' + esc(a.created_at) + '</div>' +
             '<div style="white-space:pre-wrap;font-size:15px;color:var(--fg-1);">' + esc(a.message) + '</div>' +
-            (isAdmin() ? '<button class="del-upd-btn" data-uid="'+a.id+'" style="position:absolute;top:15px;right:15px;background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:font-size:11px;">Delete</button>' : '') +
+            (isAdmin() ? '<button class="del-upd-btn" data-uid="'+a.id+'" style="position:absolute;top:15px;right:15px;background:#ff4d4d;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;">Delete</button>' : '') +
           '</div>'
       ).join('');
 
@@ -572,6 +575,8 @@ function showProfile(name){
   const mine = who.toLowerCase() === currentUser().toLowerCase();
   const bSrc = bannerSrc(who);
 
+  const discordAuthLink = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${DISCORD_REDIRECT_URI}&response_type=code&scope=identify&state=link:${encodeURIComponent(who)}`;
+
   el.innerHTML =
     (bSrc ? '<div style="width:100%;height:150px;background:url(\''+esc(bSrc)+'\') center/cover;border-radius:8px 8px 0 0;margin-bottom:-60px;mask-image:linear-gradient(to bottom, black 40%, transparent 100%);-webkit-mask-image:linear-gradient(to bottom, black 40%, transparent 100%);"></div>' : '') +
     '<div class="pf-head" style="position:relative;z-index:2;'+(bSrc?'padding-top:20px;':'')+'">'+avatar(who)+
@@ -598,6 +603,9 @@ function showProfile(name){
     (!p.beaten.length&&!p.progress.length&&!p.verified.length?'<div class="pf-sec"><h3>RECORDS</h3><p class="lead" style="margin:0">No proven records yet.</p></div>':'')+
 
     (mine?
+      '<div class="pf-sec"><h3>ACCOUNT SECURITY</h3>'+
+        '<a href="'+discordAuthLink+'" class="go" style="background:#5865F2;text-decoration:none;display:block;text-align:center;margin-bottom:10px;">Link Discord Account</a>'+
+      '</div>'+
       '<div class="pf-sec"><h3>NOTIFICATIONS</h3>'+
         '<button class="go" id="btnAllowPush" style="background:#3498db;margin-bottom:10px;">Enable Desktop Push Notifications</button>'+
       '</div>'+
@@ -1022,6 +1030,11 @@ if(refBtn){
   refBtn.addEventListener('click', () => {
     window.location.href = window.location.pathname + '?refresh=' + Date.now();
   });
+}
+
+const discLoginBtn = $('btnDiscordLogin');
+if(discLoginBtn){
+  discLoginBtn.href = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${DISCORD_REDIRECT_URI}&response_type=code&scope=identify&state=login`;
 }
 
 async function boot() {
