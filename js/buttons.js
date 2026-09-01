@@ -630,7 +630,7 @@ function showProfile(name){
       '<div class="pf-sec"><h3>CUSTOMIZE PROFILE</h3>'+
         '<label class="field"><span>AVATAR IMAGE URL</span><input type="text" id="upAvatarUrl" value="'+esc(avatarSrc(who)||'')+'" placeholder="https://i.imgur.com/example.png"></label>'+
         '<label class="field"><span>BANNER IMAGE URL</span><input type="text" id="upBannerUrl" value="'+esc(bSrc||'')+'" placeholder="https://i.imgur.com/example.png"></label>'+
-        '<label class="field"><span>BIO / STATUS</span><input type="text" id="upBio" value="'+esc(bio)+'" placeholder="Grinding Tartarus..." maxlength="100"></label>'+
+        '<label class="field"><span>BIO / STATUS</span><input type="text" id="upBio" value="'+esc(bio)+'" placeholder="enter your bio boi" maxlength="100"></label>'+
         '<label class="field"><span>YOUTUBE URL</span><input type="text" id="upYt" value="'+esc(yt)+'" placeholder="https://youtube.com/..."></label>'+
         '<label class="field"><span>TWITCH URL</span><input type="text" id="upTwitch" value="'+esc(twitch)+'" placeholder="https://twitch.tv/..."></label>'+
         '<label class="field"><span>X (TWITTER) URL</span><input type="text" id="upTwitter" value="'+esc(twitter)+'" placeholder="https://x.com/..."></label>'+
