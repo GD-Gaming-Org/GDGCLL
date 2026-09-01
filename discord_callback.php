@@ -4,7 +4,7 @@ session_start();
 require_once "db.php";
 
 $client_id     = '1544277500555825185';
-$client_secret = 'YOUR_DISCORD_CLIENT_SECRET';
+$client_secret = 'lwk9QEMngPoojqb9i_vwTeiMC3LgOUr5';
 $redirect_uri  = 'https://gdgcll.rf.gd/discord_callback.php';
 
 $code = $_GET['code'] ?? '';
