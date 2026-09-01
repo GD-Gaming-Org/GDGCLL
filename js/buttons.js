@@ -583,7 +583,8 @@ function showProfile(name){
   const yt = dbp.youtube || '';
   
   let socialHTML = '';
-  if(yt) socialHTML += '<a href="'+esc(yt)+'" target="_blank" style="color:#ff0000;margin-right:12px;font-weight:900;text-decoration:none;">YOUTUBE</a>';
+  let ytClean = yt ? (yt.match(/^https?:\/\//i) ? yt : 'https://' + yt) : '';
+  if(ytClean) socialHTML += '<a href="'+esc(ytClean)+'" target="_blank" style="color:#ff0000;font-weight:900;text-decoration:none;">YOUTUBE</a>';
 
   el.innerHTML =
     (bSrc ? '<div style="width:100%;height:150px;background:url(\''+esc(bSrc)+'\') center/cover;border-radius:8px 8px 0 0;margin-bottom:-60px;mask-image:linear-gradient(to bottom, black 40%, transparent 100%);-webkit-mask-image:linear-gradient(to bottom, black 40%, transparent 100%);"></div>' : '') +
@@ -666,7 +667,7 @@ function showProfile(name){
         let ok = true;
         for (const u of updates) {
           try {
-            const res = await fetch('/api_profile.php', {
+            const res = await fetch('/api_profile.php?t=' + Date.now(), {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
               credentials: 'include',
