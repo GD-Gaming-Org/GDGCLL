@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     while ($r = $res->fetch_assoc()) {
         $out["users"][] = $r;
     }
-    $res2 = $conn->query("SELECT username, avatar, banner, bio, youtube, twitch, twitter FROM profiles");
+    $res2 = $conn->query("SELECT username, avatar, banner, bio, youtube FROM profiles");
     if ($res2) {
         while ($r = $res2->fetch_assoc()) {
             $out["profiles"][$r['username']] = $r;
@@ -38,12 +38,10 @@ $conn->query("CREATE TABLE IF NOT EXISTS profiles (
     avatar TEXT,
     banner TEXT,
     bio TEXT,
-    youtube VARCHAR(150),
-    twitch VARCHAR(150),
-    twitter VARCHAR(150)
+    youtube VARCHAR(150)
 )");
 
-$allowed = ['avatar', 'banner', 'bio', 'youtube', 'twitch', 'twitter'];
+$allowed = ['avatar', 'banner', 'bio', 'youtube'];
 if (!in_array($type, $allowed)) {
     ob_clean();
     die(json_encode(["ok" => false, "error" => "invalid_type"]));
