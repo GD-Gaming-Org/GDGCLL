@@ -4,70 +4,54 @@ error_reporting(0);
 ini_set('display_errors', 0);
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST");
-header("Access-Control-Allow-Headers: Content-Type");
-
 require_once "db.php";
 
-$method = $_SERVER['REQUEST_METHOD'];
-
-if ($method === 'GET') {
-    $sql = "SELECT * FROM users";
-    $result = $conn->query($sql);
-    $profiles = [];
-    $allUsers = [];
-    
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $uName = $row['username'] ?? '';
-            if (!$uName) continue;
-
-            $profiles[$uName] = [
-                'role' => $row['role'] ?? 'user',
-                'title' => $row['title'] ?? '',
-                'avatar' => $row['avatar'] ?? '',
-                'banner' => $row['banner'] ?? '',
-                'is_banned' => (int)($row['is_banned'] ?? 0)
-            ];
-            
-            $allUsers[] = [
-                'username' => $uName,
-                'role' => $row['role'] ?? 'user',
-                'title' => $row['title'] ?? '',
-                'avatar' => $row['avatar'] ?? ''
-            ];
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $out = ["ok" => true, "profiles" => [], "users" => []];
+    $res = $conn->query("SELECT username, role, is_banned, title FROM users");
+    while ($r = $res->fetch_assoc()) {
+        $out["users"][] = $r;
+    }
+    $res2 = $conn->query("SELECT username, avatar, banner, bio, youtube, twitch, twitter FROM profiles");
+    if ($res2) {
+        while ($r = $res2->fetch_assoc()) {
+            $out["profiles"][$r['username']] = $r;
         }
     }
-    
     ob_clean();
-    echo json_encode(["ok" => true, "profiles" => $profiles, "users" => $allUsers]);
-    exit;
+    die(json_encode($out));
 }
 
-if ($method === 'POST') {
-    $raw = file_get_contents("php://input");
-    $data = json_decode($raw, true) ?: [];
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true) ?: [];
+$user = trim($data['username'] ?? '');
+$type = trim($data['type'] ?? '');
+$val = trim($data['value'] ?? $data['url'] ?? '');
 
-    $user = trim($data['username'] ?? '');
-    $type = trim($data['type'] ?? '');
-    $url = trim($data['url'] ?? '');
-
-    if (!$user || !in_array($type, ['avatar', 'banner'])) {
-        ob_clean();
-        echo json_encode(["ok" => false, "error" => "invalid_data"]);
-        exit;
-    }
-
-    $col = ($type === 'avatar') ? 'avatar' : 'banner';
-    $stmt = $conn->prepare("UPDATE users SET $col = ? WHERE username = ?");
-    if ($stmt) {
-        $stmt->bind_param("ss", $url, $user);
-        $stmt->execute();
-        ob_clean();
-        echo json_encode(["ok" => true]);
-    } else {
-        ob_clean();
-        echo json_encode(["ok" => false, "error" => "db_error"]);
-    }
-    exit;
+if (!$user || !$type) {
+    ob_clean();
+    die(json_encode(["ok" => false, "error" => "missing_data"]));
 }
+
+$conn->query("CREATE TABLE IF NOT EXISTS profiles (
+    username VARCHAR(50) PRIMARY KEY,
+    avatar TEXT,
+    banner TEXT,
+    bio TEXT,
+    youtube VARCHAR(150),
+    twitch VARCHAR(150),
+    twitter VARCHAR(150)
+)");
+
+$allowed = ['avatar', 'banner', 'bio', 'youtube', 'twitch', 'twitter'];
+if (!in_array($type, $allowed)) {
+    ob_clean();
+    die(json_encode(["ok" => false, "error" => "invalid_type"]));
+}
+
+$stmt = $conn->prepare("INSERT INTO profiles (username, $type) VALUES (?, ?) ON DUPLICATE KEY UPDATE $type = ?");
+$stmt->bind_param("sss", $user, $val, $val);
+$stmt->execute();
+
+ob_clean();
+die(json_encode(["ok" => true]));
