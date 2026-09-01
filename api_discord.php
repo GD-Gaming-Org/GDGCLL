@@ -18,15 +18,13 @@ $target_user = trim($data['username'] ?? '');
 
 if (!$discord_id) {
     ob_clean();
-    echo json_encode(["ok" => false, "error" => "missing_discord_id"]);
-    exit;
+    die(json_encode(["ok" => false, "error" => "missing_discord_id"]));
 }
 
 if ($action === 'link') {
     if (!$target_user) {
         ob_clean();
-        echo json_encode(["ok" => false, "error" => "missing_username"]);
-        exit;
+        die(json_encode(["ok" => false, "error" => "missing_username"]));
     }
 
     $stmt = $conn->prepare("SELECT id, username FROM users WHERE discord_id = ?");
@@ -36,8 +34,7 @@ if ($action === 'link') {
 
     if ($res && strtolower($res['username']) !== strtolower($target_user)) {
         ob_clean();
-        echo json_encode(["ok" => false, "error" => "already_linked"]);
-        exit;
+        die(json_encode(["ok" => false, "error" => "already_linked"]));
     }
 
     $link_stmt = $conn->prepare("UPDATE users SET discord_id = ? WHERE username = ?");
@@ -45,8 +42,7 @@ if ($action === 'link') {
     $link_stmt->execute();
 
     ob_clean();
-    echo json_encode(["ok" => true]);
-    exit;
+    die(json_encode(["ok" => true]));
 }
 
 if ($action === 'login') {
@@ -58,19 +54,15 @@ if ($action === 'login') {
     if ($res) {
         if ((int)$res['is_banned'] === 1) {
             ob_clean();
-            echo json_encode(["ok" => false, "error" => "banned"]);
-            exit;
+            die(json_encode(["ok" => false, "error" => "banned"]));
         }
         ob_clean();
-        echo json_encode(["ok" => true, "username" => $res['username'], "role" => $res['role'] ?? 'user']);
-        exit;
+        die(json_encode(["ok" => true, "username" => $res['username'], "role" => $res['role'] ?? 'user']));
     } else {
         ob_clean();
-        echo json_encode(["ok" => false, "error" => "not_linked"]);
-        exit;
+        die(json_encode(["ok" => false, "error" => "not_linked"]));
     }
 }
 
 ob_clean();
-echo json_encode(["ok" => false, "error" => "invalid_action"]);
-exit;
+die(json_encode(["ok" => false, "error" => "invalid_action"]));
