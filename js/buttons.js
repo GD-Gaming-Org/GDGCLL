@@ -1,5 +1,5 @@
 const DISCORD_CLIENT_ID = '1544277500555825185';
-const DISCORD_REDIRECT_URI = encodeURIComponent('https://gdgcll.rf.gd/discord_callback.php');
+const DISCORD_REDIRECT_URI = encodeURIComponent('https://gdgcll.rf.gd/');
 
 const ADMIN_ROLES = ['owner','admin','developer'];
 let DB_PROFILES = {};
@@ -575,8 +575,6 @@ function showProfile(name){
   const mine = who.toLowerCase() === currentUser().toLowerCase();
   const bSrc = bannerSrc(who);
 
-  const discordAuthLink = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${DISCORD_REDIRECT_URI}&response_type=code&scope=identify&state=link:${encodeURIComponent(who)}`;
-
   el.innerHTML =
     (bSrc ? '<div style="width:100%;height:150px;background:url(\''+esc(bSrc)+'\') center/cover;border-radius:8px 8px 0 0;margin-bottom:-60px;mask-image:linear-gradient(to bottom, black 40%, transparent 100%);-webkit-mask-image:linear-gradient(to bottom, black 40%, transparent 100%);"></div>' : '') +
     '<div class="pf-head" style="position:relative;z-index:2;'+(bSrc?'padding-top:20px;':'')+'">'+avatar(who)+
@@ -604,7 +602,7 @@ function showProfile(name){
 
     (mine?
       '<div class="pf-sec"><h3>ACCOUNT SECURITY</h3>'+
-        '<a href="'+discordAuthLink+'" class="go" style="background:#5865F2;text-decoration:none;display:block;text-align:center;margin-bottom:10px;">Link Discord Account</a>'+
+        '<button class="go" id="btnLinkDiscord" style="background:#5865F2;margin-bottom:10px;">Link Discord Account</button>'+
       '</div>'+
       '<div class="pf-sec"><h3>NOTIFICATIONS</h3>'+
         '<button class="go" id="btnAllowPush" style="background:#3498db;margin-bottom:10px;">Enable Desktop Push Notifications</button>'+
@@ -629,6 +627,14 @@ function showProfile(name){
   applyTheme();
 
   if(mine){
+    const btnLinkDisc = $('btnLinkDiscord');
+    if(btnLinkDisc) {
+      btnLinkDisc.addEventListener('click', () => {
+        localStorage.setItem('gd_discord_action', 'link:' + who);
+        window.location.href = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${DISCORD_REDIRECT_URI}&response_type=token&scope=identify`;
+      });
+    }
+
     const btnPush = $('btnAllowPush');
     if(btnPush) btnPush.addEventListener('click', requestNotificationPermission);
 
@@ -995,6 +1001,15 @@ $('loginGo').addEventListener('click', async (e)=>{
   btn.disabled = false; btn.textContent = 'Log in';
 });
 
+const discLogin = $('btnDiscordLogin');
+if(discLogin){
+  discLogin.addEventListener('click', (e) => {
+    e.preventDefault();
+    localStorage.setItem('gd_discord_action', 'login');
+    window.location.href = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${DISCORD_REDIRECT_URI}&response_type=token&scope=identify`;
+  });
+}
+
 $('regGo').addEventListener('click', async (e)=>{
   e.preventDefault(); 
   const user = $('regUser').value.trim(); const pass = $('regPass').value; const pass2 = $('regPass2').value;
@@ -1032,12 +1047,66 @@ if(refBtn){
   });
 }
 
-const discLoginBtn = $('btnDiscordLogin');
-if(discLoginBtn){
-  discLoginBtn.href = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${DISCORD_REDIRECT_URI}&response_type=code&scope=identify&state=login`;
-}
-
 async function boot() {
+  if (window.location.hash.includes('access_token=')) {
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    const token = params.get('access_token');
+    const action = localStorage.getItem('gd_discord_action') || '';
+    localStorage.removeItem('gd_discord_action');
+    window.history.replaceState(null, null, ' ');
+
+    if (token) {
+      try {
+        const uRes = await fetch('https://discord.com/api/users/@me', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const discUser = await uRes.json();
+        
+        if (discUser && discUser.id) {
+          if (action.startsWith('link:')) {
+            const targetUser = action.split(':')[1];
+            const linkRes = await fetch('/api_discord.php', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ action: 'link', username: targetUser, discord_id: discUser.id })
+            });
+            const lData = await linkRes.json();
+            if (lData.ok) {
+              alert('Discord account successfully linked!');
+            } else if (lData.error === 'already_linked') {
+              alert('This Discord account is already linked to another user!');
+            } else {
+              alert('Failed to link Discord account.');
+            }
+            location.reload();
+            return;
+          } else if (action === 'login') {
+            const logRes = await fetch('/api_discord.php', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ action: 'login', discord_id: discUser.id })
+            });
+            const logData = await logRes.json();
+            if (logData.ok) {
+              localStorage.setItem('gd_user', logData.username);
+              localStorage.setItem('gd_role', logData.role);
+              alert('Successfully logged in as ' + logData.username);
+              location.reload();
+              return;
+            } else if (logData.error === 'banned') {
+              alert('This account is banned.');
+            } else {
+              alert('No GDGCLL account is linked to this Discord account. Please log in normally and link it via your profile first.');
+            }
+          }
+        }
+      } catch (err) {
+        alert('Failed to authenticate with Discord.');
+      }
+    }
+  }
+
   document.querySelectorAll('[data-ico]').forEach(el=>{ el.innerHTML=ico(el.dataset.ico) });
   applyTheme();
 
