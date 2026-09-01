@@ -171,7 +171,7 @@ function showToast(message) {
 
 async function fetchComments(levelId) {
   try {
-    const res = await fetch('/comments.php?level_id=' + levelId);
+    const res = await fetch('/comments.php?level_id=' + levelId + '&t=' + Date.now());
     const data = await res.json();
     return data.ok ? data.data : [];
   } catch (e) { return []; }
@@ -453,7 +453,7 @@ function renderSubmit() {
     btn.textContent = 'Submitting...';
     
     try {
-      const res = await fetch('/api_submit.php', {
+      const res = await fetch('/api_submit.php?t=' + Date.now(), {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         credentials: 'include',
@@ -481,7 +481,7 @@ async function renderUpdates() {
   async function loadList() {
       const listEl = $('updatesList');
       if(!listEl) return;
-      const res = await fetch('/api_announcements.php');
+      const res = await fetch('/api_announcements.php?t=' + Date.now());
       const data = await res.json();
       if(!data.ok || !data.announcements) {
           listEl.innerHTML = '<p style="color:var(--fg-3);text-align:center;">Failed to load updates.</p>';
@@ -539,7 +539,7 @@ async function renderInbox() {
   el.innerHTML = '<div class="head"><h1>Notifications</h1><p>Alerts & status updates on your records.</p></div><div id="inboxList">Loading notifications...</div>';
 
   try {
-    const res = await fetch('/api_notifications.php?username=' + encodeURIComponent(who));
+    const res = await fetch('/api_notifications.php?username=' + encodeURIComponent(who) + '&t=' + Date.now());
     const data = await res.json();
     const box = $('inboxList');
     if(!data.ok || !data.notifications || data.notifications.length === 0) {
@@ -581,15 +581,9 @@ function showProfile(name){
   const dbp = pKey ? DB_PROFILES[pKey] : {};
   const bio = dbp.bio || '';
   const yt = dbp.youtube || '';
-  const twitch = dbp.twitch || '';
-  const twitter = dbp.twitter || '';
-  
-  const hardest = p.beaten.length > 0 ? p.beaten.reduce((a,b)=>a.rank<b.rank?a:b) : null;
   
   let socialHTML = '';
   if(yt) socialHTML += '<a href="'+esc(yt)+'" target="_blank" style="color:#ff0000;margin-right:12px;font-weight:900;text-decoration:none;">YOUTUBE</a>';
-  if(twitch) socialHTML += '<a href="'+esc(twitch)+'" target="_blank" style="color:#9146ff;margin-right:12px;font-weight:900;text-decoration:none;">TWITCH</a>';
-  if(twitter) socialHTML += '<a href="'+esc(twitter)+'" target="_blank" style="color:#1da1f2;font-weight:900;text-decoration:none;">X/TWITTER</a>';
 
   el.innerHTML =
     (bSrc ? '<div style="width:100%;height:150px;background:url(\''+esc(bSrc)+'\') center/cover;border-radius:8px 8px 0 0;margin-bottom:-60px;mask-image:linear-gradient(to bottom, black 40%, transparent 100%);-webkit-mask-image:linear-gradient(to bottom, black 40%, transparent 100%);"></div>' : '') +
@@ -610,8 +604,6 @@ function showProfile(name){
       '<div class="pf-stat"><b>'+p.progress.length+'</b><span>PROGRESS</span></div>'+
       '<div class="pf-stat"><b>'+p.verified.length+'</b><span>VERIFIED</span></div>'+
     '</div>'+
-    
-    (hardest?'<div class="pf-sec" style="border-color:var(--accent);"><h3 style="color:var(--accent);">HARDEST DEMON</h3><div class="rec" style="border:none;padding:0;"><span class="rec-name" style="font-size:15px;">#'+hardest.rank+' '+esc(hardest.level)+'</span><a class="rec-watch" href="'+esc(hardest.link)+'" target="_blank" rel="noopener">Watch</a></div></div>':'')+
 
     (p.beaten.length?'<div class="pf-sec"><h3>BEATEN ('+p.beaten.length+')</h3>'+p.beaten.map(recLine).join('')+'</div>':'')+
     (p.progress.length?'<div class="pf-sec"><h3>PROGRESS ('+p.progress.length+')</h3>'+p.progress.map(recLine).join('')+'</div>':'')+
@@ -632,8 +624,6 @@ function showProfile(name){
         '<label class="field"><span>BANNER IMAGE URL</span><input type="text" id="upBannerUrl" value="'+esc(bSrc||'')+'" placeholder="https://i.imgur.com/example.png"></label>'+
         '<label class="field"><span>BIO / STATUS</span><input type="text" id="upBio" value="'+esc(bio)+'" placeholder="enter your bio boi" maxlength="100"></label>'+
         '<label class="field"><span>YOUTUBE URL</span><input type="text" id="upYt" value="'+esc(yt)+'" placeholder="https://youtube.com/..."></label>'+
-        '<label class="field"><span>TWITCH URL</span><input type="text" id="upTwitch" value="'+esc(twitch)+'" placeholder="https://twitch.tv/..."></label>'+
-        '<label class="field"><span>X (TWITTER) URL</span><input type="text" id="upTwitter" value="'+esc(twitter)+'" placeholder="https://x.com/..."></label>'+
         '<button class="go" id="btnSaveProfile" style="margin-top:12px;">Save Profile Settings</button>'+
       '</div>'+
       '<div class="pf-sec"><h3>THEME</h3><div class="themes">'+
@@ -670,9 +660,7 @@ function showProfile(name){
           {type: 'avatar', value: $('upAvatarUrl').value.trim()},
           {type: 'banner', value: $('upBannerUrl').value.trim()},
           {type: 'bio', value: $('upBio').value.trim()},
-          {type: 'youtube', value: $('upYt').value.trim()},
-          {type: 'twitch', value: $('upTwitch').value.trim()},
-          {type: 'twitter', value: $('upTwitter').value.trim()}
+          {type: 'youtube', value: $('upYt').value.trim()}
         ];
         
         let ok = true;
@@ -1140,7 +1128,7 @@ async function boot() {
   const who = currentUser();
   if (who) {
     try {
-      const authRes = await fetch('/api_check.php?username=' + encodeURIComponent(who));
+      const authRes = await fetch('/api_check.php?username=' + encodeURIComponent(who) + '&t=' + Date.now());
       const authDb = await authRes.json();
       if (authDb.ok) {
         if (authDb.is_banned === 1 || authDb.role !== currentRole()) {
@@ -1155,7 +1143,7 @@ async function boot() {
     } catch(e) {}
 
     try {
-      const nRes = await fetch('/api_notifications.php?username=' + encodeURIComponent(who));
+      const nRes = await fetch('/api_notifications.php?username=' + encodeURIComponent(who) + '&t=' + Date.now());
       const nDb = await nRes.json();
       if(nDb.ok && nDb.unread > 0) {
         lastUnreadCount = nDb.unread;
@@ -1171,7 +1159,7 @@ async function boot() {
       const curUser = currentUser();
       if(!curUser) return;
       try {
-        const nRes = await fetch('/api_notifications.php?username=' + encodeURIComponent(curUser));
+        const nRes = await fetch('/api_notifications.php?username=' + encodeURIComponent(curUser) + '&t=' + Date.now());
         const nDb = await nRes.json();
         if(nDb.ok && nDb.unread > lastUnreadCount) {
           lastUnreadCount = nDb.unread;
@@ -1189,7 +1177,7 @@ async function boot() {
   }
 
   try {
-    const aRes = await fetch('/api_announcements.php');
+    const aRes = await fetch('/api_announcements.php?t=' + Date.now());
     const aDb = await aRes.json();
     if(aDb.ok && aDb.announcements.length > 0) {
       const latestId = aDb.announcements[0].id;
@@ -1211,7 +1199,7 @@ async function boot() {
   } catch(e) {}
 
   try {
-    const res = await fetch('/api_levels.php');
+    const res = await fetch('/api_levels.php?t=' + Date.now());
     const db = await res.json();
     
     if (db.ok) {
