@@ -1,4 +1,4 @@
-const DISCORD_CLIENT_ID = 'YOUR_DISCORD_CLIENT_ID';
+const DISCORD_CLIENT_ID = '1544277500555825185';
 const DISCORD_REDIRECT_URI = encodeURIComponent('https://gdgcll.rf.gd/discord_callback.php');
 
 const ADMIN_ROLES = ['owner','admin','developer'];
