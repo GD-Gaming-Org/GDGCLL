@@ -253,7 +253,7 @@ body[data-theme="classic"] footer{background:rgba(0,0,0,.26); border-top:5px sol
 body[data-theme="classic"] footer a{color:#FFC733}
 
 
-/* GLOBAL CSS */
+
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   background:var(--bg);color:var(--text);
