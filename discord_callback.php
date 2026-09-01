@@ -31,6 +31,10 @@ curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/x-www-form-urlencoded',
+    'User-Agent: GDGCLL-App (https://gdgcll.rf.gd, 1.0)'
+]);
 $response = curl_exec($ch);
 curl_close($ch);
 
@@ -38,14 +42,18 @@ $token_data = json_decode($response, true);
 $access_token = $token_data['access_token'] ?? null;
 
 if (!$access_token) {
-    echo "<script>alert('Failed to get access token from Discord.'); window.location.href='/';</script>";
+    $err_msg = $token_data['error_description'] ?? $token_data['error'] ?? 'Unknown Error';
+    echo "<script>alert('Discord Token Error: " . addslashes($err_msg) . "'); window.location.href='/';</script>";
     exit;
 }
 
 $user_url = "https://discord.com/api/users/@me";
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $user_url);
-curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $access_token"]);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Authorization: Bearer $access_token",
+    "User-Agent: GDGCLL-App (https://gdgcll.rf.gd, 1.0)"
+]);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 $user_response = curl_exec($ch);
