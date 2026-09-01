@@ -576,6 +576,20 @@ function showProfile(name){
   const p = playerCard(who);
   const mine = who.toLowerCase() === currentUser().toLowerCase();
   const bSrc = bannerSrc(who);
+  
+  const pKey = Object.keys(DB_PROFILES).find(k=>k.toLowerCase()===who.toLowerCase());
+  const dbp = pKey ? DB_PROFILES[pKey] : {};
+  const bio = dbp.bio || '';
+  const yt = dbp.youtube || '';
+  const twitch = dbp.twitch || '';
+  const twitter = dbp.twitter || '';
+  
+  const hardest = p.beaten.length > 0 ? p.beaten.reduce((a,b)=>a.rank<b.rank?a:b) : null;
+  
+  let socialHTML = '';
+  if(yt) socialHTML += '<a href="'+esc(yt)+'" target="_blank" style="color:#ff0000;margin-right:12px;font-weight:900;text-decoration:none;">YOUTUBE</a>';
+  if(twitch) socialHTML += '<a href="'+esc(twitch)+'" target="_blank" style="color:#9146ff;margin-right:12px;font-weight:900;text-decoration:none;">TWITCH</a>';
+  if(twitter) socialHTML += '<a href="'+esc(twitter)+'" target="_blank" style="color:#1da1f2;font-weight:900;text-decoration:none;">X/TWITTER</a>';
 
   el.innerHTML =
     (bSrc ? '<div style="width:100%;height:150px;background:url(\''+esc(bSrc)+'\') center/cover;border-radius:8px 8px 0 0;margin-bottom:-60px;mask-image:linear-gradient(to bottom, black 40%, transparent 100%);-webkit-mask-image:linear-gradient(to bottom, black 40%, transparent 100%);"></div>' : '') +
@@ -584,7 +598,9 @@ function showProfile(name){
       '<span class="pf-role">'+esc(userRole(who).toUpperCase())+
         (isReg(who)?' &middot; <span style="color:#2ecc71;">REGISTERED </span>':'')+
         (p.firsts?' &middot; '+p.firsts+' FIRST':'')+'</span>'+
-      (titleFor(who)?'<div class="pf-title">'+esc(titleFor(who))+'</div>':'')+
+      (titleFor(who)?'<div class="pf-title" style="margin-top:4px;font-size:12px;color:var(--gold);font-weight:bold;">'+esc(titleFor(who))+'</div>':'')+
+      (bio?'<div style="margin-top:8px;font-size:13px;color:var(--fg-1);max-width:400px;line-height:1.4;">'+esc(bio)+'</div>':'')+
+      (socialHTML?'<div style="margin-top:8px;font-size:11px;">'+socialHTML+'</div>':'')+
       '</div>'+
     '</div>'+
 
@@ -594,6 +610,8 @@ function showProfile(name){
       '<div class="pf-stat"><b>'+p.progress.length+'</b><span>PROGRESS</span></div>'+
       '<div class="pf-stat"><b>'+p.verified.length+'</b><span>VERIFIED</span></div>'+
     '</div>'+
+    
+    (hardest?'<div class="pf-sec" style="border-color:var(--accent);"><h3 style="color:var(--accent);">HARDEST DEMON</h3><div class="rec" style="border:none;padding:0;"><span class="rec-name" style="font-size:15px;">#'+hardest.rank+' '+esc(hardest.level)+'</span><a class="rec-watch" href="'+esc(hardest.link)+'" target="_blank" rel="noopener">Watch</a></div></div>':'')+
 
     (p.beaten.length?'<div class="pf-sec"><h3>BEATEN ('+p.beaten.length+')</h3>'+p.beaten.map(recLine).join('')+'</div>':'')+
     (p.progress.length?'<div class="pf-sec"><h3>PROGRESS ('+p.progress.length+')</h3>'+p.progress.map(recLine).join('')+'</div>':'')+
@@ -610,10 +628,13 @@ function showProfile(name){
         '<button class="go" id="btnAllowPush" style="background:#3498db;margin-bottom:10px;">Enable Desktop Push Notifications</button>'+
       '</div>'+
       '<div class="pf-sec"><h3>CUSTOMIZE PROFILE</h3>'+
-        '<label class="field"><span>AVATAR IMAGE URL</span><input type="text" id="upAvatarUrl" placeholder="https://i.imgur.com/example.png"></label>'+
-        '<button class="go" id="btnSaveAvatar" style="margin-bottom:12px;">Save Avatar</button>'+
-        '<label class="field"><span>BANNER IMAGE URL</span><input type="text" id="upBannerUrl" placeholder="https://i.imgur.com/example.png"></label>'+
-        '<button class="go" id="btnSaveBanner">Save Banner</button>'+
+        '<label class="field"><span>AVATAR IMAGE URL</span><input type="text" id="upAvatarUrl" value="'+esc(avatarSrc(who)||'')+'" placeholder="https://i.imgur.com/example.png"></label>'+
+        '<label class="field"><span>BANNER IMAGE URL</span><input type="text" id="upBannerUrl" value="'+esc(bSrc||'')+'" placeholder="https://i.imgur.com/example.png"></label>'+
+        '<label class="field"><span>BIO / STATUS</span><input type="text" id="upBio" value="'+esc(bio)+'" placeholder="Grinding Tartarus..." maxlength="100"></label>'+
+        '<label class="field"><span>YOUTUBE URL</span><input type="text" id="upYt" value="'+esc(yt)+'" placeholder="https://youtube.com/..."></label>'+
+        '<label class="field"><span>TWITCH URL</span><input type="text" id="upTwitch" value="'+esc(twitch)+'" placeholder="https://twitch.tv/..."></label>'+
+        '<label class="field"><span>X (TWITTER) URL</span><input type="text" id="upTwitter" value="'+esc(twitter)+'" placeholder="https://x.com/..."></label>'+
+        '<button class="go" id="btnSaveProfile" style="margin-top:12px;">Save Profile Settings</button>'+
       '</div>'+
       '<div class="pf-sec"><h3>THEME</h3><div class="themes">'+
         THEMES.map(t=>'<button class="sw sw-'+t[0]+'" data-theme="'+t[0]+'" title="'+t[1]+'"></button>').join('')+
@@ -640,37 +661,42 @@ function showProfile(name){
     const btnPush = $('btnAllowPush');
     if(btnPush) btnPush.addEventListener('click', requestNotificationPermission);
 
-    const btnSaveAv = $('btnSaveAvatar');
-    if(btnSaveAv) btnSaveAv.addEventListener('click', async () => {
-      const url = $('upAvatarUrl').value.trim();
-      if(!url) return alert('Please enter an image URL.');
-      btnSaveAv.disabled = true;
-      const res = await fetch('/api_profile.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        credentials: 'include',
-        body: JSON.stringify({ username: who, type: 'avatar', url: url })
+    const btnSaveProf = $('btnSaveProfile');
+    if(btnSaveProf) {
+      btnSaveProf.addEventListener('click', async () => {
+        btnSaveProf.disabled = true;
+        btnSaveProf.textContent = 'Saving...';
+        const updates = [
+          {type: 'avatar', value: $('upAvatarUrl').value.trim()},
+          {type: 'banner', value: $('upBannerUrl').value.trim()},
+          {type: 'bio', value: $('upBio').value.trim()},
+          {type: 'youtube', value: $('upYt').value.trim()},
+          {type: 'twitch', value: $('upTwitch').value.trim()},
+          {type: 'twitter', value: $('upTwitter').value.trim()}
+        ];
+        
+        let ok = true;
+        for (const u of updates) {
+          try {
+            const res = await fetch('/api_profile.php', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              credentials: 'include',
+              body: JSON.stringify({username: who, type: u.type, value: u.value})
+            });
+            const j = await res.json();
+            if(!j.ok) ok = false;
+          } catch(e) { ok = false; }
+        }
+        
+        if(ok) location.reload(); 
+        else { 
+          alert('Failed to save some profile data.'); 
+          btnSaveProf.disabled = false; 
+          btnSaveProf.textContent = 'Save Profile Settings'; 
+        }
       });
-      const json = await res.json();
-      if(json.ok) location.reload(); else alert('Failed to save avatar.');
-      btnSaveAv.disabled = false;
-    });
-
-    const btnSaveBan = $('btnSaveBanner');
-    if(btnSaveBan) btnSaveBan.addEventListener('click', async () => {
-      const url = $('upBannerUrl').value.trim();
-      if(!url) return alert('Please enter an image URL.');
-      btnSaveBan.disabled = true;
-      const res = await fetch('/api_profile.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        credentials: 'include',
-        body: JSON.stringify({ username: who, type: 'banner', url: url })
-      });
-      const json = await res.json();
-      if(json.ok) location.reload(); else alert('Failed to save banner.');
-      btnSaveBan.disabled = false;
-    });
+    }
   }
 
   const lo = $('doLogout');
