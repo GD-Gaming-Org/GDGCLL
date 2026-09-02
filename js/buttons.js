@@ -112,7 +112,8 @@ const THEMES=[
   ['green','Green'], ['classic','GD Classic'], ['gold','Gold'],
   ['orange','Orange'], ['red','Red'], ['pink','Pink'],
   ['mono','Mono'], ['light','Light'], ['bluewhite','Blue & White'],
-  ['mctify','MCTIFY Dark'], ['old','Windows XP']
+  ['mctify','MCTIFY Dark'], ['old','Windows XP'],
+  ['terminal','Terminal'], ['discord','Discord']
 ];
 
 function applyTheme(k){
