@@ -112,7 +112,7 @@ const THEMES=[
   ['green','Green'], ['classic','GD Classic'], ['gold','Gold'],
   ['orange','Orange'], ['red','Red'], ['pink','Pink'],
   ['mono','Mono'], ['light','Light'], ['bluewhite','Blue & White'],
-  ['mctify','MCTIFY Dark']
+  ['mctify','MCTIFY Dark'], ['old','Windows XP']
 ];
 
 function applyTheme(k){
