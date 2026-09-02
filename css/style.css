@@ -104,6 +104,22 @@ body[data-theme="old"]{
   --gold:#FF8C00;
 }
 
+body[data-theme="terminal"]{
+  --bg:#000000; --card:#050505; --card-hi:#111111;
+  --dash:#39FF14; --line:#003300;
+  --text:#39FF14; --dim:#2E8B57;
+  --accent:#39FF14; --accent-2:#32CD32; --on-accent:#000000;
+  --gold:#39FF14;
+}
+
+body[data-theme="discord"]{
+  --bg:#313338; --card:#2B2D31; --card-hi:#1E1F22;
+  --dash:#404249; --line:#1E1F22;
+  --text:#DBDEE1; --dim:#B5BAC1;
+  --accent:#5865F2; --accent-2:#4752C4; --on-accent:#FFFFFF;
+  --gold:#FEE75C;
+}
+
 body[data-theme="mctify"] .card,
 body[data-theme="mctify"] .detail,
 body[data-theme="mctify"] .box,
@@ -253,7 +269,6 @@ body[data-theme="old"] button,
 body[data-theme="old"] input {
   font-family: 'Tahoma', 'Verdana', sans-serif !important;
 }
-
 body[data-theme="old"] .card,
 body[data-theme="old"] .detail,
 body[data-theme="old"] .box,
@@ -272,12 +287,10 @@ body[data-theme="old"] #toastNotification {
   border-radius: 0 !important;
   border: 1px solid #7F9DB9 !important;
 }
-
 body[data-theme="old"] .top {
   background: linear-gradient(180deg, #0058e6 0%, #3a93ff 8%, #288eff 40%, #127dff 88%, #036bfe 93%, #0262ee 100%) !important;
   border-bottom: 2px solid #000 !important;
 }
-
 body[data-theme="old"] .brand,
 body[data-theme="old"] .nav button,
 body[data-theme="old"] .top .btn {
@@ -285,15 +298,36 @@ body[data-theme="old"] .top .btn {
   border-color: transparent !important;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
 }
-
 body[data-theme="old"] .nav button[aria-selected="true"] {
   background: rgba(0,0,0,0.2) !important;
   border: 1px solid #fff !important;
 }
-
 body[data-theme="old"] .hero h1 span,
 body[data-theme="old"] .card-title em {
   color: #FF8C00;
+}
+
+body[data-theme="terminal"] *,
+body[data-theme="terminal"] button,
+body[data-theme="terminal"] input {
+  font-family: 'Courier New', Courier, monospace !important;
+}
+body[data-theme="terminal"] .card,
+body[data-theme="terminal"] .detail,
+body[data-theme="terminal"] .box,
+body[data-theme="terminal"] .pf-head,
+body[data-theme="terminal"] .pf-sec,
+body[data-theme="terminal"] .pf-stat,
+body[data-theme="terminal"] .adm,
+body[data-theme="terminal"] .btn,
+body[data-theme="terminal"] .go,
+body[data-theme="terminal"] .field input,
+body[data-theme="terminal"] .field select,
+body[data-theme="terminal"] .nav button,
+body[data-theme="terminal"] .lb-row,
+body[data-theme="terminal"] .staff-card,
+body[data-theme="terminal"] #toastNotification {
+  border-radius: 0 !important;
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -430,7 +464,10 @@ a{color:inherit;text-decoration:none}
   font-size:11.5px;font-weight:900;color:#fff;
 }
 .pfp img{image-rendering:pixelated}
-.pfp.icon{border-radius:0;background:none !important;overflow:visible;}
+.pfp.icon{
+  border-radius:0;background:none !important;
+  overflow:visible;
+}
 
 .lb{display:flex;flex-direction:column;gap:11px}
 .lb-row{
@@ -511,6 +548,8 @@ a{color:inherit;text-decoration:none}
 .sw-orange{background:#F5811F}
 .sw-mctify{background:#0a0a0c;border-color:#58a6ff}
 .sw-old{background:#004E98;border-color:#ECE9D8}
+.sw-terminal{background:#000000;border-color:#39FF14}
+.sw-discord{background:#313338;border-color:#5865F2}
 
 .adm{border:1px dashed var(--dash);background:var(--card);padding:22px;margin-bottom:14px}
 .adm h3{font-size:15px;font-weight:900;margin-bottom:6px}
